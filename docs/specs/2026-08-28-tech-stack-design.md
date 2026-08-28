@@ -619,7 +619,7 @@ These do not block the start of implementation but must be settled before launch
 
 ---
 
-## 附錄 A：難度分級表（初稿）/ Appendix A: Difficulty scale (draft)
+## 附錄 A：難度分級表（初稿） / Appendix A: Difficulty scale (draft)
 
 此表為初稿，待產品負責人依北北基實際路線經驗校準。單車與健行的體感難度標準不同，因此分開定義。此表為前台顯示的內容文案，非資料庫結構，日後修改不影響既有資料。
 
