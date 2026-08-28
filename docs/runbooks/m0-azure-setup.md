@@ -1,12 +1,23 @@
 # M0 — 建立 Azure 資源並完成部署驗證 / Creating the Azure resources and finishing the deployment check
 
-> **狀態 / Status**: 待執行 / Not yet run
+> **狀態 / Status**: 已執行完成，2026-08-28 / Run to completion, 2026-08-28
 > **前置 / Prerequisite**: 一個 Azure 訂閱 / an Azure subscription
 > **預計時間 / Time**: 約 15 分鐘 / roughly 15 minutes
 
-這份文件是 M0 需要人工執行的那一半。程式碼、基礎設施定義與驗收腳本都已完成並在本機驗證過；缺的是一個真實的 Azure 訂閱，而登入需要互動式瀏覽器驗證，無法自動化。
+這份文件是 M0 需要人工執行的那一半。只有 `az login` 真的需要人——它走互動式瀏覽器驗證，無法自動化；其餘每一步都可以照抄執行。
 
-This runbook covers the half of M0 that a human has to run. The application, the infrastructure definition, and the acceptance script are written and verified locally; what is missing is a real Azure subscription, and signing in requires interactive browser authentication that cannot be automated.
+This runbook covers the half of M0 that a human has to run. Only `az login` genuinely needs a person — it uses interactive browser authentication and cannot be automated; every other step can be run as written.
+
+## 實測結果 / What actually happened
+
+2026-08-28 對真實訂閱執行的結果，逐項記錄，因為 M0 的價值就在這些答案：
+
+Recorded from the 2026-08-28 run against a real subscription, because these answers are the entire point of M0:
+
+- **Static Web Apps 確實會伺服器端算繪 hybrid Next.js。** 風險 1 沒有成真，備案（Container Apps）不需要動用。<br>**Static Web Apps really does server-render hybrid Next.js.** Risk 1 did not materialise; the Container Apps fallback was not needed.
+- **執行環境是 Node v22.23.1，region eastasia。** 微軟文件寫的 18.17.1 與現實不符，以實測為準。<br>**The runtime is Node v22.23.1 in eastasia.** Microsoft's documented 18.17.1 does not match reality; trust the measurement.
+- **Cosmos DB 免費層在此訂閱尚未被使用**，M1 的資料層可以照計畫進行。<br>**The Cosmos DB free tier is unused on this subscription**, so M1's data layer can proceed as planned.
+- **全新訂閱的 `Microsoft.Web` provider 預設未註冊**，未先註冊會讓步驟 3 直接失敗。已補進步驟 1。<br>**On a fresh subscription the `Microsoft.Web` provider is unregistered**, which makes step 3 fail outright. Now covered in step 1.
 
 ---
 
@@ -30,6 +41,15 @@ az account show --output table
 ```bash
 az account list --output table
 az account set --subscription "<訂閱名稱或 ID / subscription name or id>"
+```
+
+註冊 `Microsoft.Web` provider。全新訂閱預設不會註冊它，而 Static Web Apps 屬於這個 provider，漏掉這一步時步驟 3 會失敗。註冊需要一到兩分鐘，每個訂閱只需做一次：
+
+Register the `Microsoft.Web` provider. A fresh subscription does not have it registered, Static Web Apps lives under it, and skipping this makes step 3 fail. It takes a minute or two and is needed only once per subscription:
+
+```bash
+az provider register -n Microsoft.Web --wait
+az provider show -n Microsoft.Web --query registrationState -o tsv   # 應為 Registered / expect Registered
 ```
 
 ---
@@ -60,9 +80,9 @@ az deployment sub create \
   --parameters infra/main.bicepparam
 ```
 
-這會建立資源群組 `rg-traversee` 與一個 Free 方案的 Static Web App。Bicep 已在本機以 Bicep CLI 0.46.1 編譯驗證過，但**尚未對真實訂閱部署過** — 這一步就是驗證。
+這會建立資源群組 `rg-traversee` 與一個 Free 方案的 Static Web App。以 Bicep CLI 0.46.1 編譯，並已於 2026-08-28 對真實訂閱部署成功。
 
-This creates the resource group `rg-traversee` and a Free-plan Static Web App. The Bicep compiles cleanly under Bicep CLI 0.46.1, but **has never been deployed against a real subscription** — this step is that test.
+This creates the resource group `rg-traversee` and a Free-plan Static Web App. It compiles under Bicep CLI 0.46.1 and deployed successfully against a real subscription on 2026-08-28.
 
 取得網址 / Get the URL:
 
@@ -75,16 +95,17 @@ az deployment sub show --name traversee-m0 --query properties.outputs.siteUrl.va
 ## 4. 把部署權杖存進 GitHub / Store the deployment token in GitHub
 
 ```bash
-TOKEN=$(az staticwebapp secrets list \
+az staticwebapp secrets list \
   --name traversee \
-  --query "properties.apiKey" -o tsv)
-
-gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN --body "$TOKEN"
+  --resource-group rg-traversee \
+  --query "properties.apiKey" -o tsv \
+  | tr -d '\n' \
+  | gh secret set AZURE_STATIC_WEB_APPS_API_TOKEN
 ```
 
-這個權杖等同於部署權限，**絕對不要貼進 commit、issue 或 PR**。上面的寫法讓它只存在於環境變數中，不會進入 shell history 的參數列。
+這個權杖等同於部署權限，**絕對不要貼進 commit、issue 或 PR**。用管線傳遞是刻意的：`gh secret set --body "$TOKEN"` 會把權杖放進命令參數，而參數在同一台機器上是所有使用者都能從行程列表讀到的。
 
-This token is equivalent to deploy permission. **Never paste it into a commit, issue, or pull request.** The form above keeps it in an environment variable rather than in a command argument that lands in shell history.
+This token is equivalent to deploy permission. **Never paste it into a commit, issue, or pull request.** Piping it is deliberate: `gh secret set --body "$TOKEN"` puts the token in a command argument, and arguments are readable from the process list by any user on the machine.
 
 設定完成後，`Deploy` workflow 的 guard job 會自動偵測到權杖存在並開始實際部署；在此之前它會顯示 skipped 而非失敗。
 
@@ -94,14 +115,22 @@ Once set, the `Deploy` workflow's guard job detects the token and starts deployi
 
 ## 5. 驗收 / Acceptance
 
-重新觸發部署（推一個 commit，或手動執行 workflow），然後確認：
+權杖是在 workflow 執行當下才讀取的，所以重跑一次既有的執行就會生效，不必為了觸發部署而製造一個空 commit。`deploy.yml` 沒有 `workflow_dispatch`，因此無法從 GitHub 網頁手動執行：
 
-Re-trigger the deployment (push a commit, or run the workflow manually), then confirm:
+The token is read at run time, so re-running an existing run picks it up — no empty commit is needed just to trigger a deployment. `deploy.yml` has no `workflow_dispatch`, so it cannot be started by hand from the GitHub web UI:
 
-- [ ] `Deploy` workflow 綠燈，且 **Verify server-side rendering** 這一步通過。<br>The `Deploy` workflow is green and its **Verify server-side rendering** step passes.
-- [ ] 開啟網址，重新整理數次，頁面上的 `Rendered at` 每次都不同。<br>Open the site, reload a few times, and `Rendered at` changes every time.
-- [ ] 記下頁面顯示的 `Node` 版本與 `Region`。微軟文件說 hybrid runtime 用 Node 18.17.1，但實際建置紀錄顯示 22 — 這一欄會告訴我們真相。<br>Note the `Node` version and `Region` shown. Microsoft's docs say the hybrid runtime uses Node 18.17.1 while real build logs show 22; this field settles it.
-- [ ] 開一個測試 PR，確認會產生預覽網址，且關閉 PR 後預覽環境被回收。<br>Open a throwaway PR, confirm a preview URL appears, and that closing the PR reclaims the environment.
+```bash
+gh run list --workflow=deploy.yml --limit 5
+gh run rerun <run-id>
+```
+
+然後確認 / Then confirm:
+
+- [x] `Deploy` workflow 綠燈，且 **Verify server-side rendering** 這一步通過。<br>The `Deploy` workflow is green and its **Verify server-side rendering** step passes.
+- [x] 開啟網址，重新整理數次，頁面上的 `Rendered at` 每次都不同。<br>Open the site, reload a few times, and `Rendered at` changes every time.
+- [x] 記下頁面顯示的 `Node` 版本與 `Region`。實測為 **Node v22.23.1 / eastasia**，與微軟文件寫的 18.17.1 不符——以實測為準。<br>Note the `Node` version and `Region` shown. Measured **Node v22.23.1 / eastasia**, which contradicts Microsoft's documented 18.17.1 — trust the measurement.
+- [x] 確認 PR 會產生預覽網址。這個 PR 自己就是證明，預覽環境 `3` 已 Ready 並通過 SSR 驗證。<br>Confirm a pull request gets a preview URL. This pull request is itself the proof: preview environment `3` came up Ready and passed the SSR check.
+- [ ] 確認關閉 PR 後預覽環境被回收。要等這個 PR 合併、`close-preview` job 實際跑過才能勾。<br>Confirm closing a pull request reclaims the environment. Cannot be ticked until this PR merges and the `close-preview` job has actually run.
 
 也可以在本機直接驗收 / You can also run the check locally against the live site:
 
