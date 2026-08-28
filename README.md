@@ -1,8 +1,8 @@
 # Traversee
 
-> A community-driven cycling & hiking route hub for Northern Taiwan.
+> A community-driven outdoor destination hub for Northern Taiwan.
 
-Discover, share, and plan bike rides and hikes across Taipei, New Taipei, and Keelung. Traversee starts with routes sourced from OpenStreetMap and grows through routes shared by the community.
+Find somewhere to go outdoors across Taipei, New Taipei, and Keelung — trails, rides, campsites, surf breaks, waterfalls, and more. Traversee starts with places sourced from OpenStreetMap and grows through what the community shares.
 
 ## Status
 
@@ -14,13 +14,18 @@ Full rationale, data model, and testing strategy:
 ## Planned features (v1)
 
 - Bilingual site (Traditional Chinese and English) from day one
-- Route library with filtering by activity type, difficulty, and length
-- Interactive map view — all routes on one map
-- Route detail pages with GPX tracks, elevation profile, notes, and photos
+- A library of outdoor places, filterable by activity and difficulty
+- Interactive map view — routes as lines, spots as pins, all on one map
+- Detail pages with GPX tracks and elevation profiles for routes, and activity-specific
+  details for spots (facilities at a campsite, break type at a surf spot, and so on)
 - Google sign-in (no self-managed passwords)
-- Community-submitted routes, published only after moderator approval
+- Community submissions, published only after moderator approval
 
-Comments, ratings, saved collections, and coverage beyond Taipei / New Taipei /
+The data model supports arbitrarily many activity types; how many launch in v1 is
+bounded by how fast one person can curate content, not by the architecture.
+
+Live conditions (tides, surf reports, weather, campsite availability), booking,
+comments, ratings, saved collections, and coverage beyond Taipei / New Taipei /
 Keelung are explicitly out of scope for v1.
 
 ## Tech stack

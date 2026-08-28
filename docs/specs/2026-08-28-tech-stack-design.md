@@ -20,9 +20,13 @@ This document records the technology choices and architecture for Traversee v1, 
 
 ### 產品前提 / Product context
 
-Traversee 是北北基（台北市、新北市、基隆市）的單車與健行路線知識庫。內容有兩個來源：從 OpenStreetMap 匯入並經人工挑選的種子路線，以及註冊使用者上傳的路線。
+Traversee 是北北基（台北市、新北市、基隆市）的**戶外活動地點知識庫**：健行、單車、露營、衝浪、瀑布，並可持續擴充。內容有兩個來源：從 OpenStreetMap 匯入並經人工挑選的種子資料，以及註冊使用者上傳的內容。
 
-Traversee is a cycling and hiking route knowledge base for northern Taiwan (Taipei, New Taipei, Keelung). Content comes from two sources: seed routes imported from OpenStreetMap and manually curated, plus routes submitted by registered users.
+Traversee is an **outdoor destination knowledge base** for northern Taiwan (Taipei, New Taipei, Keelung): hiking, cycling, camping, surfing, waterfalls, and more over time. Content comes from two sources: seed entries imported from OpenStreetMap and manually curated, plus entries submitted by registered users.
+
+**關於名稱 / On the name** — Traversee 源自 traverse（橫越），字面上偏向路線。保留此名是經過考慮的決定：抵達一個戶外地點——溯溪到瀑布、揹裝備進營地、走下岩岸找到浪點——本身就是一段需要付出的過程，「橫越」描述的是這個過程，不只是一條線。此決定記錄於此，以免日後被誤認為疏漏。
+
+Traversee derives from *traverse*, which reads as route-oriented. Keeping it is a considered decision rather than an oversight: reaching an outdoor place — walking a river up to a waterfall, carrying gear into a campsite, scrambling down a rocky shore to a break — is itself an effort, and *traverse* describes that effort rather than merely a line on a map. Recorded here so it is not later mistaken for something nobody noticed.
 
 ### 本次新確認的產品決定 / Product decisions confirmed in this round
 
@@ -30,8 +34,9 @@ Traversee is a cycling and hiking route knowledge base for northern Taiwan (Taip
 |---|---|
 | 雙語 / Bilingual | v1 即支援繁體中文與英文，網址分流 `/zh` `/en`。<br>Traditional Chinese and English from v1, with `/zh` and `/en` URL routing. |
 | 登入方式 / Authentication | 僅支援 Google 登入，不自建密碼系統。<br>Google sign-in only; no self-managed password system. |
-| 審核後台 / Moderation console | 納入 v1。使用者上傳的路線需審核通過才會公開。<br>In scope for v1. User submissions require approval before going public. |
-| 難度分級 / Difficulty scale | 1–5 級，單車與健行各一套定義（見附錄 A）。<br>Five levels, with separate definitions for cycling and hiking (see Appendix A). |
+| 審核後台 / Moderation console | 納入 v1。使用者上傳的內容需審核通過才會公開。<br>In scope for v1. User submissions require approval before going public. |
+| 活動範圍 / Activity scope | 資料模型自始支援任意多種戶外活動；v1 實際上線的類型數量另行決定，受限於內容整理量而非技術。<br>The data model supports arbitrarily many outdoor activities from the outset; how many actually launch in v1 is a separate decision, bounded by curation effort rather than by the architecture. |
+| 難度分級 / Difficulty scale | 1–5 級，每種活動各自一套定義，量表之間不互相比較（見附錄 A）。<br>Five levels, defined separately per activity, with no comparison across scales (see Appendix A). |
 | 預估時間 / Duration estimate | 以區間呈現，並記錄估算依據。<br>Presented as a range, with the basis of the estimate recorded. |
 
 ### 技術限制 / Technical constraints
@@ -97,7 +102,7 @@ Exact package versions will be pinned to the then-current stable releases at imp
   │ Cosmos DB │ │   Blob    │ │Azure Maps │ │   Google   │ │ Application │
   │  NoSQL    │ │  Storage  │ │   Gen2    │ │   OAuth    │ │  Insights   │
   ├───────────┤ ├───────────┤ ├───────────┤ ├────────────┤ ├─────────────┤
-  │ routes    │ │ pending/  │ │ 向量圖磚   │ │ 身分驗證    │ │ 錯誤與效能   │
+  │ places    │ │ pending/  │ │ 向量圖磚   │ │ 身分驗證    │ │ 錯誤與效能   │
   │ users     │ │ public/   │ │ tiles     │ │ identity   │ │ telemetry   │
   ├───────────┤ ├───────────┤ ├───────────┤ ├────────────┤ ├─────────────┤
   │ 永久免費   │ │ ~$0.05/mo │ │ 永久免費   │ │   免費      │ │  5 GB/mo    │
@@ -191,9 +196,9 @@ Raw OpenStreetMap path data is of uneven quality: many segments are unnamed, geo
 
 Instead: a one-off extraction of northern Taiwan's trails and cycleways via the Overpass API, programmatically cleaned into a candidate list, then manually curated and edited by the product owner before import. Content quality thus stays in our hands.
 
-所有 OSM 來源路線標註 `© OpenStreetMap contributors`。這是 ODbL 授權的法定要求。
+所有 OSM 來源項目標註 `© OpenStreetMap contributors`。這是 ODbL 授權的法定要求。
 
-All OSM-derived routes carry the attribution `© OpenStreetMap contributors`. This is a legal requirement of the ODbL licence.
+All OSM-derived entries carry the attribution `© OpenStreetMap contributors`. This is a legal requirement of the ODbL licence.
 
 ---
 
@@ -203,43 +208,71 @@ All OSM-derived routes carry the attribution `© OpenStreetMap contributors`. Th
 
 The database uses shared throughput, with 1,000 RU/s shared across two containers.
 
-### 5.1 `routes` container
+### 5.1 `places` container
 
 **分割索引鍵 / Partition key**: `/city`
 
-北北基共三個值，資料量分布均衡，每個邏輯分割區都遠低於 20 GB 上限；且「僅檢視特定縣市路線」是最可能新增的篩選條件。
+北北基共三個值，資料量分布均衡，每個邏輯分割區都遠低於 20 GB 上限；且「僅檢視特定縣市」是最可能新增的篩選條件。
 
 Three values covering the whole geographic scope, evenly distributed, each logical partition far below the 20 GB limit; filtering to a single city is also the most likely filter to be added.
 
 ```jsonc
 {
   "id": "a3f2c1e8-…",
-  "slug": "lengshuikeng-loop",        // 網址代稱 / URL slug — /zh/routes/lengshuikeng-loop
+  "slug": "lengshuikeng-loop",        // 網址代稱 / URL slug — /zh/places/lengshuikeng-loop
   "city": "taipei",                   // taipei | newTaipei | keelung  ← 分割索引鍵 / partition key
-  "activityType": "hiking",           // hiking | cycling
   "status": "published",              // pending | published | rejected
+
+  // ── 結構與活動，刻意分開 / Structure and activity, deliberately separate ──
+  "kind": "route",                    // route（一條路徑）| spot（一個地點）
+                                      // route (a path you traverse) | spot (a place you go to)
+  "activities": ["hiking"],           // hiking | cycling | camping | surfing | waterfall | …
+                                      // 一個地點可同時屬於多種活動 / one place may serve several
 
   // ── 雙語文字 / Bilingual text ──
   "name":        { "zh": "冷水坑環走",   "en": "Lengshuikeng Loop" },
   "summary":     { "zh": "…",          "en": "…" },   // 列表卡片 / list card
   "description": { "zh": "…",          "en": "…" },   // 詳情頁 / detail page
 
-  // ── 數據 / Metrics ──
-  "difficulty": 3,                    // 1–5，依 activityType 解讀 / interpreted per activityType
-  "distanceKm": 6.4,
-  "elevationGainM": 320,
-  "duration": {
-    "minMinutes": 120,
-    "maxMinutes": 180,
-    "basis": "gpx"                    // gpx | submitter | editor
-  },
+  // ── 難度：每個活動各自一級，量表不互通 / one level per activity; the scales are not comparable ──
+  "difficulty": { "hiking": 3 },      // 1–5，依活動解讀 / interpreted per activity
 
   // ── 地理資料 / Geospatial ──
+  // kind=route → LineString；kind=spot → Point
   "geometry":   { "type": "LineString", "coordinates": [[121.55, 25.16], "…"] },  // 簡化版 / simplified
-  "startPoint": { "type": "Point",      "coordinates": [121.55, 25.16] },
+  "startPoint": { "type": "Point",      "coordinates": [121.55, 25.16] },  // route 起點 / spot 本身
 
-  // ── 大檔案指標 / Pointers to large files ──
-  "gpxPath": "gpx/a3f2c1e8.gpx",
+  // ── 路徑數據，kind=spot 時為 null / route metrics, null for spots ──
+  "route": {
+    "distanceKm": 6.4,
+    "elevationGainM": 320,
+    "duration": { "minMinutes": 120, "maxMinutes": 180, "basis": "gpx" },  // gpx | submitter | editor
+    "gpxPath": "gpx/a3f2c1e8.gpx"
+  },
+
+  // ── 接近路線：需要走一段才會到的地點（瀑布、祕境海灘）/ approach for spots you must walk in to ──
+  // 無此需求時為 null（例如可開車直達的營地）/ null when you can drive to the door
+  "approach": {
+    "distanceKm": 1.8,
+    "elevationGainM": 120,
+    "duration": { "minMinutes": 40, "maxMinutes": 60, "basis": "editor" },
+    "gpxPath": null,
+    "geometry": { "type": "LineString", "coordinates": ["…"] }
+  },
+
+  // ── 活動專屬屬性 / Activity-specific attributes ──
+  // 鍵必須出現在 activities 中 / keys must appear in activities
+  "attributes": {
+    "camping": { "water": true, "electricity": false, "toilets": "flush",
+                 "driveIn": true, "reservation": "required", "pitchCount": 30,
+                 "priceTwdPerNight": 800 },
+    "surfing": { "breakType": "beach", "bottom": "sand", "swellDirection": ["NE", "E"],
+                 "bestTide": "mid", "season": ["oct", "nov", "dec"],
+                 "hazards": ["ripCurrent"] },
+    "waterfall": { "heightM": 22, "swimmable": true, "seasonality": "yearRound" }
+  },
+
+  // ── 照片 / Photos ──
   "photos": [
     { "path": "photos/a3f2c1e8/1.webp", "width": 1600, "height": 1067,
       "caption": { "zh": "…", "en": "…" } }
@@ -258,7 +291,35 @@ Three values covering the whole geographic scope, evenly distributed, each logic
 }
 ```
 
-#### 三個關鍵設計決定 / Three key design decisions
+#### 關鍵設計決定 / Key design decisions
+
+**〇、「結構」與「活動」是兩個獨立的維度，不能壓成同一個欄位。**
+這是整份資料模型最重要的一個決定。直覺的做法是把 `activityType` 從兩個值擴充成八個值就好，但那會撞上兩件真實世界的事實。第一，同一個地點可以同時支援多種活動——一片海灘可能既是衝浪點也是營地；第二，活動類型無法決定資料形狀：健行與單車是「一條線」，露營與衝浪是「一個點」，而瀑布是「一個點，外加一段要走進去的路」。
+
+因此 `kind` 只描述形狀（`route` 或 `spot`），`activities` 是一個陣列描述能做什麼，兩者正交。路徑專屬的數據收在 `route` 物件裡，`kind=spot` 時為 `null`；而「開車到不了、要走一段」則由 `approach` 表達，讓瀑布這種混合型態不需要新的 `kind`。
+
+**0. Structure and activity are independent dimensions and must not be collapsed into one field.**
+This is the single most important decision in the data model. The intuitive move is to widen `activityType` from two values to eight, but that collides with two facts about the real world. First, one place can support several activities — a beach may be both a surf break and a campsite. Second, the activity does not determine the shape of the data: hiking and cycling are *a line*, camping and surfing are *a point*, and a waterfall is *a point with a walk-in attached*.
+
+So `kind` describes shape only (`route` or `spot`), `activities` is an array describing what you can do there, and the two are orthogonal. Path metrics live in the `route` object, which is `null` for spots, while "you have to walk in" is expressed by `approach` — so a waterfall needs no third `kind`.
+
+**〇之二、難度是一個以活動為鍵的物件，不是單一數字。**
+健行難度由距離與爬升定義，衝浪難度由浪高與水流定義，露營的「難度」實際上是「車能不能開到」。把它們塞進同一個 1–5 整數，等於宣稱這些量表可以互相比較，而它們不能。以活動為鍵之後，一個同時可衝浪與露營的海灘可以誠實地標成 `{"surfing": 4, "camping": 1}`。
+
+**0b. Difficulty is an object keyed by activity, not a single number.**
+Hiking difficulty is defined by distance and climb, surfing difficulty by wave size and current, and a campsite's "difficulty" is really whether you can drive to it. Forcing them into one 1–5 integer asserts that those scales are comparable, and they are not. Keyed by activity, a beach that is both a surf break and a campsite can honestly read `{"surfing": 4, "camping": 1}`.
+
+**〇之三、活動專屬欄位收在 `attributes` 之下，而非攤平在文件根層。**
+若把 `swellDirection`、`pitchCount`、`heightM` 全部攤平，文件根層會變成一張又寬又稀疏的表：每份文件都帶著十幾個與它無關的 `null`。收進 `attributes` 之後，一份文件只攜帶它真正有的屬性，而且新增活動類型不需要更動既有文件——這正是 Cosmos DB 無固定綱要的價值所在。
+
+**0c. Activity-specific fields live under `attributes` rather than flattened onto the document root.**
+Flattening `swellDirection`, `pitchCount`, and `heightM` onto the root would make it a wide, sparse table where every document carries a dozen `null`s that do not apply to it. Nested, a document carries only the attributes it actually has, and adding an activity type touches no existing document — precisely the value of Cosmos DB being schemaless.
+
+**〇之四、所有類型共用一個 container，不依活動拆分。**
+兩個理由。其一，免費層的 1,000 RU/s 是整個資料庫共用的，拆成八個 container 不會拿到更多輸送量，只會讓每次跨類型查詢變成八次查詢。其二，最常見的查詢正是跨類型的：地圖總覽要一次顯示這個區域裡的所有東西。依活動拆分會讓最常見的操作變成最貴的操作。
+
+**0d. All types share one container rather than being split by activity.**
+Two reasons. The free tier's 1,000 RU/s is shared across the whole database, so splitting into eight containers buys no extra throughput and turns every cross-type query into eight queries. And the most common query *is* cross-type: the overview map shows everything in an area at once. Splitting by activity would make the most frequent operation the most expensive one.
 
 **一、雙語以「單一文件內的雙欄位」表示，而非兩份文件。**
 一條路線的距離、爬升、GPX、照片在中英文版本完全相同，僅文字不同。若拆成兩份文件，修正一次距離就必須同步兩處，長期必然不一致。此設計另有一個好處：若某條路線僅有中文描述，英文版可自動退回顯示中文並標示「尚未翻譯」，而不是讓該路線在英文版整條消失。
@@ -331,22 +392,22 @@ Administrator status is determined by an email allowlist held in an environment 
 
 規則 / Rules:
 
-- 僅 `published` 的路線會出現在公開頁面與地圖。<br>Only `published` routes appear on public pages and the map.
-- `pending` 與 `rejected` 僅該路線的上傳者與管理員可見。<br>`pending` and `rejected` routes are visible only to their submitter and to administrators.
+- 僅 `published` 的項目會出現在公開頁面與地圖。<br>Only `published` entries appear on public pages and the map.
+- `pending` 與 `rejected` 僅該項目的投稿者與管理員可見。<br>`pending` and `rejected` entries are visible only to their submitter and to administrators.
 - 退回必須填寫 `reviewNote`；此為系統強制，退回原因對上傳者可見。<br>Rejection requires a `reviewNote`; this is enforced, and the reason is visible to the submitter.
-- OSM 匯入的路線因已經人工挑選，直接進入 `published`。<br>OSM-imported routes are already manually curated and enter `published` directly.
+- OSM 匯入的項目因已經人工挑選，直接進入 `published`。<br>OSM-imported entries are already manually curated and enter `published` directly.
 
 ### 5.4 檔案儲存配置 / Blob storage layout
 
 ```
 pending/                              私有 / private
-  gpx/{routeId}.gpx
-  photos/{routeId}/{n}.webp
+  gpx/{placeId}.gpx
+  photos/{placeId}/{n}.webp
 
 public/                               公開唯讀 / public read-only
-  gpx/{routeId}.gpx
-  photos/{routeId}/{n}.webp
-  photos/{routeId}/{n}-thumb.webp
+  gpx/{placeId}.gpx
+  photos/{placeId}/{n}.webp
+  photos/{placeId}/{n}-thumb.webp
 ```
 
 審核通過時，檔案自 `pending` 伺服器端複製至 `public` 後刪除來源。同一儲存體帳戶內的複製為伺服器端操作，即時且不計輸出流量費用。
@@ -361,18 +422,26 @@ If all uploads landed in a public container, inappropriate content would have a 
 
 ## 6. 資料流 / Data flows
 
-### 6.1 訪客瀏覽路線 / Visitor browses routes
+### 6.1 訪客瀏覽地點 / Visitor browses places
 
 ```
-訪客開啟 /zh/routes
+訪客開啟 /zh/places（可依 activities 篩選）
   └─► Next.js 於伺服器端查詢 Cosmos：status = "published"
       投影僅取列表所需欄位（不含 description 與完整 geometry）
   └─► 伺服器產生完整 HTML 後送出
-  └─► 瀏覽器以 MapLibre 於 Azure Maps 底圖上繪製路線
-  └─► 點選路線 → /zh/routes/{slug}
-      └─► 查詢單一文件 + 自 Blob 讀取完整 GPX
-      └─► 繪製精確軌跡與海拔剖面圖
+  └─► 瀏覽器以 MapLibre 於 Azure Maps 底圖上繪製
+      · kind = route → 線段
+      · kind = spot  → 圖釘（依 activities 決定圖示）
+  └─► 點選 → /zh/places/{slug}
+      └─► 查詢單一文件
+      └─► kind = route 或有 approach → 自 Blob 讀取完整 GPX，
+           繪製精確軌跡與海拔剖面圖
+      └─► kind = spot → 顯示該活動的 attributes 表
 ```
+
+**篩選條件依活動而異 / Filters are activity-dependent** — 「距離」與「爬升」只對 `kind = route` 有意義，「浪向」只對衝浪有意義。前台的篩選介面因此隨已選活動改變，而不是提供一組適用於所有類型的通用篩選——後者會產出大量對多數項目無效的條件。
+
+Distance and elevation gain only mean anything for `kind = route`, and swell direction only for surfing. The filter UI therefore changes with the selected activity rather than offering one generic filter set, which would present conditions that do not apply to most entries.
 
 **為何採用伺服器端渲染 / Why server-side rendering** — 兩個理由。其一，搜尋引擎爬蟲能取得完整內容，這對一個希望被搜尋到的路線網站至關重要。其二，行動裝置首次載入即有內容，不會先呈現空白再逐步載入。
 
@@ -382,18 +451,30 @@ Two reasons. First, search engine crawlers receive complete content, which matte
 
 List data changes infrequently and will be cached for several minutes, so repeat visits never reach the database — directly conserving the free throughput grant.
 
-### 6.2 使用者上傳路線 / User submits a route
+### 6.2 使用者投稿 / User submits an entry
+
+投稿有兩條路徑，由第一個問題決定：這是一條路線，還是一個地點。GPX 因此從必要條件降為其中一條路徑的輸入。
+
+There are two submission paths, chosen by the first question asked: is this a route, or a place? GPX therefore drops from a precondition to the input of just one of them.
 
 ```
-登入後開啟 /zh/submit
-  └─► 選擇 GPX 檔 → 於瀏覽器端解析
-      · 即時顯示預覽地圖（確認檔案正確）
-      · 自動計算距離、爬升、移動時間並預填表單
-  └─► 填寫中英文名稱與描述、選擇難度、上傳照片
+登入後開啟 /zh/submit → 選擇 kind
+  │
+  ├─ route ─► 選擇 GPX 檔 → 於瀏覽器端解析
+  │            · 即時顯示預覽地圖（確認檔案正確）
+  │            · 自動計算距離、爬升、移動時間並預填表單
+  │
+  └─ spot  ─► 於地圖上標記位置（或輸入座標）
+               · 可選擇再加一段 approach GPX（瀑布、祕境海灘）
+               · 依所選 activities 顯示對應的屬性欄位
+  │
+  └─► 兩條路徑匯流：填寫中英文名稱與描述、勾選 activities、
+      為每個活動各選一個難度、上傳照片
   └─► 送出 → 伺服器端驗證
       · 檔案大小與 MIME 類型
       · XML 解析停用外部實體（防 XXE）
       · 座標是否落在北北基邊界框內
+      · attributes 的鍵必須都出現在 activities 中
       · 照片重新編碼為 WebP 並移除 EXIF
   └─► 寫入 pending/ 容器 → 寫入 Cosmos（status = pending）
   └─► 顯示「已送出，等待審核」
@@ -402,6 +483,10 @@ List data changes infrequently and will be cached for several minutes, so repeat
 **為何在瀏覽器端解析 GPX / Why parse GPX in the browser** — 使用者能立即看到預覽並確認上傳的是正確檔案，體驗遠優於送出後才知道錯誤；同時節省伺服器資源。伺服器端仍會重新驗證，前端解析純粹是體驗優化，不作為信任邊界。
 
 The user immediately sees a preview and confirms they uploaded the right file, which is far better than discovering an error after submission; it also conserves server resources. The server re-validates regardless — client-side parsing is a UX optimisation, never a trust boundary.
+
+**屬性表單由活動驅動 / The attribute form is driven by the selected activities** — 每種活動的屬性欄位定義集中在一份設定中，投稿表單、審核後台與詳情頁三處共用。新增一種活動因此是新增一筆設定，而不是在三個地方各改一次程式。
+
+The field definitions for each activity live in one configuration shared by the submission form, the moderation console, and the detail page. Adding an activity is therefore adding one entry, not editing code in three places.
 
 ### 6.3 管理員審核 / Administrator reviews
 
@@ -421,16 +506,23 @@ The user immediately sees a preview and confirms they uploaded the right file, w
 This flow is **not a site feature but a one-off offline task**.
 
 ```
-Overpass API 查詢北北基的 highway=path/footway/cycleway 等標籤
+Overpass API 查詢北北基，依 kind 分為兩組標籤：
+  · route → highway=path / footway / cycleway
+  · spot  → tourism=camp_site、waterway=waterfall、natural=beach …
   └─► 清洗腳本
-      · 濾除無名稱路段
-      · 合併斷裂的連續路段
-      · 計算距離與爬升（結合高程資料）
+      · 濾除無名稱項目
+      · route：合併斷裂的連續路段、計算距離與爬升（結合高程資料）
+      · spot ：取代表座標，映射 OSM 標籤到 attributes
+               （例如 drinking_water=yes → camping.water）
       · 產出候選 JSON
   └─► 產品負責人人工挑選與潤稿（中英文）
   └─► 匯入腳本寫入 Cosmos，status = published，
       source = "osm"，附 © OpenStreetMap contributors 標註
 ```
+
+**spot 類型的 OSM 資料品質差異更大 / OSM data for spots is even more uneven than for routes** — 步道至少有明確的幾何形狀，而營地與瀑布的標籤完整度落差極大：多數只有一個座標與名稱，設施標籤時有時無，且營地的營業狀態與費用經常過期。因此 spot 的候選清單只作為「值得去查證的地點列表」，屬性欄位一律以人工查證為準，不直接採信 OSM 標籤。
+
+Trails at least come with a definite geometry, whereas tagging for campsites and waterfalls varies enormously: most carry only a coordinate and a name, facility tags are hit-and-miss, and a campsite's operating status and pricing are frequently stale. The spot candidate list is therefore treated as *a list of places worth verifying*, with attribute values always established by hand rather than trusted from OSM tags.
 
 腳本存放於 repo 的 `scripts/` 目錄並納入版本控制，使匯入過程可重現、可稽核。
 
@@ -520,6 +612,11 @@ Only pure-function logic where an error would cause real harm:
 - 北北基邊界檢查 / regional bounds checking
 - 審核狀態轉換規則（哪些轉換合法）/ moderation state transition rules
 - 雙語欄位的語言退回邏輯 / bilingual fallback logic
+- 文件形狀的一致性規則：`kind = route` 必須有 `route` 與 LineString、`kind = spot` 必須有 Point 且 `route` 為 null、`attributes` 的每個鍵都必須出現在 `activities` 中、`difficulty` 的每個鍵亦然。<br>Document shape consistency: `kind = route` requires a `route` object and a LineString, `kind = spot` requires a Point with `route` null, every key in `attributes` must appear in `activities`, and the same for every key in `difficulty`.
+
+最後一項在資料模型擴充為多活動後，是最容易靜默出錯的地方：無固定綱要的資料庫不會阻止你寫入一份宣稱可以露營、卻沒有任何露營屬性的文件。
+
+That last one is the easiest thing to get silently wrong now that the model spans many activities: a schemaless database will not stop you writing a document that claims to allow camping and carries no camping attributes at all.
 
 ### 9.2 端對端測試 — Playwright / End-to-end tests
 
@@ -527,7 +624,7 @@ Only pure-function logic where an error would cause real harm:
 
 Only three critical paths:
 
-1. 訪客能看見已發布路線並開啟詳情頁。<br>A visitor can see published routes and open a detail page.
+1. 訪客能看見已發布項目並開啟詳情頁，route 與 spot 各一。<br>A visitor can see published entries and open a detail page, for one route and one spot.
 2. 未登入者無法存取上傳頁面與上傳 API。<br>An unauthenticated user cannot reach the submission page or API.
 3. **`pending` 與 `rejected` 狀態的路線不出現於任何公開頁面。**<br>**Routes in `pending` or `rejected` state appear on no public page.**
 
@@ -632,7 +729,9 @@ Explicitly excluded from v1, listed here to prevent scope creep:
 - 北北基以外的地理範圍 / Coverage beyond Taipei, New Taipei, and Keelung
 - 進階搜尋與篩選 / Advanced search and filtering
 - 留言、評分、按讚 / Comments, ratings, likes
-- 收藏與「我的路線」清單 / Saving routes and personal collections
+- 收藏與「我的地點」清單 / Saving places and personal collections
+- **即時性資料**：潮汐、浪況、天氣、營地空位。衝浪與露營都有現成的即時服務，重做一個既無優勢又會產生持續的維運與資料授權負擔。本站提供的是「這個地方是什麼樣子」，不是「現在情況如何」。<br>**Live data**: tides, surf conditions, weather, campsite availability. Dedicated services already do these well; duplicating them offers no advantage and creates a permanent operational and licensing burden. This site describes what a place *is*, not what it is doing right now.
+- **訂位與交易 / Booking and payments** — 營地只記錄「是否需要預約」與聯絡方式。<br>Campsites record only whether reservation is required, plus contact details.
 - 原生行動應用程式（v1 為響應式網頁）/ Native mobile apps (v1 is responsive web)
 - 完整管理後台：使用者管理、數據儀表板、批次操作 / A full admin console with user management, analytics dashboards, and bulk operations
 - 依體能程度分級的預估時間（資料模型已預留擴充空間）/ Fitness-level-specific duration estimates (the data model reserves room for these)
@@ -653,9 +752,21 @@ These do not block the start of implementation but must be settled before launch
 
 ## 附錄 A：難度分級表（初稿） / Appendix A: Difficulty scale (draft)
 
-此表為初稿，待產品負責人依北北基實際路線經驗校準。單車與健行的體感難度標準不同，因此分開定義。此表為前台顯示的內容文案，非資料庫結構，日後修改不影響既有資料。
+此表為初稿，待產品負責人依北北基實際經驗校準。**每種活動各有一套量表，彼此不可比較**——「衝浪 3 級」與「健行 3 級」之間沒有任何換算關係，前台不得將不同活動的難度並排比較或加總排序。此表為前台顯示的內容文案，非資料庫結構，日後修改不影響既有資料。
 
-This is a draft pending calibration by the product owner against real experience of the region's routes. Cycling and hiking difficulty are perceived differently and are therefore defined separately. This table is front-end content copy, not a database structure; revising it does not affect existing data.
+This is a draft pending calibration by the product owner against real experience of the region. **Each activity has its own scale and they are not comparable** — there is no conversion between "surfing 3" and "hiking 3", and the front end must never rank or compare difficulty across activities. This table is front-end content copy, not a database structure; revising it does not affect existing data.
+
+健行與單車兩套量表已有初稿；其餘活動尚未定義，標記如下，需在該活動實際上線前補齊。刻意不先寫一份猜測的版本——難度分級是使用者據以判斷自身安全的資訊，寫錯比留白更糟。
+
+Hiking and cycling have drafts below. The remaining activities are undefined and marked as such; each must be filled in before that activity launches. Guessed drafts are deliberately not supplied — difficulty is what a user relies on to judge their own safety, and a wrong scale is worse than a missing one.
+
+| 活動 / Activity | 量表狀態 / Scale status | 應以什麼定義 / What it should be based on |
+|---|---|---|
+| 健行 / Hiking | 初稿如下 / draft below | 距離、爬升、地形與所需裝備 / distance, climb, terrain, equipment |
+| 單車 / Cycling | 初稿如下 / draft below | 距離、累積爬升、是否與汽車共道 / distance, cumulative climb, shared traffic |
+| 露營 / Camping | **未定義 / undefined** | 主要是可及性：能否開車直達、需揹負多遠、有無水電衛浴 / chiefly access — drive-in versus carry-in distance, and available facilities |
+| 衝浪 / Surfing | **未定義 / undefined** | 浪高、底質（沙底較寬容、礁石不然）、水流與離岸流風險 / wave size, bottom (sand forgives, reef does not), current and rip risk |
+| 瀑布 / Waterfall | **未定義 / undefined** | 接近路線的難度，而非瀑布本身；是否需溯溪 / the difficulty of the approach rather than the fall itself, and whether river-tracing is required |
 
 ### 健行 / Hiking
 
