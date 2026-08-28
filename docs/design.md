@@ -93,8 +93,14 @@ strategy: [`docs/specs/2026-08-28-tech-stack-design.md`](specs/2026-08-28-tech-s
 | Styling / i18n | Tailwind CSS / next-intl |
 | IaC / CI/CD | Bicep / GitHub Actions |
 | Testing | Vitest (unit) + Playwright (E2E) |
+| Monitoring | Azure Application Insights, sampled with a daily ingestion cap |
 
-Steady-state cost after the $200 credit expires: under $0.10/month.
+Steady-state cost after the $200 credit expires: under $0.10/month. Every free grant this
+relies on was verified against Microsoft's documentation on 2026-08-28. Note the units:
+the Application Insights 5 GB/month grant is per *billing account* and the Static Web Apps
+100 GB/month bandwidth ceiling is per *subscription* — both are shared with anything else
+deployed under the same subscription, so the figure holds only while this is the sole
+project there.
 
 The decisive constraint was that Azure Database for PostgreSQL is free for 12 months only,
 not permanently — it would cost $15–25/month thereafter, several times the budget ceiling.

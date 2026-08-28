@@ -3,6 +3,7 @@
 > **狀態 / Status**: 待審核 / In review
 > **日期 / Date**: 2026-08-28
 > **決策者 / Decided by**: Yulia (Product) + Claude (Engineering)
+> **額度查證 / Grants verified**: 2026-08-28，對照 Microsoft Learn 與 Azure 定價頁 / against Microsoft Learn and the Azure pricing pages
 > **前置文件 / Supersedes**: [`docs/design.md`](../design.md) 的 "Open decisions" 一節 / the "Open decisions" section of `docs/design.md`
 
 ---
@@ -61,7 +62,7 @@ Azure's pricing pages mix **always-free** offerings (a monthly grant that never 
 | 代管 / Hosting | Azure Static Web Apps — Free 方案 / Free plan | 永久免費 / Always free | App Service F1, Container Apps |
 | 資料庫 / Database | Azure Cosmos DB for NoSQL — 免費層 / free tier | 永久免費（1,000 RU/s + 25 GB）/ Always free | Azure PostgreSQL, 外部 Postgres / external Postgres |
 | 檔案儲存 / File storage | Azure Blob Storage | 依用量計費，約 $0.05/月 / Pay-as-you-go, ~$0.05/mo | 資料庫內嵌 / storing blobs in the DB |
-| 身分驗證 / Authentication | Auth.js + Google OAuth，跑在 Next.js 內 / running inside Next.js | 免費 / Free | Static Web Apps 內建驗證 / built-in auth, Auth0, Entra ID B2C |
+| 身分驗證 / Authentication | Auth.js + Google OAuth，跑在 Next.js 內 / running inside Next.js | 免費 / Free | Static Web Apps 內建驗證 / built-in auth, Clerk, Auth0, Entra ID B2C |
 | 地圖底圖 / Map tiles | Azure Maps **Gen2** | 永久免費額度 5,000 交易/月 / Always-free grant, 5,000 transactions/mo | Azure Maps Gen1（2026-09-15 退役 / retiring）, OSM raster tiles |
 | 地圖繪製 / Map rendering | MapLibre GL JS | 開源 / Open source | Leaflet, Mapbox GL JS |
 | 樣式 / Styling | Tailwind CSS | 開源 / Open source | CSS Modules, styled-components |
@@ -165,6 +166,20 @@ The Static Web Apps Free plan preconfigures only GitHub and Microsoft Entra ID a
 因此我們不使用平台內建驗證，改在 Next.js 應用程式內以 Auth.js 直接串接 Google OAuth。此方案執行於 Free 方案所提供的受管後端中，功能完整且成本為零。
 
 We therefore bypass the platform's built-in authentication and integrate Google OAuth directly via Auth.js inside the Next.js application. This runs in the managed backend that the Free plan provides, is fully featured, and costs nothing.
+
+**為什麼也不用 Clerk 或 Auth0 / Why not Clerk or Auth0 either**
+
+必須說清楚：**這兩者都不是輸在成本。** Clerk 的免費方案涵蓋每月 50,000 名保留使用者（2026-02 由 10,000 調升），Auth0 的免費方案亦遠超本專案可預見的規模。照本專案的流量，兩者實際帳單都會是 $0。
+
+To be explicit: **neither loses on cost.** Clerk's free plan covers 50,000 monthly retained users (raised from 10,000 in February 2026) and Auth0's free plan likewise far exceeds any scale this project can foresee. At our traffic both would genuinely bill $0.
+
+它們落選的理由是**使用者資料的真實來源會被切成兩份**。本專案的 `users` container 已經是使用者記錄的權威來源，存放 `role`、`preferredLocale` 等應用程式自有欄位（見 5.2）。若引入託管式身分服務，身分資料在對方平台、應用程式資料在 Cosmos，兩邊須靠 webhook 或每次請求同步維持一致——這是為了 v1 用不到的能力（多因素驗證、組織與成員管理、使用者管理後台）而引入一整類分散式一致性問題。
+
+They were rejected because they **split the source of truth for user data in two**. The `users` container is already the authoritative record, holding application-owned fields such as `role` and `preferredLocale` (see 5.2). Introducing a hosted identity service puts identity on their platform and application data in Cosmos, requiring webhooks or per-request synchronisation to keep the two consistent — a whole class of distributed-consistency problems taken on in exchange for capabilities v1 does not need: MFA, organisations and membership, and a user-management console.
+
+本專案只需要單一提供者（Google）與一份以環境變數維護的管理員 email 允許清單。Auth.js 是執行於應用程式行程內的函式庫，沒有第三方相依、沒有按使用者計價的模型，也沒有需要對帳的第二份使用者資料。
+
+This project needs exactly one provider (Google) and an admin email allowlist held in an environment variable. Auth.js is a library running inside the application process: no third-party dependency, no per-user pricing model, and no second copy of user data to reconcile.
 
 ### 4.4 為什麼種子資料是一次性匯入，而非即時查詢 OpenStreetMap / Why OSM data is imported once rather than queried live
 
@@ -468,6 +483,10 @@ Application Insights 收集未處理的例外、API 回應時間與失敗率。�
 
 Application Insights captures unhandled exceptions, API response times, and failure rates. Sampling is enabled to stay within the 5 GB monthly free grant. An Azure budget alert will notify when projected monthly spend exceeds USD $3.
 
+**5 GB 額度的計算單位是「每個帳單帳戶」，不是每個資源。** 該額度由此訂閱下所有 Log Analytics 工作區共用，因此日後新增任何服務的遙測都會分食同一份額度。除採樣外，另設定每日擷取上限（daily cap），使額度即使被其他資源消耗，也不會轉為非預期費用。
+
+**The 5 GB grant is per billing account, not per resource.** It is shared across every Log Analytics workspace under the subscription, so telemetry from any service added later draws on the same allowance. Beyond sampling, a daily ingestion cap is configured so that exhausting the grant cannot silently turn into unexpected charges.
+
 ---
 
 ## 8. 安全與隱私 / Security and privacy
@@ -575,19 +594,32 @@ $200 額度自建立起 30 天內到期，將用於試用付費服務（例如�
 
 The $200 credit expires 30 days after account creation and will be used to trial paid services — for instance, to characterise real Azure Maps usage — not to underpin the long-term architecture.
 
+### 免費額度的計算單位 / What the free grants are actually measured in
+
+上表的每一項額度，其計算單位都與直覺不同，逐項釐清如下。誤讀單位會讓「還有多少餘裕」的判斷差上一個數量級。
+
+Each grant above is measured in a unit that differs from the intuitive reading. Misreading the unit puts any estimate of remaining headroom off by an order of magnitude.
+
+| 額度 / Grant | 實際單位 / Actual unit |
+|---|---|
+| Azure Maps 5,000 交易 / transactions | 底圖圖磚以**每 15 次圖磚請求計為 1 次交易**，故 5,000 交易約等於每月 75,000 次圖磚請求。<br>Base map tiles are billed at **one transaction per 15 tile requests**, so the grant is roughly 75,000 tile requests per month. |
+| Application Insights 5 GB | **每個帳單帳戶**，非每個資源；由訂閱下所有工作區共用。<br>Per **billing account**, not per resource; shared across every workspace in the subscription. |
+| Static Web Apps 100 GB | **每個訂閱**，非每個應用程式；最多 10 個應用程式共用同一份頻寬。<br>Per **subscription**, not per app; shared across up to 10 apps. |
+| Cosmos DB 1,000 RU/s + 25 GB | 每個訂閱僅一個帳戶可享，且僅能於建立帳戶時選擇。<br>One account per subscription, selectable only at account creation. |
+
 ---
 
 ## 12. 風險與緩解 / Risks and mitigations
 
 | # | 風險 / Risk | 緩解 / Mitigation |
 |---|---|---|
-| 1 | Static Web Apps 對 Next.js 混合渲染的支援仍標示為預覽（preview）階段。<br>Static Web Apps' hybrid Next.js support is still labelled preview. | 若遭遇阻斷性缺陷，改部署至 Azure Container Apps；架構其餘部分（資料庫、儲存、驗證、地圖）完全不受影響，遷移成本限於部署層。<br>If a blocking defect appears, redeploy to Azure Container Apps; the rest of the architecture is unaffected and migration is confined to the deployment layer. |
-| 2 | Free 方案超過每月 100 GB 流量時**直接停止服務**，無超額計費機制。<br>The Free plan **stops serving** past 100 GB monthly bandwidth; there is no overage billing. | 圖片壓縮為 WebP 並產生縮圖；設定 Azure 預算與流量警示。以預期流量而言此上限極難觸及，但不得自此託管大量高解析媒體。<br>Compress images to WebP with thumbnails; configure budget and bandwidth alerts. The ceiling is far out of reach at expected traffic, but no bulk high-resolution media may be hosted from it. |
+| 1 | Static Web Apps 對 Next.js 混合渲染的支援仍標示為預覽（preview）階段。預覽狀態同時**停用 SWA CLI 的本機模擬與部署**、`navigationFallback` 設定，以及 ISR 影像快取；且不支援以 Azure Functions 形式外掛的 API，後端邏輯一律須為 Next.js route handler。<br>Static Web Apps' hybrid Next.js support is still labelled preview. Preview status also **disables SWA CLI local emulation and deployment**, `navigationFallback`, and ISR image caching; linked Azure Functions APIs are unsupported, so all backend logic must be Next.js route handlers. | 里程碑 0 以最小可行部署先行驗證此路徑是否可用（見實作計畫）。本機開發改用 `next dev`，不依賴 SWA CLI。若遭遇阻斷性缺陷，改部署至 Azure Container Apps；架構其餘部分（資料庫、儲存、驗證、地圖）完全不受影響，遷移成本限於部署層。<br>Milestone 0 validates this path with a minimal deployment before anything is built on it (see the implementation plan). Local development uses `next dev` rather than the SWA CLI. If a blocking defect appears, redeploy to Azure Container Apps; the rest of the architecture is unaffected and migration is confined to the deployment layer. |
+| 2 | Free 方案超過每月 100 GB 流量時**直接停止服務**，無超額計費機制。此上限的單位是**每個訂閱**，非每個應用程式，最多 10 個應用程式共用。<br>The Free plan **stops serving** past 100 GB monthly bandwidth; there is no overage billing. The ceiling is per **subscription**, not per app, and is shared across up to 10 apps. | 圖片壓縮為 WebP 並產生縮圖；設定 Azure 預算與流量警示。以預期流量而言此上限極難觸及，但不得自此託管大量高解析媒體，亦不得在同一訂閱下堆疊其他高流量應用程式。<br>Compress images to WebP with thumbnails; configure budget and bandwidth alerts. The ceiling is far out of reach at expected traffic, but no bulk high-resolution media may be hosted from it, and no other high-traffic app may be stacked on the same subscription. |
 | 3 | Cosmos DB 免費層每個訂閱僅能啟用一次，且**只能於帳戶建立時選擇**，事後無法補加。<br>The Cosmos DB free tier is once per subscription and **can only be selected at account creation**; it cannot be applied retroactively. | 建立帳戶前確認該訂閱尚未使用免費層，並於 Bicep 中明確設定 `enableFreeTier`。不得使用 serverless 模式（與免費層互斥）。<br>Verify the subscription has not consumed it, and set `enableFreeTier` explicitly in Bicep. Serverless mode must not be used, as it is incompatible with the free tier. |
-| 4 | Azure Maps Gen1 價格層於 **2026-09-15** 退役。<br>The Azure Maps Gen1 price tier retires on **2026-09-15**. | 帳戶建立時直接指定 Gen2，不經由 Gen1 建立後升級。<br>Create the account as Gen2 directly rather than creating Gen1 and upgrading. |
+| 4 | ~~Azure Maps Gen1 價格層退役~~ — **經查證後判定不構成風險。** Gen1 於 2026-09-15 退役，但既有 Gen1 帳戶當日會**自動升級**為 Gen2 而非停用，且變更價格層不需重新產生 subscription key、client ID 或 SAS token。本專案自始採用 Gen2，此事與我方無關，亦不構成任何時程壓力。<br>~~Azure Maps Gen1 retirement~~ — **verified as not a risk.** Gen1 retires on 2026-09-15, but existing Gen1 accounts are **auto-upgraded** to Gen2 on that date rather than disabled, and changing price tier requires no regeneration of subscription keys, client IDs, or SAS tokens. This project uses Gen2 from the outset, so the retirement does not apply to us and imposes no deadline. | 保留為建置檢查項目而非風險：建立 Azure Maps 帳戶時於 Bicep 明確指定 Gen2，使免費額度為已知的 5,000 交易/月。<br>Retained as a build checklist item rather than a risk: set Gen2 explicitly in Bicep when creating the Azure Maps account, so the free grant is the known 5,000 transactions/month. |
 | 5 | OSM 原始資料品質不一，直接匯入會嚴重拉低內容品質。<br>Raw OSM data quality is uneven; direct import would badly degrade content quality. | 匯入前經程式清洗與人工挑選（見 6.4）。<br>Programmatic cleaning plus manual curation before import (see 6.4). |
 | 6 | 雙語內容使每條路線的文案工作量加倍，可能拖慢上線。<br>Bilingual content doubles the copywriting effort per route and may delay launch. | 允許單語路線存在，前台以語言退回機制顯示並標示「尚未翻譯」，不阻斷發布。<br>Single-language routes are permitted; the front end falls back with a "not yet translated" marker rather than blocking publication. |
-| 7 | Application Insights 每月 5 GB 免費額度的永久性未經完整查證。<br>The permanence of the Application Insights 5 GB monthly grant is not fully verified. | 實作時查證；預設開啟採樣並設定每日擷取上限，確保即使額度變更也不致產生非預期費用。<br>Verify at implementation; enable sampling and a daily ingestion cap by default so that any change to the grant cannot produce unexpected charges. |
+| 7 | Application Insights 每月 5 GB 免費額度**已查證為永久**，非限時優惠；但其單位是每個帳單帳戶，由訂閱下所有工作區共用。<br>The Application Insights 5 GB monthly grant is **verified as permanent**, not time-limited; but it is measured per billing account and shared across every workspace in the subscription. | 預設開啟採樣並設定每日擷取上限。日後於同一訂閱下新增任何服務時，須重新評估額度分配。<br>Enable sampling and a daily ingestion cap by default. Reassess the allocation whenever another service is added to the same subscription. |
 
 ---
 
