@@ -30,9 +30,6 @@ build/
 .next/
 out/
 
-# Generated docs site — rebuilt from docs/*.md by scripts/render-docs.mjs
-site/
-
 # Python
 __pycache__/
 *.py[cod]
