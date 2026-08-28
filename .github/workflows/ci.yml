@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Superseding an outdated check run is wasted work, so cancel in-flight runs for
+# the same ref. Safe here because this workflow only reads — the deploy workflow
+# is the one that must never be cancelled mid-flight.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Typecheck, lint, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Static Web Apps' hybrid runtime currently builds on Node 22. Matching
+          # it here means a version-specific failure surfaces in CI rather than
+          # for the first time during a deploy.
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      # Catches the failure M0 exists to detect, before we ever reach Azure: if
+      # these routes stop being server-rendered, the site still looks perfectly
+      # healthy while silently serving a frozen snapshot. Asserting on behaviour
+      # rather than on Next's console output keeps this from breaking every time
+      # the build summary is reformatted.
+      - name: Verify SSR against a local production server
+        run: |
+          npm start &
+          for _ in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3000/api/render-check && break
+            sleep 1
+          done
+          npm run verify:ssr

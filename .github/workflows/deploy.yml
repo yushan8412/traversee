@@ -1,0 +1,118 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+jobs:
+  # Until the Azure resources exist there is no deployment token, and without
+  # this gate every pull request would carry a red check for a step that was
+  # never going to run. Skipping with a notice is honest; failing is noise.
+  guard:
+    name: Check Azure is configured
+    runs-on: ubuntu-latest
+    outputs:
+      configured: ${{ steps.check.outputs.configured }}
+    steps:
+      - id: check
+        env:
+          TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AZURE_STATIC_WEB_APPS_API_TOKEN is not set, so deployment is skipped. Setup steps: docs/runbooks/m0-azure-setup.md"
+          fi
+
+  deploy:
+    name: Deploy to Static Web Apps
+    needs: guard
+    runs-on: ubuntu-latest
+    # Fork pull requests cannot read secrets, so the deploy would fail with a
+    # confusing auth error rather than an honest "not applicable".
+    if: >-
+      needs.guard.outputs.configured == 'true' &&
+      github.event.action != 'closed' &&
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+      pull-requests: write # the action comments the preview URL on the PR
+
+    # Scoped to the job AND keyed by ref. A workflow-level group shared between
+    # pull_request and push runs lets unrelated PR activity cancel a queued
+    # production deploy — GitHub keeps only one pending run per group — which
+    # leaves the live site silently stale with no failed check to show for it.
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Deploy
+        id: deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          # Hybrid Next.js requires all three of these exactly so: the app at the
+          # repo root, and both other paths empty. Setting output_location sends
+          # Static Web Apps down the static-export path instead, which would
+          # deploy a site that looks fine and has no server rendering at all.
+          # For the same reason IS_STATIC_EXPORT must never be set here.
+          app_location: "/"
+          api_location: ""
+          output_location: ""
+
+      # The deployment is not "done" when the action returns — this asserts the
+      # thing we actually care about, that the live URL renders per request.
+      # scripts/verify-ssr.mjs uses only Node built-ins, so no install is needed.
+      - name: Verify server-side rendering on the deployed site
+        env:
+          TARGET: ${{ steps.deploy.outputs.static_web_app_url }}
+        run: |
+          if [ -z "$TARGET" ]; then
+            echo "::error::The deploy step reported no URL, so SSR could not be verified."
+            exit 1
+          fi
+          echo "Verifying $TARGET"
+          for attempt in 1 2 3 4 5 6; do
+            if node scripts/verify-ssr.mjs "$TARGET"; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed; the deployment may still be propagating."
+            sleep 20
+          done
+          echo "::error::$TARGET is not server-rendering. See risk 1 in the architecture spec —"
+          echo "::error::hybrid Next.js on Static Web Apps is in preview; the fallback is Container Apps."
+          exit 1
+
+  close-preview:
+    name: Tear down the preview environment
+    needs: guard
+    runs-on: ubuntu-latest
+    if: >-
+      needs.guard.outputs.configured == 'true' &&
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      # The Free plan allows three preview environments. Without this they are
+      # never reclaimed and the fourth open pull request fails to get one.
+      - name: Close
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close
