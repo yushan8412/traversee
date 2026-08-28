@@ -11,7 +11,7 @@ export default async function Home() {
   return (
     <main>
       <h1>Traversee</h1>
-      <p className="tagline">北北基單車與健行路線庫 · Cycling and hiking routes for northern Taiwan</p>
+      <p className="tagline">北北基戶外活動地點庫 · Outdoor places in northern Taiwan</p>
 
       <h2>Render check</h2>
       <div className="probe">
