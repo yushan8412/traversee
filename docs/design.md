@@ -46,8 +46,11 @@ Confirmed 2026-08-28:
 | 1 | Route list page | All routes as cards: photo, name, activity type, difficulty, distance. |
 | 2 | Interactive map view | All routes rendered on one map; click a route to see details. |
 | 3 | Route detail page | GPX track on map, elevation profile, description, photos, source attribution. |
-| 4 | User registration / login | Account creation via email (and possibly social login). |
-| 5 | User-submitted routes | Signed-in users can upload a GPX file + description to add a route. |
+| 4 | User registration / login | Google sign-in only. No self-managed passwords. |
+| 5 | User-submitted routes | Signed-in users upload a GPX file + bilingual description. |
+| 6 | Moderation console | Submissions stay unpublished until an admin approves them. |
+
+The site is bilingual (Traditional Chinese and English) from v1, with `/zh` and `/en` routing.
 
 ## Constraints
 
@@ -74,17 +77,37 @@ AI assistant's role is Engineer: writes code, opens PRs, explains architecture.
 
 Visual design workflow: author supplies screenshots / URLs / verbal descriptions of preferred layouts; assistant translates them into UI code; iterate until visual match.
 
-## Open decisions (still TBD)
+## Architecture
 
-Blocking full architecture; being decided next:
+Resolved 2026-08-28. Full rationale, data model, data flows, error handling, and testing
+strategy: [`docs/specs/2026-08-28-tech-stack-design.md`](specs/2026-08-28-tech-stack-design.md).
 
-- **Frontend framework** (candidates: Next.js, Astro, plain React + Vite, SvelteKit).
-- **Backend runtime** (Node.js in Next.js, Azure Functions, or a separate backend).
-- **Database** (Cosmos DB free tier, Azure Database for PostgreSQL, or SQLite for MVP).
-- **Auth provider** (Azure AD B2C, Auth0 free tier, Clerk free tier, or roll own).
-- **Map library** (Leaflet + OSM tiles vs. MapLibre GL vs. Azure Maps).
-- **Media hosting** (Azure Blob Storage for GPX + photos).
-- **CI/CD** (GitHub Actions to Azure).
+| Layer | Choice |
+|---|---|
+| Web framework | Next.js (App Router) + TypeScript |
+| Hosting | Azure Static Web Apps, Free plan |
+| Database | Azure Cosmos DB for NoSQL, free tier |
+| File storage | Azure Blob Storage |
+| Authentication | Auth.js + Google OAuth, running inside Next.js |
+| Map tiles / rendering | Azure Maps Gen2 / MapLibre GL JS |
+| Styling / i18n | Tailwind CSS / next-intl |
+| IaC / CI/CD | Bicep / GitHub Actions |
+| Testing | Vitest (unit) + Playwright (E2E) |
+
+Steady-state cost after the $200 credit expires: under $0.10/month.
+
+The decisive constraint was that Azure Database for PostgreSQL is free for 12 months only,
+not permanently — it would cost $15–25/month thereafter, several times the budget ceiling.
+Cosmos DB's free tier is permanent and supports GeoJSON geospatial queries, so it wins on
+cost without conceding capability.
+
+## Deferred decisions
+
+Not blocking implementation; to be settled before launch:
+
+- **Custom domain** — whether to buy one. The Free plan supports two, with free auto-renewing SSL.
+- **Visual design direction** — brand tone, palette, typography, layout.
+- **Difficulty scale wording** — Appendix A of the architecture spec is a draft awaiting calibration.
 
 ## Repo & environments
 
