@@ -1,0 +1,57 @@
+{
+  "site": {
+    "name": "Traversee",
+    "tagline": "Outdoor places in northern Taiwan"
+  },
+  "nav": {
+    "places": "All places",
+    "switchLanguage": "中文"
+  },
+  "places": {
+    "title": "All places",
+    "intro": "Outdoor places across Taipei, New Taipei and Keelung — hiking, cycling, camping, surfing and waterfalls.",
+    "empty": "No published places yet.",
+    "count": "{count} places",
+    "notTranslated": "Not yet translated",
+    "notTranslatedHint": "This has no English version yet; the original is shown below.",
+    "backToList": "Back to all places",
+    "kind": {
+      "route": "Route",
+      "spot": "Spot"
+    },
+    "activity": {
+      "hiking": "Hiking",
+      "cycling": "Cycling",
+      "camping": "Camping",
+      "surfing": "Surfing",
+      "waterfall": "Waterfall"
+    },
+    "city": {
+      "taipei": "Taipei",
+      "newTaipei": "New Taipei",
+      "keelung": "Keelung"
+    },
+    "metrics": {
+      "distance": "Distance",
+      "elevationGain": "Elevation gain",
+      "duration": "Time needed",
+      "difficulty": "Difficulty",
+      "kilometres": "{value} km",
+      "metres": "{value} m",
+      "minutes": "{min}–{max} min",
+      "difficultyValue": "{value} / 5"
+    },
+    "basis": {
+      "gpx": "from recorded tracks",
+      "submitter": "submitter's estimate",
+      "editor": "editor's estimate"
+    },
+    "approach": {
+      "title": "Approach",
+      "note": "You cannot drive to this place; part of the way is on foot."
+    },
+    "attributes": {
+      "title": "Activity details"
+    }
+  }
+}

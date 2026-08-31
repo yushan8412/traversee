@@ -1,0 +1,57 @@
+{
+  "site": {
+    "name": "Traversee",
+    "tagline": "北北基戶外活動地點庫"
+  },
+  "nav": {
+    "places": "所有地點",
+    "switchLanguage": "English"
+  },
+  "places": {
+    "title": "所有地點",
+    "intro": "台北、新北、基隆的戶外地點，涵蓋健行、單車、露營、衝浪與瀑布。",
+    "empty": "目前沒有已發布的地點。",
+    "count": "{count} 個地點",
+    "notTranslated": "尚未翻譯",
+    "notTranslatedHint": "此內容尚未提供中文版本，以下顯示原文。",
+    "backToList": "回到所有地點",
+    "kind": {
+      "route": "路線",
+      "spot": "地點"
+    },
+    "activity": {
+      "hiking": "健行",
+      "cycling": "單車",
+      "camping": "露營",
+      "surfing": "衝浪",
+      "waterfall": "瀑布"
+    },
+    "city": {
+      "taipei": "台北",
+      "newTaipei": "新北",
+      "keelung": "基隆"
+    },
+    "metrics": {
+      "distance": "距離",
+      "elevationGain": "總爬升",
+      "duration": "所需時間",
+      "difficulty": "難度",
+      "kilometres": "{value} 公里",
+      "metres": "{value} 公尺",
+      "minutes": "{min}–{max} 分鐘",
+      "difficultyValue": "{value} / 5"
+    },
+    "basis": {
+      "gpx": "依實際軌跡紀錄",
+      "submitter": "投稿者估計",
+      "editor": "編輯估計"
+    },
+    "approach": {
+      "title": "接近路線",
+      "note": "此地點無法開車直達，需步行一段才會抵達。"
+    },
+    "attributes": {
+      "title": "活動資訊"
+    }
+  }
+}
