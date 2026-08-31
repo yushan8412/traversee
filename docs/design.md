@@ -5,31 +5,36 @@
 
 ## Product overview
 
-**Traversee** is a community-driven cycling & hiking route hub for Northern Taiwan (Taipei, New Taipei, Keelung).
+**Traversee** is a community-driven outdoor destination hub for Northern Taiwan (Taipei, New Taipei, Keelung).
 
-- **What**: A route knowledge base combining data seeded from OpenStreetMap with routes shared by registered users.
-- **Who**: Cyclists and hikers exploring Taipei metro area, plus international visitors wanting curated route information.
-- **Why**: Personal passion project (author enjoys both activities) that doubles as a portfolio piece.
+- **What**: A knowledge base of outdoor places — hiking, cycling, camping, surfing, waterfalls, and more over time — combining data seeded from OpenStreetMap with entries shared by registered users.
+- **Who**: People looking for somewhere to go outdoors around the Taipei metro area, plus international visitors who cannot easily read Chinese-language sources.
+- **Why**: Personal passion project that doubles as a portfolio piece.
+
+**On the name.** *Traversee* comes from *traverse*, which sounds route-shaped. It stays, deliberately: getting to an outdoor place — walking a river up to a waterfall, carrying gear into a campsite, scrambling down to a break — is itself the effort the name describes. It is not only about lines on a map.
 
 ## Scope
 
 ### In scope for v1
 
 - Geographic coverage: **Taipei City, New Taipei City, Keelung City** only.
-- Two activity types: **cycling** and **hiking**.
+- **Multiple outdoor activities.** The data model supports arbitrarily many from the outset; how many actually launch is bounded by curation effort, not by the architecture, and is decided separately.
+- Two structural kinds: **routes** (a path you traverse) and **spots** (a place you go to). A waterfall is a spot with a walk-in attached.
 - Two content sources:
   - Seeded from OpenStreetMap (safe/legal, comprehensive).
-  - Contributed by registered users (GPX upload + text description).
+  - Contributed by registered users.
 
 ### Explicitly out of scope for v1
 
-Deferred so v1 stays shippable in a few weeks:
+Deferred so v1 stays shippable:
 
 - Coverage beyond 北北基.
 - Advanced filtering / search.
 - Comments, ratings, likes.
-- Save / favorite / "my routes" lists.
+- Save / favorite / personal collections.
 - Mobile app (v1 is responsive web only).
+- **Live conditions** — tides, surf reports, weather, campsite availability. Dedicated services already do these well; duplicating them buys nothing and creates a permanent operational burden. This site describes what a place *is*, not what it is doing right now.
+- **Booking and payments.** Campsites record whether reservation is required, and contact details. Nothing more.
 
 ### Why this scope
 
@@ -43,11 +48,11 @@ Confirmed 2026-08-28:
 
 | # | Feature | Notes |
 |---|---|---|
-| 1 | Route list page | All routes as cards: photo, name, activity type, difficulty, distance. |
-| 2 | Interactive map view | All routes rendered on one map; click a route to see details. |
-| 3 | Route detail page | GPX track on map, elevation profile, description, photos, source attribution. |
+| 1 | Place list page | Cards: photo, name, activities, difficulty. Filters change with the activity selected — distance means nothing for a surf break. |
+| 2 | Interactive map view | Everything on one map; routes draw as lines, spots as pins keyed to their activities. |
+| 3 | Place detail page | Routes show GPX track and elevation profile; spots show their activity attributes. Photos, description, and source attribution throughout. |
 | 4 | User registration / login | Google sign-in only. No self-managed passwords. |
-| 5 | User-submitted routes | Signed-in users upload a GPX file + bilingual description. |
+| 5 | User submissions | Two paths: upload a GPX for a route, or drop a pin for a spot. Bilingual description either way. |
 | 6 | Moderation console | Submissions stay unpublished until an admin approves them. |
 
 The site is bilingual (Traditional Chinese and English) from v1, with `/zh` and `/en` routing.
