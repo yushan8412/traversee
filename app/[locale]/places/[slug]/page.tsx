@@ -5,6 +5,7 @@ import type { Locale } from '../../../../i18n/routing'
 import { getPublishedPlaceBySlug } from '../../../../lib/places/repository'
 import { resolveText } from '../../../../lib/places/text'
 import type { RouteMetrics } from '../../../../lib/places/types'
+import { PlaceMap } from '../place-map'
 import { TranslatedText } from '../translated-text'
 
 export const dynamic = 'force-dynamic'
@@ -61,6 +62,14 @@ export default async function PlacePage({
       </p>
 
       {summary && <TranslatedText text={summary} className="mt-4 text-lg" />}
+
+      {/* The detail query returns the whole document, so the simplified track is
+          already in hand and drawing it costs nothing extra. */}
+      <PlaceMap
+        markers={[{ slug: place.slug, name: name?.value ?? place.slug, point: place.startPoint }]}
+        geometry={place.geometry}
+        className="mt-6 h-96 w-full"
+      />
 
       {Object.keys(place.difficulty).length > 0 && (
         <section className="mt-6">
