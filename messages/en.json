@@ -62,5 +62,33 @@
     "signIn": "Sign in with Google",
     "signOut": "Sign out",
     "admin": "Admin"
+  },
+  "submit": {
+    "title": "Add a place",
+    "adminOnly": "Only administrators can add places.",
+    "signInFirst": "Please sign in first.",
+    "pickLocation": "Click the map to set the location",
+    "coordinates": "Coordinates",
+    "city": "City",
+    "activities": "Activities",
+    "nameZh": "Name (Chinese)",
+    "nameEn": "Name (English)",
+    "summaryZh": "Summary (Chinese)",
+    "summaryEn": "Summary (English)",
+    "descriptionZh": "Description (Chinese)",
+    "descriptionEn": "Description (English)",
+    "submit": "Submit",
+    "submitting": "Submitting…",
+    "submitted": "Submitted. It is now awaiting review.",
+    "optional": "optional",
+    "errors": {
+      "not-allowed": "You do not have permission to add places.",
+      "invalid-city": "Choose a city.",
+      "needs-an-activity": "Choose at least one activity.",
+      "outside-coverage": "Those coordinates are outside northern Taiwan.",
+      "spot-needs-point": "A spot needs a single coordinate.",
+      "difficulty-out-of-range": "Difficulty must be between 1 and 5.",
+      "unknown": "Submission failed. Please try again."
+    }
   }
 }

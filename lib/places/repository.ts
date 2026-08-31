@@ -76,6 +76,32 @@ export async function listPublishedPlaces(): Promise<PlaceSummary[]> {
   return resources
 }
 
+/**
+ * Writes a submission. `create` rather than `upsert`, so a repeated id fails
+ * loudly instead of silently overwriting somebody's entry.
+ */
+export async function createPlace(place: Place): Promise<void> {
+  if (shouldUseFixtures()) {
+    throw new Error('Cosmos is not configured; refusing to accept a submission that cannot be saved.')
+  }
+  await getContainer().items.create(place)
+}
+
+/** Slugs appear in URLs, so a collision would make one entry unreachable. */
+export async function slugExists(slug: string): Promise<boolean> {
+  if (shouldUseFixtures()) {
+    return fixturePlaces.some((p) => p.slug === slug)
+  }
+  const { resources } = await getContainer()
+    // SELECT VALUE returns the scalar itself rather than a wrapper object.
+    .items.query<number>({
+      query: 'SELECT VALUE COUNT(1) FROM c WHERE c.slug = @slug',
+      parameters: [{ name: '@slug', value: slug }],
+    })
+    .fetchAll()
+  return (resources[0] ?? 0) > 0
+}
+
 export async function getPublishedPlaceBySlug(slug: string): Promise<Place | null> {
   if (shouldUseFixtures()) {
     return fixturePlaces.find((p) => p.slug === slug && p.status === 'published') ?? null
