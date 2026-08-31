@@ -5,7 +5,9 @@
   },
   "nav": {
     "places": "All places",
-    "switchLanguage": "中文"
+    "switchLanguage": "中文",
+    "submit": "Add a place",
+    "review": "Review"
   },
   "places": {
     "title": "All places",
@@ -89,6 +91,27 @@
       "spot-needs-point": "A spot needs a single coordinate.",
       "difficulty-out-of-range": "Difficulty must be between 1 and 5.",
       "unknown": "Submission failed. Please try again."
+    }
+  },
+  "review": {
+    "title": "Awaiting review",
+    "empty": "Nothing is waiting for review.",
+    "adminOnly": "Administrators only.",
+    "publish": "Publish",
+    "reject": "Reject",
+    "unpublish": "Unpublish",
+    "reason": "Reason for rejection (required, shown to the submitter)",
+    "submittedAt": "Submitted",
+    "status": {
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "published": "Published"
+    },
+    "errors": {
+      "not-allowed": "Not permitted.",
+      "not-found": "That entry no longer exists.",
+      "reason-required": "A rejection needs a reason.",
+      "invalid": "That action is not valid."
     }
   }
 }

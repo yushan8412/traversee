@@ -5,7 +5,9 @@
   },
   "nav": {
     "places": "所有地點",
-    "switchLanguage": "English"
+    "switchLanguage": "English",
+    "submit": "新增地點",
+    "review": "待審核"
   },
   "places": {
     "title": "所有地點",
@@ -89,6 +91,27 @@
       "spot-needs-point": "地點必須是單一座標。",
       "difficulty-out-of-range": "難度必須介於 1 到 5。",
       "unknown": "送出失敗，請再試一次。"
+    }
+  },
+  "review": {
+    "title": "待審核",
+    "empty": "目前沒有待審核的項目。",
+    "adminOnly": "只有管理員可以檢視。",
+    "publish": "發布",
+    "reject": "退回",
+    "unpublish": "下架",
+    "reason": "退回原因（必填，投稿者看得到）",
+    "submittedAt": "投稿於",
+    "status": {
+      "pending": "待審核",
+      "rejected": "已退回",
+      "published": "已發布"
+    },
+    "errors": {
+      "not-allowed": "沒有權限。",
+      "not-found": "找不到這個項目。",
+      "reason-required": "退回必須填寫原因。",
+      "invalid": "操作無效。"
     }
   }
 }
