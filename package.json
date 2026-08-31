@@ -26,6 +26,7 @@
     "fast-xml-parser": "5.11.1",
     "maplibre-gl": "6.6.0",
     "next": "15.5.24",
+    "next-auth": "5.0.0-beta.32",
     "next-intl": "4.14.1",
     "react": "19.2.8",
     "react-dom": "19.2.8"
