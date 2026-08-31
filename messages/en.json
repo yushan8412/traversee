@@ -52,6 +52,10 @@
     },
     "attributes": {
       "title": "Activity details"
+    },
+    "map": {
+      "overview": "Overview map",
+      "unavailable": "The map could not be loaded."
     }
   }
 }

@@ -52,6 +52,10 @@
     },
     "attributes": {
       "title": "活動資訊"
+    },
+    "map": {
+      "overview": "地圖總覽",
+      "unavailable": "地圖無法載入。"
     }
   }
 }
