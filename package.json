@@ -15,6 +15,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "verify:ssr": "node scripts/verify-ssr.mjs",
+    "seed": "node --experimental-strip-types scripts/seed-places.ts",
     "test": "vitest run"
   },
   "dependencies": {
