@@ -56,14 +56,54 @@ export function PlaceMap({
       }
       if (cancelled || !container.current) return
 
+      // The track is declared in the style rather than added on the `load`
+      // event. Adding it later worked in principle and did not in practice, and
+      // the runtime path had more places to fail than could be checked without a
+      // browser: event ordering, a swallowed exception, a source added before
+      // the style settled. Declared here there is no ordering to get wrong.
+      const track =
+        geometry?.type === 'LineString'
+          ? {
+              // Coordinates are copied rather than passed through. They arrive
+              // deserialised from the server payload, and MapLibre hands source
+              // data to a worker, so plain arrays remove any question about what
+              // survives that boundary.
+              type: 'FeatureCollection' as const,
+              features: [
+                {
+                  type: 'Feature' as const,
+                  properties: {},
+                  geometry: {
+                    type: 'LineString' as const,
+                    coordinates: geometry.coordinates.map(([lng, lat]) => [lng, lat]),
+                  },
+                },
+              ],
+            }
+          : null
+
       const instance = new MapLibreMap({
         container: container.current,
         style: {
           version: 8,
           sources: {
             azure: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: 18 },
+            ...(track ? { track: { type: 'geojson' as const, data: track } } : {}),
           },
-          layers: [{ id: 'azure', type: 'raster', source: 'azure' }],
+          layers: [
+            { id: 'azure', type: 'raster', source: 'azure' },
+            ...(track
+              ? [
+                  {
+                    id: 'track',
+                    type: 'line' as const,
+                    source: 'track',
+                    paint: { 'line-color': '#2f6b4f', 'line-width': 4 },
+                    layout: { 'line-cap': 'round' as const, 'line-join': 'round' as const },
+                  },
+                ]
+              : []),
+          ],
         },
         center: markers[0]?.point.coordinates ?? [121.56, 25.05],
         zoom: markers.length === 1 ? 12 : 9,
@@ -85,18 +125,14 @@ export function PlaceMap({
 
       instance.addControl(new NavigationControl({ showCompass: false }), 'top-right')
 
-      instance.on('load', () => {
-        if (geometry?.type === 'LineString') {
-          instance.addSource('track', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry } })
-          instance.addLayer({
-            id: 'track',
-            type: 'line',
-            source: 'track',
-            paint: { 'line-color': '#2f6b4f', 'line-width': 4 },
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-          })
-        }
+      // Without this, a style or source failure is silent: the basemap and the
+      // markers still appear, so the map looks fine while a layer is missing.
+      // That is exactly how the track went unnoticed the first time.
+      instance.on('error', (event) => {
+        console.error('MapLibre error', event.error ?? event)
+      })
 
+      instance.on('load', () => {
         for (const marker of markers) {
           new Marker({ color: '#2f6b4f' })
             .setLngLat(marker.point.coordinates)
