@@ -87,6 +87,43 @@ export async function createPlace(place: Place): Promise<void> {
   await getContainer().items.create(place)
 }
 
+/**
+ * Everything awaiting or refused review, newest first. Administrators only —
+ * the caller enforces that; this does not filter by viewer.
+ */
+export async function listPlacesForReview(): Promise<Place[]> {
+  if (shouldUseFixtures()) {
+    return fixturePlaces.filter((p) => p.status !== 'published')
+  }
+  const { resources } = await getContainer()
+    .items.query<Place>(
+      "SELECT * FROM c WHERE c.status != 'published' ORDER BY c.createdAt DESC",
+    )
+    .fetchAll()
+  return resources
+}
+
+/**
+ * Applies a status change. Reads first so the transition is decided against
+ * what is actually stored rather than what a form claimed the current state was.
+ */
+export async function getPlaceById(id: string, city: string): Promise<Place | null> {
+  if (shouldUseFixtures()) return fixturePlaces.find((p) => p.id === id) ?? null
+  try {
+    const { resource } = await getContainer().item(id, city).read<Place>()
+    return resource ?? null
+  } catch {
+    return null
+  }
+}
+
+export async function replacePlace(place: Place): Promise<void> {
+  if (shouldUseFixtures()) {
+    throw new Error('Cosmos is not configured; refusing to pretend a review was saved.')
+  }
+  await getContainer().item(place.id, place.city).replace(place)
+}
+
 /** Slugs appear in URLs, so a collision would make one entry unreachable. */
 export async function slugExists(slug: string): Promise<boolean> {
   if (shouldUseFixtures()) {

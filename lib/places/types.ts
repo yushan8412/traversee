@@ -73,6 +73,9 @@ export interface Place {
   coverPhotoIndex: number
   source: 'osm' | 'user'
   submittedBy: string | null
+  reviewedBy?: string | null
+  /** Why a submission was refused. Shown to its submitter, so it is not internal. */
+  reviewNote?: string | null
   createdAt: string
   updatedAt: string
   publishedAt: string | null
