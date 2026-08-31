@@ -23,6 +23,7 @@
   "dependencies": {
     "@azure/cosmos": "4.10.0",
     "@azure/identity": "4.13.2",
+    "@azure/storage-blob": "12.33.0",
     "fast-xml-parser": "5.11.1",
     "maplibre-gl": "6.6.0",
     "next": "15.5.24",

@@ -90,8 +90,19 @@
       "outside-coverage": "座標不在北北基範圍內。",
       "spot-needs-point": "地點必須是單一座標。",
       "difficulty-out-of-range": "難度必須介於 1 到 5。",
-      "unknown": "送出失敗，請再試一次。"
-    }
+      "unknown": "送出失敗，請再試一次。",
+      "gpx-required": "請選擇一個 GPX 檔案。",
+      "gpx-too-large": "檔案過大（上限 10 MB）。",
+      "gpx-unreadable": "無法從這個檔案讀出軌跡。",
+      "route-needs-linestring": "這個檔案沒有形成一條路徑。",
+      "route-needs-metrics": "缺少路線數據。"
+    },
+    "kindRoute": "路線（上傳 GPX）",
+    "kindSpot": "地點（在地圖上標記）",
+    "gpxFile": "GPX 檔案",
+    "preview": "預覽",
+    "storedPoints": "簡化後的點數",
+    "noTimestamps": "檔案沒有時間戳"
   },
   "review": {
     "title": "待審核",

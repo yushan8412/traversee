@@ -90,8 +90,19 @@
       "outside-coverage": "Those coordinates are outside northern Taiwan.",
       "spot-needs-point": "A spot needs a single coordinate.",
       "difficulty-out-of-range": "Difficulty must be between 1 and 5.",
-      "unknown": "Submission failed. Please try again."
-    }
+      "unknown": "Submission failed. Please try again.",
+      "gpx-required": "Choose a GPX file.",
+      "gpx-too-large": "That file is too large (10 MB limit).",
+      "gpx-unreadable": "No track could be read from that file.",
+      "route-needs-linestring": "That file does not form a path.",
+      "route-needs-metrics": "Route metrics are missing."
+    },
+    "kindRoute": "Route (upload a GPX)",
+    "kindSpot": "Spot (mark it on the map)",
+    "gpxFile": "GPX file",
+    "preview": "Preview",
+    "storedPoints": "Points after simplification",
+    "noTimestamps": "The file has no timestamps"
   },
   "review": {
     "title": "Awaiting review",
