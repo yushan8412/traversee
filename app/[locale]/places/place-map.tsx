@@ -53,7 +53,20 @@ export function PlaceMap({
   const [failed, setFailed] = useState(false)
   const t = useTranslations('places')
 
+  // Depending on the props directly ties the effect to object identity, so any
+  // re-render tears the map down and builds a new one — and a new map refetches
+  // every tile. On 2026-08-31 that produced bursts of nearly ten thousand tile
+  // requests a minute, roughly 150 a second, against a free grant of 5,000
+  // billable transactions for the entire month.
+  //
+  // Keying on the serialised content instead means the map is rebuilt when the
+  // data actually differs and not when React merely hands over a new array.
+  const dataKey = JSON.stringify({ markers, geometry })
+  const latest = useRef({ markers, geometry })
+  latest.current = { markers, geometry }
+
   useEffect(() => {
+    const { markers, geometry } = latest.current
     if (!container.current || map.current) return
     let cancelled = false
 
@@ -123,6 +136,16 @@ export function PlaceMap({
         center: markers[0]?.point.coordinates ?? [121.56, 25.05],
         zoom: markers.length === 1 ? 12 : 9,
         attributionControl: { compact: true },
+        // The site covers Taipei, New Taipei and Keelung, so panning to another
+        // continent serves nobody and every pan costs tile requests against a
+        // grant of 5,000 billable transactions a month. Bounding the map is a
+        // product decision that happens to cap the worst case.
+        maxBounds: [
+          [121.0, 24.7],
+          [122.3, 25.5],
+        ],
+        minZoom: 8,
+        maxZoom: 17,
         // Every tile request carries the short-lived token. The credential never
         // reaches the tile URL itself, so it cannot end up in a browser history
         // entry, a referrer header, or a shared link.
@@ -179,7 +202,7 @@ export function PlaceMap({
       map.current?.remove()
       map.current = null
     }
-  }, [markers, geometry])
+  }, [dataKey])
 
   if (failed) {
     return (
