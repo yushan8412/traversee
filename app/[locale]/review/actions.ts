@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { auth } from '../../../auth'
 import { getPlaceById, replacePlace } from '../../../lib/places/repository'
 import { applyTransition } from '../../../lib/places/moderation'
+import { filesOf } from '../../../lib/places/files'
+import { demoteToPending, promoteToPublic } from '../../../lib/storage/blob'
 import type { Status } from '../../../lib/places/types'
 
 export interface ReviewResult {
@@ -48,6 +50,20 @@ export async function reviewPlace(formData: FormData): Promise<ReviewResult> {
     return {
       ok: false,
       error: result.reason === 'reason-required' ? 'reason-required' : 'transition-not-allowed',
+    }
+  }
+
+  // Files move before the document changes. A file that is public while the
+  // document still says pending is invisible — nothing links to it. A document
+  // that says published while its files are still private is broken content
+  // somebody has to go and repair.
+  const files = filesOf(place)
+  if (files.length > 0) {
+    if (to === 'published') {
+      for (const path of files) await promoteToPublic(path)
+    } else if (place.status === 'published') {
+      // Coming down from published, whether to pending or rejected.
+      for (const path of files) await demoteToPending(path)
     }
   }
 
