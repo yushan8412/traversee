@@ -1,0 +1,79 @@
+name: Health
+
+# The deploy workflow proves the site was healthy at deploy time. That is a
+# different claim from the site being healthy now: on 2026-08-31 a deploy passed
+# its own SSR check and the managed function went 503 roughly ten minutes later,
+# and nothing would have noticed. This closes that gap.
+on:
+  schedule:
+    # Every 30 minutes. GitHub disables scheduled workflows after 60 days with no
+    # repository activity, so a long quiet spell silently stops this — worth
+    # knowing before trusting its silence.
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: health
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe production
+    runs-on: ubuntu-latest
+    env:
+      # Deliberately not the home page. Static Web Apps serves that from the edge
+      # with a one-year s-maxage, so it answers 200 while everything behind the
+      # function is down. verify-ssr.mjs hits /api/render-check, which cannot be
+      # served from cache and cannot succeed unless the server is really running.
+      SITE_URL: https://yellow-bay-010e67a00.7.azurestaticapps.net
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No npm install: verify-ssr.mjs uses only Node built-ins.
+      - name: Probe
+        id: probe
+        run: node scripts/verify-ssr.mjs "$SITE_URL"
+
+      # One open issue at a time. Re-running every 30 minutes against a site that
+      # stays down would otherwise file 48 issues a day and bury the first one,
+      # which is the only one anybody would read.
+      - name: Report a failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing=$(gh issue list --label health --state open --limit 1 --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "Still failing as of $(date -u '+%Y-%m-%d %H:%M UTC'). $RUN_URL"
+          else
+            gh issue create \
+              --title "Production is not responding" \
+              --label health \
+              --body "$(printf '%s\n' \
+                "\`$SITE_URL\` failed its server-side rendering probe." \
+                "" \
+                "Run: $RUN_URL" \
+                "" \
+                "The home page may still answer 200 from the edge cache; that does not mean the site is up." \
+                "Check \`/api/render-check\` directly. Re-running the deploy has cleared this before — see docs/runbooks/m0-azure-setup.md.")"
+          fi
+
+      # Closes itself once the site recovers, so an open issue always means
+      # currently broken rather than broken at some point in the past.
+      - name: Close a resolved failure
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for number in $(gh issue list --label health --state open --json number --jq '.[].number'); do
+            gh issue close "$number" --comment "Recovered; the probe passed at $(date -u '+%Y-%m-%d %H:%M UTC')."
+          done
