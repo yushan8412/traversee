@@ -51,3 +51,7 @@ temp/
 # Coverage
 coverage/
 .nyc_output/
+
+# Copied from node_modules by scripts/copy-maplibre-worker.mjs at build time.
+# Not committed: vendored copies drift out of step with the installed version.
+public/maplibre/

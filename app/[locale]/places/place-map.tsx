@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { LngLatBounds, MapLibreMap, Marker, NavigationControl, Popup } from 'maplibre-gl'
+import {
+  LngLatBounds,
+  MapLibreMap,
+  Marker,
+  NavigationControl,
+  Popup,
+  setWorkerUrl,
+} from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { LineString, Point } from '../../../lib/places/types'
 
@@ -11,6 +18,14 @@ import type { LineString, Point } from '../../../lib/places/types'
 // correct here and a hand-written vector style would be wasted work.
 const TILE_URL =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
+
+// maplibre-gl resolves its worker through import.meta.url, which Next's bundler
+// rewrites to a build-machine file:// path. The request then falls through to
+// Next's catch-all and comes back as page HTML with a 200, so the worker never
+// starts and every GeoJSON source hangs — while raster tiles keep working,
+// because those load on the main thread. Pointing at the copy that
+// scripts/copy-maplibre-worker.mjs places in public/ avoids the guesswork.
+setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
 
 interface MapCredentials {
   token: string
