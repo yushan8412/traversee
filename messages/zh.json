@@ -62,5 +62,33 @@
     "signIn": "使用 Google 登入",
     "signOut": "登出",
     "admin": "管理員"
+  },
+  "submit": {
+    "title": "新增地點",
+    "adminOnly": "只有管理員可以新增地點。",
+    "signInFirst": "請先登入。",
+    "pickLocation": "在地圖上點選位置",
+    "coordinates": "座標",
+    "city": "縣市",
+    "activities": "活動類型",
+    "nameZh": "名稱（中文）",
+    "nameEn": "名稱（英文）",
+    "summaryZh": "簡介（中文）",
+    "summaryEn": "簡介（英文）",
+    "descriptionZh": "詳細描述（中文）",
+    "descriptionEn": "詳細描述（英文）",
+    "submit": "送出",
+    "submitting": "送出中…",
+    "submitted": "已送出，狀態為待審核。",
+    "optional": "可留空",
+    "errors": {
+      "not-allowed": "你沒有新增地點的權限。",
+      "invalid-city": "請選擇縣市。",
+      "needs-an-activity": "至少要選一種活動類型。",
+      "outside-coverage": "座標不在北北基範圍內。",
+      "spot-needs-point": "地點必須是單一座標。",
+      "difficulty-out-of-range": "難度必須介於 1 到 5。",
+      "unknown": "送出失敗，請再試一次。"
+    }
   }
 }
