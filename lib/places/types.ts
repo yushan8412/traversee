@@ -46,6 +46,12 @@ export interface Approach extends RouteMetrics {
 
 export interface Photo {
   path: string
+  /**
+   * Stored rather than derived from `path`. Deriving it would put the naming
+   * convention in every place that needs a thumbnail, and changing the
+   * convention would then mean finding all of them.
+   */
+  thumbPath?: string | null
   width: number
   height: number
   caption?: BilingualText

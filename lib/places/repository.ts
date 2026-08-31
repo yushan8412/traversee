@@ -88,17 +88,17 @@ export async function createPlace(place: Place): Promise<void> {
 }
 
 /**
- * Everything awaiting or refused review, newest first. Administrators only —
- * the caller enforces that; this does not filter by viewer.
+ * Everything, whatever its status, newest first. Administrators only — the
+ * caller enforces that; this does not filter by viewer.
+ *
+ * Published entries are included deliberately. Excluding them left no way to
+ * reach an entry in order to take it down, and it also removed the one view
+ * that answers "what have I added, and where did each thing get to".
  */
 export async function listPlacesForReview(): Promise<Place[]> {
-  if (shouldUseFixtures()) {
-    return fixturePlaces.filter((p) => p.status !== 'published')
-  }
+  if (shouldUseFixtures()) return [...fixturePlaces]
   const { resources } = await getContainer()
-    .items.query<Place>(
-      "SELECT * FROM c WHERE c.status != 'published' ORDER BY c.createdAt DESC",
-    )
+    .items.query<Place>('SELECT * FROM c ORDER BY c.updatedAt DESC')
     .fetchAll()
   return resources
 }

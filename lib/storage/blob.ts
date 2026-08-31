@@ -31,20 +31,25 @@ export async function uploadToPending(
 }
 
 /**
- * Moves an approved file into the public container.
+ * Moves a file between the two containers.
  *
- * Server-side copy within the same account: immediate, and not billed as
- * egress, which a download-and-reupload would be. The source is deleted
- * afterwards so an approved file does not remain readable from the private
- * container's path as well.
+ * Server-side copy within the same account: immediate, and not billed as egress
+ * the way a download-and-reupload would be. The source is deleted after the copy
+ * so a file exists in exactly one container.
  */
-export async function promoteToPublic(path: string): Promise<void> {
-  const source = client(PENDING).getBlockBlobClient(path)
-  const target = client(PUBLIC).getBlockBlobClient(path)
+async function move(from: string, to: string, path: string): Promise<void> {
+  const source = client(from).getBlockBlobClient(path)
+  const target = client(to).getBlockBlobClient(path)
 
-  // The source container is private, so the copy needs a signed URL — the
-  // destination cannot read an unauthenticated blob URL that answers 404 to
-  // everyone. Five minutes is far longer than a copy within one account takes.
+  // Moving is idempotent, and a missing source means either the move already
+  // happened or there was never a file at that path. Neither is a reason to
+  // fail a review and leave a moderator unable to act on an entry because of a
+  // storage inconsistency they cannot see or fix.
+  if (!(await source.exists())) return
+
+  // The private container's blobs answer 404 to unauthenticated readers, and
+  // the destination is exactly that, so the copy needs a signed source URL.
+  // Five minutes is far longer than a copy within one account takes.
   const signed = await source.generateSasUrl({
     permissions: BlobSASPermissions.parse('r'),
     expiresOn: new Date(Date.now() + 5 * 60_000),
@@ -52,6 +57,15 @@ export async function promoteToPublic(path: string): Promise<void> {
 
   const poller = await target.beginCopyFromURL(signed)
   await poller.pollUntilDone()
-  // Deleted so an approved file is not still readable from the private path.
   await source.deleteIfExists()
 }
+
+/** Approval: the file becomes publicly readable. */
+export const promoteToPublic = (path: string) => move(PENDING, PUBLIC, path)
+
+/**
+ * Taking something down. The file returns to the private container, because a
+ * GPX that stays downloadable after its entry is unpublished makes unpublishing
+ * mean nothing.
+ */
+export const demoteToPending = (path: string) => move(PUBLIC, PENDING, path)
