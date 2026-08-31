@@ -130,7 +130,7 @@ gh run rerun <run-id>
 - [x] 開啟網址，重新整理數次，頁面上的 `Rendered at` 每次都不同。<br>Open the site, reload a few times, and `Rendered at` changes every time.
 - [x] 記下頁面顯示的 `Node` 版本與 `Region`。實測為 **Node v22.23.1 / eastasia**，與微軟文件寫的 18.17.1 不符——以實測為準。<br>Note the `Node` version and `Region` shown. Measured **Node v22.23.1 / eastasia**, which contradicts Microsoft's documented 18.17.1 — trust the measurement.
 - [x] 確認 PR 會產生預覽網址。這個 PR 自己就是證明，預覽環境 `3` 已 Ready 並通過 SSR 驗證。<br>Confirm a pull request gets a preview URL. This pull request is itself the proof: preview environment `3` came up Ready and passed the SSR check.
-- [ ] 確認關閉 PR 後預覽環境被回收。要等這個 PR 合併、`close-preview` job 實際跑過才能勾。<br>Confirm closing a pull request reclaims the environment. Cannot be ticked until this PR merges and the `close-preview` job has actually run.
+- [x] 確認關閉 PR 後預覽環境被回收。PR #3 合併後 `close-preview` 執行成功，預覽環境 `3` 消失，只剩 `default`。<br>Confirm closing a pull request reclaims the environment. After PR #3 merged, `close-preview` ran successfully and preview environment `3` disappeared, leaving only `default`.
 
 也可以在本機直接驗收 / You can also run the check locally against the live site:
 
