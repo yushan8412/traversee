@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Link } from '../../i18n/navigation'
 import { routing, type Locale } from '../../i18n/routing'
+import { AuthControls } from './auth-controls'
 import { LanguageSwitcher } from './language-switcher'
 import '../globals.css'
 
@@ -62,6 +63,7 @@ export default async function LocaleLayout({
                   {nav('places')}
                 </Link>
                 <LanguageSwitcher target={other} label={nav('switchLanguage')} />
+                <AuthControls />
               </nav>
             </header>
 

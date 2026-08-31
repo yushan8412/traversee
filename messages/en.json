@@ -57,5 +57,10 @@
       "overview": "Overview map",
       "unavailable": "The map could not be loaded."
     }
+  },
+  "auth": {
+    "signIn": "Sign in with Google",
+    "signOut": "Sign out",
+    "admin": "Admin"
   }
 }

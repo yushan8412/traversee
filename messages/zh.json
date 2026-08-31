@@ -57,5 +57,10 @@
       "overview": "地圖總覽",
       "unavailable": "地圖無法載入。"
     }
+  },
+  "auth": {
+    "signIn": "使用 Google 登入",
+    "signOut": "登出",
+    "admin": "管理員"
   }
 }
