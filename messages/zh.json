@@ -111,7 +111,10 @@
       "not-allowed": "沒有權限。",
       "not-found": "找不到這個項目。",
       "reason-required": "退回必須填寫原因。",
-      "invalid": "操作無效。"
-    }
+      "missing-entry": "這個項目的識別資料沒有送出。",
+      "missing-target": "沒有收到要改成哪個狀態。",
+      "transition-not-allowed": "這個狀態轉換不被允許。"
+    },
+    "cancel": "取消"
   }
 }

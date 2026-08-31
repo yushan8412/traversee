@@ -8,7 +8,13 @@ import type { Status } from '../../../lib/places/types'
 
 export interface ReviewResult {
   ok: boolean
-  error?: 'not-allowed' | 'not-found' | 'reason-required' | 'invalid'
+  error?:
+    | 'not-allowed'
+    | 'not-found'
+    | 'reason-required'
+    | 'missing-target'
+    | 'missing-entry'
+    | 'transition-not-allowed'
 }
 
 const STATUSES: Status[] = ['pending', 'published', 'rejected']
@@ -20,7 +26,11 @@ export async function reviewPlace(formData: FormData): Promise<ReviewResult> {
   const id = String(formData.get('id') ?? '')
   const city = String(formData.get('city') ?? '')
   const to = String(formData.get('to') ?? '') as Status
-  if (!id || !city || !STATUSES.includes(to)) return { ok: false, error: 'invalid' }
+
+  // Separated so a failure says which field went missing rather than collapsing
+  // every cause into one unhelpful message.
+  if (!id || !city) return { ok: false, error: 'missing-entry' }
+  if (!STATUSES.includes(to)) return { ok: false, error: 'missing-target' }
 
   // Read the stored document rather than trusting the form's idea of the
   // current state; otherwise a stale page could drive an illegal transition.
@@ -35,7 +45,10 @@ export async function reviewPlace(formData: FormData): Promise<ReviewResult> {
   })
 
   if (!result.ok) {
-    return { ok: false, error: result.reason === 'reason-required' ? 'reason-required' : 'invalid' }
+    return {
+      ok: false,
+      error: result.reason === 'reason-required' ? 'reason-required' : 'transition-not-allowed',
+    }
   }
 
   await replacePlace({ ...place, ...result.patch })

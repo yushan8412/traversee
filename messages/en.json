@@ -111,7 +111,10 @@
       "not-allowed": "Not permitted.",
       "not-found": "That entry no longer exists.",
       "reason-required": "A rejection needs a reason.",
-      "invalid": "That action is not valid."
-    }
+      "missing-entry": "The entry's identifiers were not submitted.",
+      "missing-target": "No target status was received.",
+      "transition-not-allowed": "That status change is not allowed."
+    },
+    "cancel": "Cancel"
   }
 }
