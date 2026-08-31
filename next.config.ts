@@ -1,3 +1,4 @@
+import createNextIntlPlugin from 'next-intl/plugin'
 import type { NextConfig } from 'next'
 
 // Deliberately near-empty for M0. Static Web Apps' hybrid Next.js support is in
@@ -13,4 +14,4 @@ import type { NextConfig } from 'next'
 //                           which does not support rewrites into a Next.js app.
 const nextConfig: NextConfig = {}
 
-export default nextConfig
+export default createNextIntlPlugin()(nextConfig)
