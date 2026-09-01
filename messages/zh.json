@@ -95,14 +95,19 @@
       "gpx-too-large": "檔案過大（上限 10 MB）。",
       "gpx-unreadable": "無法從這個檔案讀出軌跡。",
       "route-needs-linestring": "這個檔案沒有形成一條路徑。",
-      "route-needs-metrics": "缺少路線數據。"
+      "route-needs-metrics": "缺少路線數據。",
+      "too-many-photos": "照片最多 6 張。",
+      "photo-too-large": "單張照片上限 15 MB。",
+      "photo-not-an-image": "有檔案不是可讀取的圖片。"
     },
     "kindRoute": "路線（上傳 GPX）",
     "kindSpot": "地點（在地圖上標記）",
     "gpxFile": "GPX 檔案",
     "preview": "預覽",
     "storedPoints": "簡化後的點數",
-    "noTimestamps": "檔案沒有時間戳"
+    "noTimestamps": "檔案沒有時間戳",
+    "photos": "照片",
+    "photosHint": "最多 6 張，會自動轉檔並移除位置資訊"
   },
   "review": {
     "title": "待審核",

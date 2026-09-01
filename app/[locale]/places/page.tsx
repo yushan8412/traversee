@@ -4,6 +4,7 @@ import type { Locale } from '../../../i18n/routing'
 import { listPublishedPlaces } from '../../../lib/places/repository'
 import { resolveText } from '../../../lib/places/text'
 import { PlaceMap, type MapMarker } from './place-map'
+import { PlacePhoto } from './photo'
 import { TranslatedText } from './translated-text'
 
 // Every query is per request against Cosmos. Caching is deliberately not added
@@ -61,6 +62,15 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
                     <span key={activity}>{t(`activity.${activity}`)}</span>
                   ))}
                 </p>
+
+                {place.photos[place.coverPhotoIndex] && (
+                  <PlacePhoto
+                    photo={place.photos[place.coverPhotoIndex]!}
+                    alt={name?.value ?? place.slug}
+                    thumb
+                    className="mt-3 h-32 w-full rounded border border-line object-cover"
+                  />
+                )}
 
                 {summary && <TranslatedText text={summary} className="mt-2 text-sm" />}
 

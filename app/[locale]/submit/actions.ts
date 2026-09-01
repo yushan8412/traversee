@@ -3,6 +3,8 @@
 import { randomUUID } from 'node:crypto'
 import { auth } from '../../../auth'
 import { createPlace, slugExists } from '../../../lib/places/repository'
+import { checkUploads } from '../../../lib/photos/paths'
+import { storePhotos } from '../../../lib/photos/store'
 import { buildSpotSubmission, type SpotSubmissionInput } from '../../../lib/places/submission'
 import type { Activity, City } from '../../../lib/places/types'
 
@@ -32,6 +34,12 @@ export async function submitSpot(formData: FormData): Promise<SubmitResult> {
   if (!session?.user || session.user.role !== 'admin') {
     return { ok: false, errors: ['not-allowed'] }
   }
+
+  const photos = formData.getAll('photos').filter(
+    (entry): entry is File => entry instanceof File && entry.size > 0,
+  )
+  const photoProblem = checkUploads(photos)
+  if (photoProblem) return { ok: false, errors: [photoProblem] }
 
   const city = String(formData.get('city') ?? '') as City
   if (!CITIES.includes(city)) return { ok: false, errors: ['invalid-city'] }
@@ -70,6 +78,19 @@ export async function submitSpot(formData: FormData): Promise<SubmitResult> {
   // identifier suffix is unique by construction.
   if (await slugExists(place.slug)) {
     place.slug = `${place.slug}-${id.slice(0, 8)}`
+  }
+
+  // Photos are processed and stored before the document, for the same reason
+  // the GPX is: an orphaned blob is harmless, while a document referencing
+  // images that were never stored renders as broken content.
+  if (photos.length > 0) {
+    try {
+      place.photos = await storePhotos(id, photos)
+    } catch {
+      // processPhoto throws for anything it cannot decode, whatever the
+      // browser declared the type to be.
+      return { ok: false, errors: ['photo-not-an-image'] }
+    }
   }
 
   await createPlace(place)

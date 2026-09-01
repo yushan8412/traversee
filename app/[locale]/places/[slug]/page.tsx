@@ -6,6 +6,7 @@ import { getPublishedPlaceBySlug } from '../../../../lib/places/repository'
 import { resolveText } from '../../../../lib/places/text'
 import type { RouteMetrics } from '../../../../lib/places/types'
 import { PlaceMap } from '../place-map'
+import { PlacePhoto } from '../photo'
 import { TranslatedText } from '../translated-text'
 
 export const dynamic = 'force-dynamic'
@@ -62,6 +63,19 @@ export default async function PlacePage({
       </p>
 
       {summary && <TranslatedText text={summary} className="mt-4 text-lg" />}
+
+      {place.photos.length > 0 && (
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {place.photos.map((photo) => (
+            <PlacePhoto
+              key={photo.path}
+              photo={photo}
+              alt={name?.value ?? place.slug}
+              className="h-40 w-full rounded border border-line object-cover"
+            />
+          ))}
+        </div>
+      )}
 
       {/* The detail query returns the whole document, so the simplified track is
           already in hand and drawing it costs nothing extra. */}

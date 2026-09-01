@@ -153,6 +153,22 @@ export function RouteForm() {
         </div>
       ))}
 
+
+      <div>
+        <label className={LABEL} htmlFor="photos">
+          {t('photos')} <span className="font-normal">({t('optional')})</span>
+        </label>
+        <input
+          id="photos"
+          name="photos"
+          type="file"
+          accept="image/*"
+          multiple
+          className="text-sm"
+        />
+        <p className="mt-1 text-xs text-dim">{t('photosHint')}</p>
+      </div>
+
       {result && !result.ok && (
         <ul className="rounded border border-line bg-panel p-4 text-sm">
           {result.errors.map((code) => (
