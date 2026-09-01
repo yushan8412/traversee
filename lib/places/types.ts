@@ -1,11 +1,47 @@
 export type Locale = 'zh' | 'en'
 
-export type City = 'taipei' | 'newTaipei' | 'keelung'
+/**
+ * Every county and city the coverage box reaches. Kinmen and Lienchiang are
+ * absent on purpose: a rectangle wide enough to hold them also holds Fujian, so
+ * they need their own check rather than a silent hole in this one.
+ *
+ * This is the Cosmos partition key. Adding values is free; renaming one is a
+ * migration, because existing documents keep the old string.
+ */
+export type City =
+  | 'taipei'
+  | 'newTaipei'
+  | 'keelung'
+  | 'taoyuan'
+  | 'hsinchuCity'
+  | 'hsinchuCounty'
+  | 'miaoli'
+  | 'taichung'
+  | 'changhua'
+  | 'nantou'
+  | 'yunlin'
+  | 'chiayiCity'
+  | 'chiayiCounty'
+  | 'tainan'
+  | 'kaohsiung'
+  | 'pingtung'
+  | 'yilan'
+  | 'hualien'
+  | 'taitung'
+  | 'penghu'
 
 /** Shape only. A waterfall is a spot with an `approach`, not a third kind. */
 export type Kind = 'route' | 'spot'
 
-export type Activity = 'hiking' | 'cycling' | 'camping' | 'surfing' | 'waterfall'
+export type Activity =
+  | 'hiking'
+  | 'cycling'
+  | 'camping'
+  | 'surfing'
+  | 'waterfall'
+  | 'climbing'
+  | 'vtt'
+  | 'diving'
 
 export type Status = 'pending' | 'published' | 'rejected'
 

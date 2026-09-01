@@ -1,7 +1,7 @@
 {
   "site": {
     "name": "Traversee",
-    "tagline": "北北基戶外活動地點庫"
+    "tagline": "台灣戶外活動地點庫"
   },
   "nav": {
     "places": "所有地點",
@@ -11,7 +11,7 @@
   },
   "places": {
     "title": "所有地點",
-    "intro": "台北、新北、基隆的戶外地點，涵蓋健行、單車、露營、衝浪與瀑布。",
+    "intro": "台灣各地的戶外地點，涵蓋健行、單車、露營、衝浪、潛水與瀑布。",
     "empty": "目前沒有已發布的地點。",
     "count": "{count} 個地點",
     "notTranslated": "尚未翻譯",
@@ -26,12 +26,32 @@
       "cycling": "單車",
       "camping": "露營",
       "surfing": "衝浪",
-      "waterfall": "瀑布"
+      "waterfall": "瀑布",
+      "climbing": "攀岩",
+      "vtt": "登山車",
+      "diving": "潛水"
     },
     "city": {
-      "taipei": "台北",
+      "taipei": "臺北",
       "newTaipei": "新北",
-      "keelung": "基隆"
+      "keelung": "基隆",
+      "taoyuan": "桃園",
+      "hsinchuCity": "新竹市",
+      "hsinchuCounty": "新竹縣",
+      "miaoli": "苗栗",
+      "taichung": "臺中",
+      "changhua": "彰化",
+      "nantou": "南投",
+      "yunlin": "雲林",
+      "chiayiCity": "嘉義市",
+      "chiayiCounty": "嘉義縣",
+      "tainan": "臺南",
+      "kaohsiung": "高雄",
+      "pingtung": "屏東",
+      "yilan": "宜蘭",
+      "hualien": "花蓮",
+      "taitung": "臺東",
+      "penghu": "澎湖"
     },
     "metrics": {
       "distance": "距離",
@@ -62,6 +82,7 @@
   },
   "auth": {
     "signIn": "使用 Google 登入",
+    "signInShort": "登入",
     "signOut": "登出",
     "admin": "管理員"
   },
@@ -87,7 +108,7 @@
       "not-allowed": "你沒有新增地點的權限。",
       "invalid-city": "請選擇縣市。",
       "needs-an-activity": "至少要選一種活動類型。",
-      "outside-coverage": "座標不在北北基範圍內。",
+      "outside-coverage": "座標不在台灣範圍內。（金門、馬祖尚未納入）",
       "spot-needs-point": "地點必須是單一座標。",
       "difficulty-out-of-range": "難度必須介於 1 到 5。",
       "unknown": "送出失敗，請再試一次。",
@@ -132,5 +153,88 @@
       "transition-not-allowed": "這個狀態轉換不被允許。"
     },
     "cancel": "取消"
+  },
+  "home": {
+    "heroTitle": "城市的盡頭",
+    "heroTitle2": "就是山海的起點",
+    "heroSub": "健行、單車、露營、衝浪、潛水、瀑布。距離與爬升算自實際軌跡，時間標明是量到的還是估的。",
+    "searchPlaceholder": "搜尋路線、山、地區…",
+    "openMap": "開啟地圖",
+    "mapTitle": "從地圖上找",
+    "mapSub": "先看它在哪、周圍是什麼，再決定去不去。",
+    "all": "全部",
+    "seeAll": "看全部 {count} 個地點",
+    "aboutKicker": "關於這個站",
+    "aboutTitle": "一個人手工整理的台灣戶外地點庫",
+    "aboutBody": "這裡不做即時天氣、浪況與營位查詢——那些已經有人做得很好。這裡回答的是另一個問題：這個地方是什麼樣子，我適不適合去。每一筆的距離與爬升都來自實際軌跡，時間會標明是量到的還是估的。",
+    "factPlaces": "個地點",
+    "factActivities": "種活動",
+    "factCities": "個縣市",
+    "startExploring": "開始探索",
+    "empty": "目前沒有已發布的地點。",
+    "activitiesKicker": "戶外資源",
+    "activitiesTitle": "八種出門的方式",
+    "activitiesTitle2": "同一座島",
+    "activitiesSub": "每一種活動的難度用自己的量表，因為它們不能互相比較。",
+    "countPlaces": "{count} 個地點",
+    "gathering": "收集中",
+    "prev": "上一項",
+    "next": "下一項",
+    "seeActivity": "看 {activity} 的地點",
+    "lead": {
+      "hiking": "從捷運站出來，一個半小時就在稜線上。",
+      "cycling": "河濱一路往上，柏油沒有斷過。",
+      "vtt": "林道的樂趣不在快，在讀路。",
+      "climbing": "海就在腳下，浪聲比風聲大。",
+      "camping": "天黑得比你安排的早。",
+      "surfing": "風向對了，才叫浪點。",
+      "waterfall": "聽得到聲音的時候，通常還要再走十分鐘。",
+      "diving": "水面下的台灣，是另一座島。"
+    },
+    "blurb": {
+      "hiking": "陽明山系與市區近郊的步道多半路徑明確、指標完整，適合第一次自己安排的人。這裡記下每條的實際距離與累積爬升，時間則標明是量到的還是估的。",
+      "cycling": "從河濱車道接進山線，坡度與路面在同一趟裡會變好幾次。每條路線附上高度變化，出門前就知道要換幾次檔。",
+      "vtt": "產業道路與林道構成的越野路段，路況隨雨勢改變得很快。這裡記下軌跡與坡度，路況交給走過的人自己補，並附上日期。",
+      "climbing": "龍洞的砂岩海崖是台灣最主要的天然岩場。這裡只記位置、接近方式與資訊來源，不自己評難度——那應該來自岩場本身的共識。",
+      "camping": "營地的形態差很多，從有水有電到什麼都沒有。這裡標明抵達方式、地形與海拔，營位與收費請以現場為準。",
+      "surfing": "北海岸與東北角的浪點各有適合的季節與風向。這裡不做即時浪況——那已經有人做得很好——只說明這個點長什麼樣子、怎麼下水。",
+      "waterfall": "平溪、三峽一帶的溪谷藏著大小不一的瀑布，多數在步道終點。這裡記下步行距離與落差，以及雨後該不該去。",
+      "diving": "綠島、小琉球、墾丁與東北角都有可以下水的點，深度、流速和適合的季節差很多。這裡記下位置、怎麼到、以及岸潛還是船潛——氣況與能見度請以當天的在地資訊為準。"
+    },
+    "offerKicker": "這個站提供什麼",
+    "offerTitle": "不只是一個座標",
+    "offerTitle2": "是一次判斷的依據",
+    "offerBody": "每一筆都附上實際軌跡算出的距離與爬升、標明依據的所需時間，以及走過的人寫下的路況。你要判斷的是「我適不適合去」，那需要的不只是知道它在哪。",
+    "offer1": "路線軌跡",
+    "offer1d": "GPX 實測，可下載",
+    "offer2": "難度分級",
+    "offer2d": "依活動各自計算",
+    "offer3": "時間依據",
+    "offer3d": "量到的與估的分開",
+    "offer4": "現場心得",
+    "offer4d": "路況、停車、水源",
+    "offerCta": "探索所有地點",
+    "featuredKicker": "精選",
+    "featuredScribble": "step into the wild!",
+    "featuredTitle": "最近加入的地方",
+    "featuredTitle2": "一個一個慢慢補",
+    "noPhoto": "尚無照片",
+    "view": "看看"
+  },
+  "closing": {
+    "scribble": "keep going!",
+    "title": "台灣還有很多地方",
+    "title2": "沒有被寫下來",
+    "body": "目前有 {count} 個地點，一筆一筆慢慢補。先從已經在的開始看。",
+    "cta": "看全部地點",
+    "credit": "南雅奇岩 · fullfen666 / CC BY-SA 2.0"
+  },
+  "footer": {
+    "blurb": "台灣的戶外地點記錄——健行、單車、露營、衝浪、潛水、瀑布、攀岩、登山車。目前還很小，一筆一筆慢慢長。",
+    "browse": "瀏覽",
+    "about": "關於",
+    "source": "原始碼（GitHub）",
+    "credits": "地點照片來自 Wikimedia Commons，各自標示作者與授權。運動與首頁影片為免費授權素材，將陸續換成自己拍攝的內容。",
+    "legal": "Traversee — 一個公開的作品集專案。內容以 CC 授權引用，出處見各張照片標示。"
   }
 }

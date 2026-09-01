@@ -43,18 +43,30 @@ describe('elevationGainM', () => {
 })
 
 describe('isWithinCoverage', () => {
-  it('accepts places inside northern Taiwan', () => {
-    expect(isWithinCoverage([121.5518, 25.1662])).toBe(true) // Yangmingshan
-    expect(isWithinCoverage([121.9441, 25.0206])).toBe(true) // Fulong
-    expect(isWithinCoverage([121.7961, 25.1449])).toBe(true) // Keelung
+  it('accepts places the length of the island', () => {
+    expect(isWithinCoverage([121.5518, 25.1662])).toBe(true) // Yangmingshan, north
+    expect(isWithinCoverage([120.9573, 23.4699])).toBe(true) // Yushan, centre
+    expect(isWithinCoverage([120.8, 21.95])).toBe(true) // Kenting, south
+    expect(isWithinCoverage([121.4936, 22.6614])).toBe(true) // Green Island
+    expect(isWithinCoverage([119.5665, 23.5711])).toBe(true) // Penghu
   })
 
   it('rejects places outside it', () => {
-    // Submissions carry coordinates from a file the site did not produce, so
-    // "somewhere in Taiwan" is not good enough — a track from Kenting would
-    // otherwise publish onto a site that claims to cover the north.
-    expect(isWithinCoverage([120.8, 21.95])).toBe(false) // Kenting
     expect(isWithinCoverage([139.7, 35.7])).toBe(false) // Tokyo
+    expect(isWithinCoverage([121.0, 19.5])).toBe(false) // Batanes, south of the box
+  })
+
+  it('rejects Kinmen and Matsu, which the box cannot reach', () => {
+    // Not an oversight. A rectangle stretched to either archipelago also covers
+    // the Fujian coast, so they are refused with a message that says so rather
+    // than admitted alongside somewhere in mainland China.
+    expect(isWithinCoverage([118.3186, 24.4364])).toBe(false) // Kinmen
+    expect(isWithinCoverage([119.9494, 26.1608])).toBe(false) // Nangan, Matsu
+  })
+
+  it('rejects the mainland coast the box comes closest to', () => {
+    expect(isWithinCoverage([119.3061, 26.0745])).toBe(false) // Fuzhou
+    expect(isWithinCoverage([118.0894, 24.4798])).toBe(false) // Xiamen
   })
 
   it('rejects coordinates given the wrong way round', () => {

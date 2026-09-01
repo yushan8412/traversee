@@ -15,7 +15,7 @@ export default async function SubmitPage({ params }: { params: Promise<{ locale:
   // hiding the form is not authorisation, and the action does not trust it.
   if (!session?.user) {
     return (
-      <main>
+      <main className="mx-auto max-w-3xl px-6 pb-20 pt-10">
         <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="text-dim">{t('signInFirst')}</p>
       </main>

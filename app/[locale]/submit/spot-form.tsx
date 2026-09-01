@@ -12,7 +12,15 @@ const TILE_URL =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
 
 const CITIES = ['taipei', 'newTaipei', 'keelung'] as const
-const ACTIVITIES = ['hiking', 'cycling', 'camping', 'surfing', 'waterfall'] as const
+const ACTIVITIES = [
+  'hiking',
+  'cycling',
+  'camping',
+  'surfing',
+  'waterfall',
+  'climbing',
+  'vtt',
+] as const
 
 const FIELD = 'w-full rounded border border-line bg-panel px-3 py-2 text-sm'
 const LABEL = 'mb-1 block text-xs font-medium text-dim'
@@ -51,7 +59,7 @@ export function SpotForm() {
         },
         center: [121.56, 25.05],
         zoom: 9,
-        maxBounds: new LngLatBounds([121.0, 24.7], [122.3, 25.5]),
+        maxBounds: new LngLatBounds([119.3, 21.75], [122.1, 25.4]),
         minZoom: 8,
         maxZoom: 17,
         attributionControl: { compact: true },

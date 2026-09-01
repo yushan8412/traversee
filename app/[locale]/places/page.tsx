@@ -31,7 +31,7 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
   }))
 
   return (
-    <main>
+    <main className="mx-auto max-w-3xl px-6 pb-20 pt-10">
       <h1 className="mb-2 text-2xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mb-6 text-sm text-dim">{t('count', { count: places.length })}</p>
 

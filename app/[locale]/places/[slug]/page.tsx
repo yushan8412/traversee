@@ -45,7 +45,7 @@ export default async function PlacePage({
   )
 
   return (
-    <main>
+    <main className="mx-auto max-w-3xl px-6 pb-20 pt-10">
       <Link href="/places" className="text-sm text-accent hover:underline">
         ← {t('backToList')}
       </Link>

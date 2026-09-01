@@ -141,10 +141,10 @@ export function PlaceMap({
         // grant of 5,000 billable transactions a month. Bounding the map is a
         // product decision that happens to cap the worst case.
         maxBounds: [
-          [121.0, 24.7],
-          [122.3, 25.5],
+          [119.3, 21.75],
+          [122.1, 25.4],
         ],
-        minZoom: 8,
+        minZoom: 7,
         maxZoom: 17,
         // Every tile request carries the short-lived token. The credential never
         // reaches the tile URL itself, so it cannot end up in a browser history

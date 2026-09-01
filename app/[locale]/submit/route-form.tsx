@@ -8,7 +8,15 @@ import { PlaceMap } from '../places/place-map'
 import { submitRoute, type SubmitResult } from './route-actions'
 
 const CITIES = ['taipei', 'newTaipei', 'keelung'] as const
-const ACTIVITIES = ['hiking', 'cycling', 'camping', 'surfing', 'waterfall'] as const
+const ACTIVITIES = [
+  'hiking',
+  'cycling',
+  'camping',
+  'surfing',
+  'waterfall',
+  'climbing',
+  'vtt',
+] as const
 
 const FIELD = 'w-full rounded border border-line bg-panel px-3 py-2 text-sm'
 const LABEL = 'mb-1 block text-xs font-medium text-dim'

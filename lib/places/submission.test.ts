@@ -69,7 +69,7 @@ describe('buildSpotSubmission', () => {
   })
 
   it('rejects a location outside the covered region', () => {
-    const { errors } = buildSpotSubmission({ ...input, lng: 120.8, lat: 21.95 }, context)
+    const { errors } = buildSpotSubmission({ ...input, lng: 127.68, lat: 26.21 }, context)
     expect(errors.map((e) => e.code)).toContain('outside-coverage')
   })
 })

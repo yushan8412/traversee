@@ -19,11 +19,17 @@ export function distanceKm(from: Position, to: Position): number {
 }
 
 /**
- * Bounding box for Taipei, New Taipei and Keelung, with enough margin to include
- * the coast and the outlying parts of New Taipei without reaching Yilan or
- * Taoyuan. The same box the map is bounded to.
+ * Taiwan: the main island, Penghu, and Green and Orchid Islands. The same box
+ * both maps are bounded to.
+ *
+ * Kinmen and Lienchiang fall outside it, and that is deliberate rather than an
+ * oversight. Kinmen sits at 118.3E and Matsu at 26.1N; a rectangle stretched to
+ * reach either one also swallows Fuzhou and the Fujian coast, so a box cannot
+ * express "Taiwan" and include them. Covering them needs a second check, not a
+ * looser first one — a bound that accepts mainland China is worse than one that
+ * turns two archipelagos away with an error a person can read.
  */
-const COVERAGE = { minLng: 121.0, maxLng: 122.3, minLat: 24.7, maxLat: 25.5 }
+const COVERAGE = { minLng: 119.3, maxLng: 122.1, minLat: 21.75, maxLat: 25.4 }
 
 /**
  * Submissions carry coordinates from a file this site did not produce, so the

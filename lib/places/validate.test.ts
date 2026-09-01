@@ -85,9 +85,9 @@ describe('validateSubmission', () => {
 
   it('rejects coordinates outside the covered region', () => {
     // The coordinates come from a file this site did not produce, so a track
-    // from Kenting must not publish onto a site that claims to cover the north.
+    // recorded in Okinawa must not publish onto a catalogue of Taiwan.
     expect(
-      errorsFor({ ...spot, geometry: { type: 'Point', coordinates: [120.8, 21.95] }, startPoint: { type: 'Point', coordinates: [120.8, 21.95] } }),
+      errorsFor({ ...spot, geometry: { type: 'Point', coordinates: [127.68, 26.21] }, startPoint: { type: 'Point', coordinates: [127.68, 26.21] } }),
     ).toContain('outside-coverage')
   })
 

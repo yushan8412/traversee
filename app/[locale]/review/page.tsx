@@ -18,7 +18,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ locale:
   // Checked again in the action. Hiding the page is not authorisation.
   if (session?.user?.role !== 'admin') {
     return (
-      <main>
+      <main className="mx-auto max-w-3xl px-6 pb-20 pt-10">
         <h1 className="mb-4 text-2xl font-semibold tracking-tight">{t('title')}</h1>
         <p className="text-dim">{t('adminOnly')}</p>
       </main>
