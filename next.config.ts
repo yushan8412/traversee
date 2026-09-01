@@ -12,6 +12,20 @@ import type { NextConfig } from 'next'
 //                           big enough for the cap to be a real question.
 //   Route rewrites        — must live here rather than in staticwebapp.config.json,
 //                           which does not support rewrites into a Next.js app.
-const nextConfig: NextConfig = {}
+const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Server actions default to a 1 MB body, which is smaller than a single
+      // phone photo — uploads failed with a 413 before reaching any of our code.
+      //
+      // 32 MB covers six photos at the per-file cap. It is a real ceiling rather
+      // than a generous one: the whole body is held in memory by the function
+      // while it is processed, and this runs on the Free plan. If submissions
+      // ever need to be larger, the answer is uploading straight to blob storage
+      // with a short-lived SAS rather than raising this again.
+      bodySizeLimit: '32mb',
+    },
+  },
+}
 
 export default createNextIntlPlugin()(nextConfig)
