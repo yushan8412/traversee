@@ -123,27 +123,51 @@ body {
 /* Map pins. MapLibre creates these elements itself, outside React's tree, so
    they are styled here rather than with utility classes. */
 .tv-pin {
-  width: 22px;
-  height: 22px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: #fff;
-  border: 6px solid var(--color-brand);
-  box-shadow: 0 3px 12px rgb(0 0 0 / 0.35);
+  background: var(--color-brand);
+  color: #fff;
+  border: 2.5px solid #fff;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
   cursor: pointer;
   padding: 0;
-  transition:
-    width 160ms ease-out,
-    height 160ms ease-out;
+  transition: transform 160ms ease-out;
 }
 .tv-pin:hover {
-  width: 26px;
-  height: 26px;
+  transform: scale(1.14);
 }
 .tv-pin.is-active {
-  width: 30px;
-  height: 30px;
-  border-color: var(--color-warm);
-  box-shadow: 0 0 0 10px rgb(181 113 75 / 0.22), 0 4px 14px rgb(0 0 0 / 0.3);
+  background: var(--color-warm);
+  box-shadow:
+    0 0 0 8px rgb(181 113 75 / 0.24),
+    0 4px 14px rgb(0 0 0 / 0.3);
+}
+
+/* One hue per activity, so a glance at the map reads as a distribution rather
+   than as a list of identical dots. All within the site's palette — the icons
+   do the identifying and the colour only groups them. */
+.tv-pin[data-activity='hiking'],
+.tv-pin[data-activity='vtt'] {
+  background: var(--color-brand);
+}
+.tv-pin[data-activity='cycling'] {
+  background: var(--color-brandInk);
+}
+.tv-pin[data-activity='climbing'] {
+  background: var(--color-clayDeep);
+}
+.tv-pin[data-activity='camping'] {
+  background: #8a7f4e;
+}
+.tv-pin[data-activity='surfing'],
+.tv-pin[data-activity='diving'] {
+  background: var(--color-sea);
+}
+.tv-pin[data-activity='waterfall'] {
+  background: var(--color-deep);
 }
 
 /* The explore map's popup is a card, so MapLibre's own padding and tip have to

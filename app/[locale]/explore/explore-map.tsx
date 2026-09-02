@@ -7,7 +7,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { Link } from '../../../i18n/navigation'
 import type { Activity, City } from '../../../lib/places/types'
 import type { TileSource } from '../../../lib/maps/tile-source'
-import { ActivityIcon } from '../activity-icon'
+import { ActivityIcon, activityIconMarkup } from '../activity-icon'
 
 const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
@@ -198,10 +198,15 @@ export function ExploreMap({
 
     for (const pin of visible) {
       if (markers.current.has(pin.slug)) continue
+      // A pin per activity rather than one green dot for everything. The
+      // activity is the first thing anyone scanning the map wants, and a
+      // uniform dot makes them click each one to find out.
       const element = document.createElement('button')
       element.type = 'button'
       element.className = 'tv-pin'
-      element.setAttribute('aria-label', pin.name)
+      element.dataset.activity = pin.activities[0] ?? 'hiking'
+      element.setAttribute('aria-label', `${pin.name} — ${pin.activityLabels.join(' · ')}`)
+      element.innerHTML = activityIconMarkup(pin.activities[0] ?? 'hiking', 18)
       const marker = new Marker({ element })
         .setLngLat([pin.lng, pin.lat])
         .setPopup(new Popup({ offset: 20, closeButton: false, maxWidth: 'none' }).setHTML(card(pin, detail)))
