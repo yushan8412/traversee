@@ -1,47 +1,61 @@
 export type Locale = 'zh' | 'en'
 
 /**
- * Every county and city the coverage box reaches. Kinmen and Lienchiang are
- * absent on purpose: a rectangle wide enough to hold them also holds Fujian, so
- * they need their own check rather than a silent hole in this one.
+ * The vocabulary, as values rather than as a union.
  *
- * This is the Cosmos partition key. Adding values is free; renaming one is a
- * migration, because existing documents keep the old string.
+ * The union came first and the arrays were written out again by hand wherever
+ * one was needed at runtime — four times for cities, four for activities. On
+ * 2026-09-02 that cost a day: the submit form offered twenty counties while the
+ * server action it posted to still accepted three, so every submission outside
+ * 北北基 came back "送出失敗", and diving was missing from all four copies, so
+ * it could not be submitted at all despite being live everywhere else.
+ *
+ * Deriving the type from the array instead of the other way round makes that
+ * drift impossible: there is one list, and adding to it updates the type.
+ *
+ * Ordered north to south. `CITIES` is the Cosmos partition key's domain, so
+ * adding a value is free and renaming one is a migration.
  */
-export type City =
-  | 'taipei'
-  | 'newTaipei'
-  | 'keelung'
-  | 'taoyuan'
-  | 'hsinchuCity'
-  | 'hsinchuCounty'
-  | 'miaoli'
-  | 'taichung'
-  | 'changhua'
-  | 'nantou'
-  | 'yunlin'
-  | 'chiayiCity'
-  | 'chiayiCounty'
-  | 'tainan'
-  | 'kaohsiung'
-  | 'pingtung'
-  | 'yilan'
-  | 'hualien'
-  | 'taitung'
-  | 'penghu'
+export const CITIES = [
+  'taipei',
+  'newTaipei',
+  'keelung',
+  'taoyuan',
+  'hsinchuCity',
+  'hsinchuCounty',
+  'miaoli',
+  'taichung',
+  'changhua',
+  'nantou',
+  'yunlin',
+  'chiayiCity',
+  'chiayiCounty',
+  'tainan',
+  'kaohsiung',
+  'pingtung',
+  'yilan',
+  'hualien',
+  'taitung',
+  'penghu',
+] as const
+
+export type City = (typeof CITIES)[number]
 
 /** Shape only. A waterfall is a spot with an `approach`, not a third kind. */
 export type Kind = 'route' | 'spot'
 
-export type Activity =
-  | 'hiking'
-  | 'cycling'
-  | 'camping'
-  | 'surfing'
-  | 'waterfall'
-  | 'climbing'
-  | 'vtt'
-  | 'diving'
+export const ACTIVITIES = [
+  'hiking',
+  'cycling',
+  'vtt',
+  'climbing',
+  'camping',
+  'surfing',
+  'diving',
+  'waterfall',
+] as const
+
+export type Activity = (typeof ACTIVITIES)[number]
 
 export type Status = 'pending' | 'published' | 'rejected'
 

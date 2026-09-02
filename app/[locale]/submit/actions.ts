@@ -6,6 +6,7 @@ import { createPlace, slugExists } from '../../../lib/places/repository'
 import { checkUploads } from '../../../lib/photos/paths'
 import { storePhotos } from '../../../lib/photos/store'
 import { buildSpotSubmission, type SpotSubmissionInput } from '../../../lib/places/submission'
+import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import type { Activity, City } from '../../../lib/places/types'
 
 export interface SubmitResult {
@@ -15,16 +16,6 @@ export interface SubmitResult {
   slug?: string
 }
 
-const CITIES: City[] = ['taipei', 'newTaipei', 'keelung']
-const ACTIVITIES: Activity[] = [
-  'hiking',
-  'cycling',
-  'camping',
-  'surfing',
-  'waterfall',
-  'climbing',
-  'vtt',
-]
 
 function readNumber(value: FormDataEntryValue | null): number {
   // NaN rather than 0 for unparseable input: 0 is a real coordinate in the
