@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '../../i18n/navigation'
 import type { Locale } from '../../i18n/routing'
-import { listPublishedPlaces } from '../../lib/places/repository'
+import { listPublishedPlacesOrNone } from '../../lib/places/repository'
 import { resolveText } from '../../lib/places/text'
 import { publicPhotoUrl } from '../../lib/photos/store'
 import { standInPhotos } from '../../lib/places/stand-in-photos'
@@ -18,7 +18,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
   const t = await getTranslations('home')
   const tp = await getTranslations('places')
-  const places = await listPublishedPlaces()
+  const places = await listPublishedPlacesOrNone()
 
   // The footage is not in the repository — see .gitignore. Point this at Blob
   // Storage in production; the local path is the convenience for development,

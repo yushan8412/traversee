@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { Metadata } from 'next'
-import { listPublishedPlaces } from '../../../lib/places/repository'
+import { listPublishedPlacesOrNone } from '../../../lib/places/repository'
 import { resolveText } from '../../../lib/places/text'
 import { resolveTileSource } from '../../../lib/maps/tile-source'
 import { publicPhotoUrl } from '../../../lib/photos/store'
@@ -38,7 +38,7 @@ export default async function Explore({ params }: { params: Promise<{ locale: st
 
   const t = await getTranslations('explore')
   const tp = await getTranslations('places')
-  const places = await listPublishedPlaces()
+  const places = await listPublishedPlacesOrNone()
 
   const pins: ExplorePin[] = places.map((place) => {
     const graded = place.activities.find((activity) => place.difficulty[activity] !== undefined)

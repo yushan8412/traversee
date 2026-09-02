@@ -61,6 +61,32 @@ function toSummary(place: Place): PlaceSummary {
   return { id, slug, city, kind, activities, name, summary, difficulty, startPoint, route, photos, coverPhotoIndex }
 }
 
+/**
+ * The catalogue for a page that has to render whether or not the database
+ * answers.
+ *
+ * The home page is a hero, eight activities, a footer — and a rail of places.
+ * Losing the last of those should cost the rail, not the page: a front door
+ * that returns 500 because a query failed is worse than one that is briefly
+ * short of content. The same is true of the map, which still has its filters.
+ *
+ * This is not the fixture fallback wearing a different hat. It returns nothing,
+ * which is true, rather than seed data, which would be a lie — that distinction
+ * is the whole point of the guard in `shouldUseFixtures`.
+ *
+ * `/places` deliberately does not use this. A catalogue page that cannot reach
+ * the catalogue has nothing to say, and "no published places yet" would be a
+ * false statement rather than an empty one.
+ */
+export async function listPublishedPlacesOrNone(): Promise<PlaceSummary[]> {
+  try {
+    return await listPublishedPlaces()
+  } catch (error) {
+    console.error('Could not read the catalogue; rendering it as empty', error)
+    return []
+  }
+}
+
 export async function listPublishedPlaces(): Promise<PlaceSummary[]> {
   if (shouldUseFixtures()) {
     return fixturePlaces.filter((p) => p.status === 'published').map(toSummary)
