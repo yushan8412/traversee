@@ -11,8 +11,23 @@ setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
 
 const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
-/** Free stand-in for anywhere that is not production. See lib/maps/tile-source. */
-const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+/**
+ * Free stand-in for anywhere that is not production. See lib/maps/tile-source.
+ *
+ * Esri's Light Gray Canvas rather than OpenStreetMap's own tiles. The default
+ * OSM style paints administrative and territorial boundaries as heavy purple
+ * lines, which on this map drew a box in the sea around Taiwan, and its bright
+ * greens and reds fight a palette built to let photographs be the only
+ * saturated thing on a page.
+ *
+ * Carto's Positron was the first choice and is out: its tiles still answer
+ * without a key, but they now come back stamped API KEY REQUIRED across every
+ * one. Esri's needs no key. Note the {z}/{y}/{x} order, which is not the usual
+ * one. Attribution is required and is declared on the source.
+ */
+const OSM_TILES =
+  'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+const OSM_ATTRIBUTION = 'Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
 
 // Every county the coverage box reaches, in the order they run down the island.
 // This list was still Taipei/New Taipei/Keelung after the scope widened, so the
@@ -70,7 +85,15 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
         container: container.current,
         style: {
           version: 8,
-          sources: { azure: { type: 'raster', tiles: [useAzure ? AZURE_TILES : OSM_TILES], tileSize: 256, maxzoom: 18 } },
+          sources: {
+            azure: {
+              type: 'raster',
+              tiles: [useAzure ? AZURE_TILES : OSM_TILES],
+              tileSize: 256,
+              maxzoom: 18,
+              ...(useAzure ? {} : { attribution: OSM_ATTRIBUTION }),
+            },
+          },
           layers: [{ id: 'azure', type: 'raster', source: 'azure' }],
         },
         center: [121.56, 25.05],
