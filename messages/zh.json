@@ -88,13 +88,21 @@
     "activity": "活動",
     "difficulty": "難度",
     "region": "地區",
-    "upTo": "{value} 以下",
     "showing": "顯示 {count} 個",
     "clear": "清除篩選",
     "noMatches": "沒有符合的地點。試著放寬條件。",
     "ungradedHidden": "另有 {count} 個地點尚未評定難度，篩選難度時不會出現。",
     "viewDetail": "看詳細資訊",
-    "noPhoto": "尚無照片"
+    "noPhoto": "尚無照片",
+    "grade": "難度 {value}",
+    "regionEmpty": "這一區還沒有地點",
+    "regions": {
+      "north": "北部",
+      "central": "中部",
+      "south": "南部",
+      "east": "東部",
+      "islands": "離島"
+    }
   },
   "auth": {
     "signIn": "使用 Google 登入",

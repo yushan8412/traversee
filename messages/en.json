@@ -88,13 +88,21 @@
     "activity": "Activity",
     "difficulty": "Difficulty",
     "region": "Region",
-    "upTo": "{value} or under",
     "showing": "{count} shown",
     "clear": "Clear filters",
     "noMatches": "Nothing matches. Try loosening a filter.",
     "ungradedHidden": "{count} more places have no difficulty grade, so filtering by it leaves them out.",
     "viewDetail": "See full details",
-    "noPhoto": "No photo yet"
+    "noPhoto": "No photo yet",
+    "grade": "Grade {value}",
+    "regionEmpty": "Nothing here yet",
+    "regions": {
+      "north": "North",
+      "central": "Central",
+      "south": "South",
+      "east": "East",
+      "islands": "Islands"
+    }
   },
   "auth": {
     "signIn": "Sign in with Google",

@@ -6,6 +6,7 @@ import { LngLatBounds, MapLibreMap, Marker, NavigationControl, Popup, setWorkerU
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Link } from '../../../i18n/navigation'
 import type { Activity, City } from '../../../lib/places/types'
+import { regionOf, type Region } from '../../../lib/places/regions'
 import type { TileSource } from '../../../lib/maps/tile-source'
 import { ActivityIcon, activityIconMarkup } from '../activity-icon'
 
@@ -35,9 +36,14 @@ export interface ExplorePin {
 
 interface Filters {
   activities: Set<Activity>
-  cities: Set<City>
-  /** Upper bound. `null` means difficulty is not being filtered on at all. */
-  maxDifficulty: number | null
+  regions: Set<Region>
+  /**
+   * Exact grades, not a ceiling. "3 or under" answered a question nobody asked:
+   * someone who wants a hard walk has to select every band below it to get
+   * there. Ticking the grades you want is both simpler to say and simpler to
+   * read back.
+   */
+  difficulties: Set<number>
 }
 
 const DIFFICULTY_STEPS = [1, 2, 3, 4, 5]
@@ -46,12 +52,15 @@ function matches(pin: ExplorePin, filters: Filters): boolean {
   if (filters.activities.size > 0 && !pin.activities.some((a) => filters.activities.has(a))) {
     return false
   }
-  if (filters.cities.size > 0 && !filters.cities.has(pin.city)) return false
+  if (filters.regions.size > 0) {
+    const region = regionOf(pin.city)
+    if (region === null || !filters.regions.has(region)) return false
+  }
   // An ungraded place is not "easy" and it is not "hard" — it is unknown, so a
   // difficulty filter has nothing to test it against and it drops out. Hiding it
   // silently would be the wrong call, which is why the panel says how many.
-  if (filters.maxDifficulty !== null) {
-    if (pin.difficulty === null || pin.difficulty > filters.maxDifficulty) return false
+  if (filters.difficulties.size > 0) {
+    if (pin.difficulty === null || !filters.difficulties.has(pin.difficulty)) return false
   }
   return true
 }
@@ -60,12 +69,13 @@ export function ExploreMap({
   pins,
   tileSource,
   activities,
-  cities,
+  regions,
 }: {
   pins: ExplorePin[]
   tileSource: TileSource
   activities: { key: Activity; label: string }[]
-  cities: { key: City; label: string }[]
+  /** Every region, with how many places each holds — including none. */
+  regions: { key: Region; label: string; count: number }[]
 }) {
   const t = useTranslations('explore')
   const tp = useTranslations('places')
@@ -84,8 +94,8 @@ export function ExploreMap({
   const [panelOpen, setPanelOpen] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     activities: new Set(),
-    cities: new Set(),
-    maxDifficulty: null,
+    regions: new Set(),
+    difficulties: new Set(),
   })
 
   const visible = useMemo(() => pins.filter((pin) => matches(pin, filters)), [pins, filters])
@@ -255,7 +265,7 @@ export function ExploreMap({
   }
 
   const cleared =
-    filters.activities.size === 0 && filters.cities.size === 0 && filters.maxDifficulty === null
+    filters.activities.size === 0 && filters.regions.size === 0 && filters.difficulties.size === 0
 
   return (
     <div className="relative h-[calc(100vh-4rem)] w-full">
@@ -307,18 +317,16 @@ export function ExploreMap({
           {DIFFICULTY_STEPS.map((step) => (
             <Chip
               key={step}
-              on={filters.maxDifficulty === step}
-              onClick={() =>
-                setFilters((f) => ({ ...f, maxDifficulty: f.maxDifficulty === step ? null : step }))
-              }
+              on={filters.difficulties.has(step)}
+              onClick={() => setFilters((f) => ({ ...f, difficulties: toggle(f.difficulties, step) }))}
             >
-              {t('upTo', { value: step })}
+              {t('grade', { value: step })}
             </Chip>
           ))}
           {/* Stated rather than left to be discovered. Most entries have no grade
               and a difficulty filter necessarily excludes them, which looks like
               a broken filter unless the page says so. */}
-          {filters.maxDifficulty !== null && ungraded > 0 && (
+          {filters.difficulties.size > 0 && ungraded > 0 && (
             <p className="mt-2 w-full text-[11px] leading-relaxed text-dim">
               {t('ungradedHidden', { count: ungraded })}
             </p>
@@ -326,13 +334,20 @@ export function ExploreMap({
         </Group>
 
         <Group label={t('region')}>
-          {cities.map((city) => (
+          {/* All five are listed, including the empty ones, because the site now
+              says it covers Taiwan and a panel offering only the north would
+              quietly contradict that. The empty ones are shown as unavailable
+              rather than as a click that returns nothing. */}
+          {regions.map((region) => (
             <Chip
-              key={city.key}
-              on={filters.cities.has(city.key)}
-              onClick={() => setFilters((f) => ({ ...f, cities: toggle(f.cities, city.key) }))}
+              key={region.key}
+              on={filters.regions.has(region.key)}
+              disabled={region.count === 0}
+              title={region.count === 0 ? t('regionEmpty') : undefined}
+              onClick={() => setFilters((f) => ({ ...f, regions: toggle(f.regions, region.key) }))}
             >
-              {city.label}
+              {region.label}
+              <span className="opacity-60">{region.count}</span>
             </Chip>
           ))}
         </Group>
@@ -341,7 +356,7 @@ export function ExploreMap({
           <button
             type="button"
             onClick={() =>
-              setFilters({ activities: new Set(), cities: new Set(), maxDifficulty: null })
+              setFilters({ activities: new Set(), regions: new Set(), difficulties: new Set() })
             }
             className="mt-5 text-xs text-brandInk underline decoration-brand/40 underline-offset-4"
           >
@@ -385,21 +400,27 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
 function Chip({
   on,
   onClick,
+  disabled,
+  title,
   children,
 }: {
   on: boolean
   onClick: () => void
+  disabled?: boolean
+  title?: string
   children: React.ReactNode
 }) {
   return (
     <button
       type="button"
       aria-pressed={on}
+      disabled={disabled}
+      title={title}
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         on
           ? 'border-brand bg-brand text-white'
-          : 'border-line bg-paper text-ink hover:border-brand/50'
+          : 'border-line bg-paper text-ink enabled:hover:border-brand/50'
       }`}
     >
       {children}
