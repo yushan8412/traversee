@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { checkUploads, photoPaths, MAX_PHOTOS, MAX_PHOTO_BYTES } from './paths'
+import { photoPaths } from './paths'
+import { checkUploads, MAX_PHOTOS, MAX_PHOTO_BYTES } from './limits'
 
 describe('photoPaths', () => {
   it('groups a place\'s photos under its own identifier', () => {

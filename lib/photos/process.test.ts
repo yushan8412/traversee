@@ -35,6 +35,22 @@ describe('processPhoto', () => {
     expect((await sharp(thumb).metadata()).exif).toBeUndefined()
   })
 
+  it('turns a photo the right way up before stripping the flag that said which way that was', async () => {
+    // A phone held upright records the frame in landscape and writes an
+    // orientation tag saying to turn it. Stripping EXIF removes that tag, so if
+    // the rotation is not applied first the photo is published on its side and
+    // nothing downstream knows it was ever meant to be otherwise.
+    const upright = await sharp({
+      create: { width: 400, height: 800, channels: 3, background: { r: 90, g: 130, b: 90 } },
+    })
+      .jpeg()
+      .withMetadata({ orientation: 6 })
+      .toBuffer()
+
+    const { width, height } = await processPhoto(upright)
+    expect({ width, height }).toEqual({ width: 800, height: 400 })
+  })
+
   it('bounds the long edge so an upload cannot be published at full camera size', async () => {
     const { full } = await processPhoto(await photoWithLocation(6000, 4000))
     const meta = await sharp(full).metadata()

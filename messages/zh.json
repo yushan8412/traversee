@@ -141,8 +141,8 @@
       "gpx-unreadable": "無法從這個檔案讀出軌跡。",
       "route-needs-linestring": "這個檔案沒有形成一條路徑。",
       "route-needs-metrics": "缺少路線數據。",
-      "too-many-photos": "照片最多 6 張。",
-      "photo-too-large": "單張照片上限 15 MB。",
+      "too-many-photos": "照片最多 {max} 張。",
+      "photo-too-large": "單張照片上限 {limit} MB。",
       "photo-not-an-image": "有檔案不是可讀取的圖片。"
     },
     "kindRoute": "路線（上傳 GPX）",
@@ -152,7 +152,7 @@
     "storedPoints": "簡化後的點數",
     "noTimestamps": "檔案沒有時間戳",
     "photos": "照片",
-    "photosHint": "最多 6 張，會自動轉檔並移除位置資訊"
+    "photosHint": "最多 {max} 張，上傳前會自動縮圖，並移除位置資訊"
   },
   "review": {
     "title": "待審核",

@@ -3,7 +3,7 @@
 import { randomUUID } from 'node:crypto'
 import { auth } from '../../../auth'
 import { createPlace, slugExists } from '../../../lib/places/repository'
-import { checkUploads } from '../../../lib/photos/paths'
+import { checkUploads } from '../../../lib/photos/limits'
 import { storePhotos } from '../../../lib/photos/store'
 import { buildSpotSubmission, type SpotSubmissionInput } from '../../../lib/places/submission'
 import { ACTIVITIES, CITIES } from '../../../lib/places/types'

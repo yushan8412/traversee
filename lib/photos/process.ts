@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import { MAX_EDGE, THUMB_EDGE } from './limits'
 
 export interface ProcessedPhoto {
   full: Buffer
@@ -6,10 +7,6 @@ export interface ProcessedPhoto {
   width: number
   height: number
 }
-
-/** Long edge of the published image. Enough for a detail page, far below camera size. */
-const MAX_EDGE = 1600
-const THUMB_EDGE = 400
 
 /**
  * Re-encodes an upload to WebP and drops everything else it was carrying.
@@ -30,7 +27,12 @@ export async function processPhoto(input: Buffer): Promise<ProcessedPhoto> {
     throw new Error('Could not read the image dimensions; the upload is not a usable image.')
   }
 
+  // rotate() with no argument applies the EXIF orientation and is a no-op
+  // without one. It has to happen before the metadata is dropped: a phone held
+  // upright records a landscape frame and a tag saying to turn it, and stripping
+  // the tag without acting on it publishes the photo on its side for good.
   const full = await sharp(input)
+    .rotate()
     // withoutEnlargement keeps a small original at its own size; upscaling would
     // grow the file without adding anything visible.
     .resize({ width: MAX_EDGE, height: MAX_EDGE, fit: 'inside', withoutEnlargement: true })
@@ -38,6 +40,7 @@ export async function processPhoto(input: Buffer): Promise<ProcessedPhoto> {
     .toBuffer()
 
   const thumb = await sharp(input)
+    .rotate()
     .resize({ width: THUMB_EDGE, height: THUMB_EDGE, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 70 })
     .toBuffer()
