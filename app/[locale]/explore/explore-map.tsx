@@ -197,16 +197,33 @@ export function ExploreMap({
     }
 
     for (const pin of visible) {
-      if (markers.current.has(pin.slug)) continue
+      // Which activity the pin wears. A beach that is both a surf break and a
+      // campsite shows the one being filtered for — otherwise filtering to
+      // camping leaves a row of surfboards on the map.
+      const lead =
+        pin.activities.find((activity) => filters.activities.has(activity)) ??
+        pin.activities[0] ??
+        'hiking'
+
+      const existing = markers.current.get(pin.slug)
+      if (existing) {
+        const element = existing.getElement()
+        if (element.dataset.activity !== lead) {
+          element.dataset.activity = lead
+          element.innerHTML = activityIconMarkup(lead, 18)
+        }
+        continue
+      }
+
       // A pin per activity rather than one green dot for everything. The
       // activity is the first thing anyone scanning the map wants, and a
       // uniform dot makes them click each one to find out.
       const element = document.createElement('button')
       element.type = 'button'
       element.className = 'tv-pin'
-      element.dataset.activity = pin.activities[0] ?? 'hiking'
+      element.dataset.activity = lead
       element.setAttribute('aria-label', `${pin.name} — ${pin.activityLabels.join(' · ')}`)
-      element.innerHTML = activityIconMarkup(pin.activities[0] ?? 'hiking', 18)
+      element.innerHTML = activityIconMarkup(lead, 18)
       const marker = new Marker({ element })
         .setLngLat([pin.lng, pin.lat])
         .setPopup(new Popup({ offset: 20, closeButton: false, maxWidth: 'none' }).setHTML(card(pin, detail)))
@@ -228,7 +245,7 @@ export function ExploreMap({
     const bounds = new LngLatBounds()
     visible.forEach((pin) => bounds.extend([pin.lng, pin.lat]))
     instance.fitBounds(bounds, { padding: 80, maxZoom: 12, duration: 500 })
-  }, [visible, ready, detail])
+  }, [visible, ready, detail, filters.activities])
 
   const toggle = <T,>(set: Set<T>, value: T) => {
     const next = new Set(set)

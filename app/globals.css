@@ -45,6 +45,11 @@
      as one drawing hand, and nothing competes with the photographs. */
   --color-clayLight: #d2a482;
   --color-clayDeep: #8f5335;
+  /* Morandi orange, for the camping pin. Chosen at this exact value rather than
+     a brighter one because a white icon has to survive on top of it: measured
+     3.3:1, over the 3:1 floor for a graphic. Anything more luminous looked
+     better as a swatch and worse as a pin. */
+  --color-ember: #c07f45;
   --color-accent: #5a7f6a;
 
   --font-sans:
@@ -141,6 +146,9 @@ body {
 }
 .tv-pin.is-active {
   background: var(--color-warm);
+  /* Scaled as well as recoloured. The warm accent now sits close to the camping
+     pin's orange, so size carries the state and hue only assists it. */
+  transform: scale(1.2);
   box-shadow:
     0 0 0 8px rgb(181 113 75 / 0.24),
     0 4px 14px rgb(0 0 0 / 0.3);
@@ -160,7 +168,7 @@ body {
   background: var(--color-clayDeep);
 }
 .tv-pin[data-activity='camping'] {
-  background: #8a7f4e;
+  background: var(--color-ember);
 }
 .tv-pin[data-activity='surfing'],
 .tv-pin[data-activity='diving'] {
