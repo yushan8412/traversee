@@ -14,6 +14,27 @@ const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
+/**
+ * Room around the island when the map first frames it.
+ *
+ * Not a single number, because two things sit on top of the map: the site
+ * header floats over the first sixty-odd pixels, and on a wide window the
+ * filter panel owns the left three hundred and forty. Framed with even padding,
+ * the northern pins landed between y −41 and +16 — half of them above the top
+ * edge, the rest under the header — which is exactly where every place in the
+ * catalogue currently is.
+ */
+function framePadding() {
+  const wide = typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches
+  return { padding: { top: 56, right: 48, bottom: 48, left: wide ? 380 : 48 } }
+}
+
+/** The same box the submission validator accepts; see lib/gpx/geo.ts. */
+const COVERAGE: [[number, number], [number, number]] = [
+  [119.3, 21.75],
+  [122.1, 25.4],
+]
+
 setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
 
 export interface ExplorePin {
@@ -89,6 +110,7 @@ export function ExploreMap({
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const markers = useRef(new Map<string, Marker>())
+  const framed = useRef(false)
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
@@ -144,14 +166,26 @@ export function ExploreMap({
           },
           layers: [{ id: 'base', type: 'raster', source: 'base' }],
         },
-        center: [120.98, 23.7],
-        zoom: 7,
+        // Opens on the whole island, framed by the coverage box rather than by
+        // a centre and a zoom. A fixed zoom shows a different amount of Taiwan
+        // on every window; fitting the bounds shows all of it on any of them.
+        bounds: COVERAGE,
+        fitBoundsOptions: framePadding(),
         attributionControl: { compact: true },
+        // Padded well outside the coverage box. Set to the box exactly, MapLibre
+        // has to keep the whole viewport inside it — and since a wide window at
+        // this zoom is wider than Taiwan, it zoomed in to comply and opened on
+        // the north with the rest of the island off screen.
+        // Generous, because this is only the limit on panning, not the framing.
+        // Set close to the coverage box it silently fought the initial fit: the
+        // padding that keeps the island clear of the header and the filter panel
+        // pushes the camera west, and a tight limit clamped it straight back.
+        // Ocean tiles are nearly empty, so the extra room costs almost nothing.
         maxBounds: [
-          [119.3, 21.75],
-          [122.1, 25.4],
+          [117.0, 20.0],
+          [124.5, 27.5],
         ],
-        minZoom: 6.5,
+        minZoom: 5.5,
         maxZoom: 17,
         transformRequest: (url: string) =>
           url.startsWith('https://atlas.microsoft.com')
@@ -178,6 +212,13 @@ export function ExploreMap({
         // drawn. Asking for a resize after load costs nothing and removes the
         // race entirely.
         instance.resize()
+        // And frame the island again now the size is real. The constructor's
+        // `bounds` was computed against whatever the container measured then,
+        // which was wrong for the same reason — the map opened at roughly half
+        // a degree of longitude, a twentieth of Taiwan, and the marker pass
+        // below then zoomed to the northern cluster because nothing was in
+        // view. Refitting here is what makes the first frame the whole island.
+        instance.fitBounds(COVERAGE, { padding: framePadding().padding, duration: 0 })
         setReady(true)
       })
     }
@@ -241,7 +282,16 @@ export function ExploreMap({
       markers.current.set(pin.slug, marker)
     }
 
-    // Only move the map when the filter has left nothing to look at.
+    // The first pass never moves the camera. The map has just been framed on
+    // the whole island, and refitting to wherever the pins happen to be undid
+    // that immediately — it opened at zoom 12 on the northern cluster, which is
+    // the `maxZoom` below, and that is how this was caught.
+    if (!framed.current) {
+      framed.current = true
+      return
+    }
+
+    // After that, only move when the filter has left nothing to look at.
     //
     // Fitting the bounds on every change looked helpful and cost 26 tile
     // requests a click — as much as building the map from scratch — because a
