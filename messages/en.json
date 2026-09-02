@@ -167,7 +167,13 @@
     "sectionTrackNote": "Choose a GPX and the track and its numbers appear below to check.",
     "chooseGpx": "Choose a GPX file",
     "replaceGpx": "Choose a different file",
-    "sectionRegionActivities": "Region and activities"
+    "sectionRegionActivities": "Region and activities",
+    "searchPlaceholder": "Search for a place, e.g. 大屯山",
+    "search": "Search",
+    "searching": "Searching…",
+    "searchNoResults": "Nothing in Taiwan matches “{query}”. You can still tap the map.",
+    "searchFailed": "Search is unavailable right now. Tap the map to place the pin.",
+    "searchResults": "Search results"
   },
   "review": {
     "title": "Awaiting review",

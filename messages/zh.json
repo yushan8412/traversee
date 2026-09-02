@@ -167,7 +167,13 @@
     "sectionTrackNote": "選一個 GPX，軌跡和數據會先顯示出來讓你確認。",
     "chooseGpx": "選擇 GPX 檔案",
     "replaceGpx": "換一個檔案",
-    "sectionRegionActivities": "地區與活動"
+    "sectionRegionActivities": "地區與活動",
+    "searchPlaceholder": "搜尋地名，例如：大屯山",
+    "search": "搜尋",
+    "searching": "搜尋中…",
+    "searchNoResults": "在台灣範圍內找不到「{query}」。直接在地圖上點選也可以。",
+    "searchFailed": "搜尋暫時無法使用，請直接在地圖上點選位置。",
+    "searchResults": "搜尋結果"
   },
   "review": {
     "title": "待審核",

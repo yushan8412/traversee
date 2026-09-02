@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { LngLatBounds, MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -11,6 +11,7 @@ import { shrinkPhotos } from '../../../lib/photos/downscale'
 import { attachPhotos } from '../../../lib/photos/selection'
 import { ActivityIcon } from '../activity-icon'
 import { PhotoPicker } from './photo-picker'
+import { PlaceSearch } from './place-search'
 import { SubmissionErrors } from './submission-errors'
 import { TranslatablePair } from './translatable-pair'
 import {
@@ -69,6 +70,17 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
   const [result, setResult] = useState<SubmitResult | null>(null)
   const [pending, setPending] = useState(false)
 
+  // One way to place the pin, whether it came from a tap or from search. Two
+  // copies of "set the state, then move or create the marker" is how the two
+  // end up disagreeing about which one exists.
+  const dropPin = useCallback((lng: number, lat: number) => {
+    setPosition({ lng, lat })
+    const instance = map.current
+    if (!instance) return
+    if (marker.current) marker.current.setLngLat([lng, lat])
+    else marker.current = new Marker({ color: '#2f6b4f' }).setLngLat([lng, lat]).addTo(instance)
+  }, [])
+
   useEffect(() => {
     if (!container.current || map.current) return
     let cancelled = false
@@ -121,12 +133,7 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
       })
 
       instance.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-      instance.on('click', (event) => {
-        const { lng, lat } = event.lngLat
-        setPosition({ lng, lat })
-        if (marker.current) marker.current.setLngLat([lng, lat])
-        else marker.current = new Marker({ color: '#2f6b4f' }).setLngLat([lng, lat]).addTo(instance)
-      })
+      instance.on('click', (event) => dropPin(event.lngLat.lng, event.lngLat.lat))
 
       map.current = instance
     }
@@ -138,9 +145,11 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
       map.current = null
       marker.current = null
     }
-    // The map is built once. `useAzure` is here only because it is read inside;
-    // it is derived from a prop that does not change while the form is open.
-  }, [useAzure])
+    // The map is built once. `useAzure` is derived from a prop that does not
+    // change while the form is open, and `dropPin` holds no state of its own, so
+    // neither of these ever fires a rebuild — they are listed because they are
+    // read inside.
+  }, [useAzure, dropPin])
 
   async function onSubmit(formData: FormData) {
     setPending(true)
@@ -167,7 +176,16 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
         <h2 className={SECTION_TITLE}>{t('sectionWhere')}</h2>
         <p className={SECTION_NOTE}>{t('sectionWhereNote')}</p>
 
-        <div className="mt-4 overflow-hidden rounded-xl border border-line">
+        <div className="mt-4">
+          <PlaceSearch
+            onSelect={(result) => {
+              dropPin(result.lng, result.lat)
+              map.current?.flyTo({ center: [result.lng, result.lat], zoom: 14 })
+            }}
+          />
+        </div>
+
+        <div className="mt-3 overflow-hidden rounded-xl border border-line">
           <div ref={container} className="h-[300px] w-full sm:h-[380px]" />
         </div>
 
