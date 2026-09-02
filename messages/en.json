@@ -92,7 +92,9 @@
     "showing": "{count} shown",
     "clear": "Clear filters",
     "noMatches": "Nothing matches. Try loosening a filter.",
-    "ungradedHidden": "{count} more places have no difficulty grade, so filtering by it leaves them out."
+    "ungradedHidden": "{count} more places have no difficulty grade, so filtering by it leaves them out.",
+    "viewDetail": "See full details",
+    "noPhoto": "No photo yet"
   },
   "auth": {
     "signIn": "Sign in with Google",

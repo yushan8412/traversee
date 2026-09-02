@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { LngLatBounds, MapLibreMap, Marker, NavigationControl, Popup, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { Link } from '../../../i18n/navigation'
@@ -25,6 +25,9 @@ export interface ExplorePin {
   activityLabels: string[]
   /** The activity it leads with, or null where nobody has graded it. */
   difficulty: number | null
+  difficultyLabel: string | null
+  /** Cover photograph, or a stand-in, or nothing. */
+  photo: string | null
   metrics: string
   lng: number
   lat: number
@@ -66,6 +69,13 @@ export function ExploreMap({
 }) {
   const t = useTranslations('explore')
   const tp = useTranslations('places')
+  const locale = useLocale()
+  // Memoised because the marker effect depends on it; rebuilt every render it
+  // would rebuild every popup on every render.
+  const detail = useMemo(
+    () => ({ label: t('viewDetail'), noPhoto: t('noPhoto'), locale }),
+    [t, locale],
+  )
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const markers = useRef(new Map<string, Marker>())
@@ -194,13 +204,7 @@ export function ExploreMap({
       element.setAttribute('aria-label', pin.name)
       const marker = new Marker({ element })
         .setLngLat([pin.lng, pin.lat])
-        .setPopup(
-          new Popup({ offset: 18, closeButton: false }).setHTML(
-            `<strong>${escapeHtml(pin.name)}</strong><br>${escapeHtml(
-              [pin.cityLabel, ...pin.activityLabels].join(' · '),
-            )}<br>${escapeHtml(pin.metrics)}`,
-          ),
-        )
+        .setPopup(new Popup({ offset: 20, closeButton: false, maxWidth: 'none' }).setHTML(card(pin, detail)))
         .addTo(instance)
       markers.current.set(pin.slug, marker)
     }
@@ -219,7 +223,7 @@ export function ExploreMap({
     const bounds = new LngLatBounds()
     visible.forEach((pin) => bounds.extend([pin.lng, pin.lat]))
     instance.fitBounds(bounds, { padding: 80, maxZoom: 12, duration: 500 })
-  }, [visible, ready])
+  }, [visible, ready, detail])
 
   const toggle = <T,>(set: Set<T>, value: T) => {
     const next = new Set(set)
@@ -379,6 +383,39 @@ function Chip({
       {children}
     </button>
   )
+}
+
+/**
+ * The popup takes an HTML string, so every value interpolated into it is
+ * escaped. Place names and summaries are submitted content, and MapLibre offers
+ * no element-based popup that would make this structural.
+ */
+function card(pin: ExplorePin, detail: { label: string; noPhoto: string; locale: string }): string {
+  const dots = Array.from(
+    { length: DIFFICULTY_STEPS.length },
+    (_, step) => `<i class="${pin.difficulty !== null && step < pin.difficulty ? 'on' : ''}"></i>`,
+  ).join('')
+
+  return `<div class="tv-card">
+  ${
+    pin.photo
+      ? `<img src="${escapeHtml(pin.photo)}" alt="">`
+      : `<div class="tv-card-empty">${escapeHtml(detail.noPhoto)}</div>`
+  }
+  <div class="tv-card-body">
+    <span class="tv-card-name">${escapeHtml(pin.name)}</span>
+    <div class="tv-card-meta">${escapeHtml([pin.cityLabel, ...pin.activityLabels].join(' · '))}</div>
+    <div class="tv-card-facts">
+      <span>${escapeHtml(pin.metrics)}</span>
+      ${
+        pin.difficultyLabel
+          ? `<span><span class="tv-dots">${dots}</span> ${escapeHtml(pin.difficultyLabel)}</span>`
+          : ''
+      }
+    </div>
+    <a href="/${escapeHtml(detail.locale)}/places/${escapeHtml(pin.slug)}">${escapeHtml(detail.label)} →</a>
+  </div>
+</div>`
 }
 
 /** The popup takes HTML, and a place name is user-submitted content. */

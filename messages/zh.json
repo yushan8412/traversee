@@ -92,7 +92,9 @@
     "showing": "顯示 {count} 個",
     "clear": "清除篩選",
     "noMatches": "沒有符合的地點。試著放寬條件。",
-    "ungradedHidden": "另有 {count} 個地點尚未評定難度，篩選難度時不會出現。"
+    "ungradedHidden": "另有 {count} 個地點尚未評定難度，篩選難度時不會出現。",
+    "viewDetail": "看詳細資訊",
+    "noPhoto": "尚無照片"
   },
   "auth": {
     "signIn": "使用 Google 登入",

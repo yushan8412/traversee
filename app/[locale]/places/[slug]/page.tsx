@@ -8,6 +8,7 @@ import type { RouteMetrics } from '../../../../lib/places/types'
 import { PlaceMap } from '../place-map'
 import { resolveTileSource } from '../../../../lib/maps/tile-source'
 import { PlacePhoto } from '../photo'
+import { standInPhotos } from '../../../../lib/places/stand-in-photos'
 import { TranslatedText } from '../translated-text'
 
 export const dynamic = 'force-dynamic'
@@ -65,7 +66,7 @@ export default async function PlacePage({
 
       {summary && <TranslatedText text={summary} className="mt-4 text-lg" />}
 
-      {place.photos.length > 0 && (
+      {place.photos.length > 0 ? (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {place.photos.map((photo) => (
             <PlacePhoto
@@ -76,6 +77,24 @@ export default async function PlacePage({
             />
           ))}
         </div>
+      ) : (
+        // Stand-ins, on the same terms as everywhere else: only where the entry
+        // has none of its own, each credited because the licences require it,
+        // and never mixed with the author's. Without this, a card on the
+        // explore map shows a photograph and the page it links to shows none.
+        (standInPhotos[place.slug] ?? []).length > 0 && (
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {standInPhotos[place.slug]!.map((photo) => (
+              <figure key={photo.path} className="relative overflow-hidden rounded border border-line">
+                {/* eslint-disable-next-line @next/next/no-img-element -- already WebP at a bounded size */}
+                <img src={photo.path} alt="" className="h-40 w-full object-cover" />
+                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-1 pt-4 text-[10px] leading-tight text-white/85">
+                  {photo.credit}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        )
       )}
 
       {/* The detail query returns the whole document, so the simplified track is
