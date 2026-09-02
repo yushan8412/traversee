@@ -16,8 +16,26 @@ import type { LineString, Point } from '../../../lib/places/types'
 // Verified against the account rather than taken from documentation: at this
 // api-version the tileset answers with 256px PNG tiles, so a raster source is
 // correct here and a hand-written vector style would be wasted work.
-const TILE_URL =
+const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
+
+/**
+ * Development does not spend the production grant.
+ *
+ * Measured 2026-09-02: opening this map costs 27 tile requests, and a visit with
+ * nine gestures costs 164. The grant is 5,000 billable transactions a month and
+ * base tiles bill at one per fifteen requests, so it covers about 75,000
+ * requests — and 78,726 went in a single day of design review with no visitors
+ * at all. Every reload and every screenshot run was hitting the metered
+ * endpoint, which is where the month went.
+ *
+ * OpenStreetMap's tiles stand in locally. Their usage policy rules them out for
+ * a deployed site, which is precisely why this switches on the environment
+ * rather than becoming the default.
+ */
+const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const USE_AZURE_TILES = process.env.NODE_ENV === 'production'
+const TILE_URL = USE_AZURE_TILES ? AZURE_TILES : OSM_TILES
 
 // maplibre-gl resolves its worker through import.meta.url, which Next's bundler
 // rewrites to a build-machine file:// path. The request then falls through to
@@ -71,16 +89,22 @@ export function PlaceMap({
     let cancelled = false
 
     async function start() {
-      let credentials: MapCredentials
-      try {
-        const response = await fetch('/api/maps-token')
-        if (!response.ok) throw new Error(`token endpoint responded ${response.status}`)
-        credentials = (await response.json()) as MapCredentials
-      } catch {
-        // The map is an enhancement; the page's information is all in the text
-        // beside it. Failing quietly to a note beats an error overlay.
-        if (!cancelled) setFailed(true)
-        return
+      // Only Azure's tiles need a credential. Minting one for OpenStreetMap
+      // would be a pointless round trip, and it would make the map depend on
+      // Azure being configured at all — which is the opposite of what the
+      // development tile source is for.
+      let credentials: MapCredentials = { token: '', clientId: '' }
+      if (USE_AZURE_TILES) {
+        try {
+          const response = await fetch('/api/maps-token')
+          if (!response.ok) throw new Error(`token endpoint responded ${response.status}`)
+          credentials = (await response.json()) as MapCredentials
+        } catch {
+          // The map is an enhancement; the page's information is all in the text
+          // beside it. Failing quietly to a note beats an error overlay.
+          if (!cancelled) setFailed(true)
+          return
+        }
       }
       if (cancelled || !container.current) return
 
