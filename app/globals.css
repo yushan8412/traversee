@@ -1,33 +1,66 @@
 @import 'tailwindcss';
 
-/* The palette carried over from the M0 skeleton. Kept rather than replaced so
-   adopting Tailwind changed how styles are written, not how the site looks. */
+/*
+ * A light surface, chosen rather than defaulted into.
+ *
+ * There was a `prefers-color-scheme: dark` block here, inherited from the M0
+ * skeleton. It was inverted, never art-directed, so anyone whose laptop was in
+ * dark mode saw a version of this site nobody had designed. A dark mode worth
+ * having is its own piece of work; until then one surface done properly beats
+ * two where one is a guess.
+ *
+ * Morandi: greens and blues with the chroma pulled out, so photographs of
+ * water and forest are the only saturated things on any page.
+ */
 @theme {
-  --color-canvas: #fbfbf9;
-  --color-panel: #f3f3ef;
-  --color-line: #e2e2db;
-  --color-ink: #1b1e1c;
-  --color-dim: #6a706b;
-  --color-accent: #2f6b4f;
+  --color-canvas: #f6f7f4;
+  --color-paper: #ffffff;
+  --color-panel: #eaeee9;
+  --color-line: #dde3dc;
+  --color-ink: #1e2a24;
+  --color-dim: #71807a;
+
+  /* Morandi green: the action colour, and the second line of a display heading. */
+  --color-brand: #5a7f6a;
+  --color-brandInk: #2f453a;
+  /* The action green lifted for use on the dark band. `brand` itself is too
+     close to `brandInk` to read as a second colour against it. */
+  --color-brandSoft: #9dbcaa;
+  /* Two more greens, for the decorative marks on the dark band only. A single
+     tint across all of them made the band look printed in one ink; these pull
+     the set apart without leaving the Morandi range — one warmer, one cooler. */
+  --color-moss: #a9bd8a;
+  --color-mint: #c6dcc9;
+  /* Morandi blue: coast and water, the quieter half of the pairing. */
+  --color-sea: #7b96a7;
+  /* The same blue taken down to a scrim weight, for the closing band. The page
+     already ends on a green field; a second one directly beneath it would read
+     as the same section twice. */
+  --color-deep: #22333f;
+  /* Clay, reserved for the active map pin. It appears nowhere else, so
+     "this one" reads without a legend. */
+  --color-warm: #b5714b;
+  /* The same clay hue lightened and deepened, for the botanical marks on the
+     pale band. One hue at three depths rather than three colours: the set reads
+     as one drawing hand, and nothing competes with the photographs. */
+  --color-clayLight: #d2a482;
+  --color-clayDeep: #8f5335;
+  /* Morandi orange, for the camping pin. Chosen at this exact value rather than
+     a brighter one because a white icon has to survive on top of it: measured
+     3.3:1, over the 3:1 floor for a graphic. Anything more luminous looked
+     better as a swatch and worse as a pin. */
+  --color-ember: #c07f45;
+  --color-accent: #5a7f6a;
 
   --font-sans:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, 'PingFang TC', 'Noto Sans TC',
     sans-serif;
+  /* Display face for headings. Songti/Noto Serif TC keep Chinese in the same
+     register as the Latin serif instead of dropping to a system sans. */
+  --font-display:
+    'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Songti TC', 'Noto Serif TC',
+    serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
-}
-
-/* Tailwind's own dark: variant needs a class or a media query per utility. The
-   palette is a token set, so overriding the tokens themselves recolours the
-   whole site at once and keeps every utility class dark-mode-correct for free. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-canvas: #14171a;
-    --color-panel: #1b1f23;
-    --color-line: #2a2f34;
-    --color-ink: #e4e6e3;
-    --color-dim: #98a09a;
-    --color-accent: #6cc39a;
-  }
 }
 
 body {
@@ -36,4 +69,189 @@ body {
   font-family: var(--font-sans);
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Hero type sits over footage whose brightness cannot be known in advance — an
+ * edit cutting from surf to forest passes through both extremes. A scrim alone
+ * fails on the bright frames, so the letterforms carry their own shadow too.
+ * The two together hold contrast without dimming the video to mud.
+ */
+.hero-type {
+  text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.42),
+    0 6px 30px rgb(0 0 0 / 0.35);
+}
+
+/*
+ * A featured card rising towards the pointer.
+ *
+ * Written here rather than as `hover:scale-[1.08]` because Tailwind builds its
+ * scale utilities out of custom properties — `transform: scale(var(--tw-scale-x),
+ * …)` — and a change to an unregistered custom property cannot be interpolated.
+ * The declared transition is honoured, the value still jumps, and the card
+ * snaps to its second size instead of growing. A literal transform animates.
+ */
+.tv-lift {
+  transition: transform 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.tv-lift:hover {
+  transform: scale(1.08);
+}
+
+/* The carousel's flanking copy enters the way its picture does — up and in —
+   so the three columns read as one movement instead of a picture that slides
+   and two paragraphs that blink. */
+@keyframes tv-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Drives the underline under the active carousel tab. A CSS animation rather
+   than per-frame React state: the bar is decoration, and re-rendering the whole
+   section sixty times a second to draw it would not be. */
+@keyframes tv-dwell {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* Map pins. MapLibre creates these elements itself, outside React's tree, so
+   they are styled here rather than with utility classes. */
+.tv-pin {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-brand);
+  color: #fff;
+  border: 2.5px solid #fff;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 160ms ease-out;
+}
+.tv-pin:hover {
+  transform: scale(1.14);
+}
+.tv-pin.is-active {
+  background: var(--color-warm);
+  /* Scaled as well as recoloured. The warm accent now sits close to the camping
+     pin's orange, so size carries the state and hue only assists it. */
+  transform: scale(1.2);
+  box-shadow:
+    0 0 0 8px rgb(181 113 75 / 0.24),
+    0 4px 14px rgb(0 0 0 / 0.3);
+}
+
+/* One hue per activity, so a glance at the map reads as a distribution rather
+   than as a list of identical dots. All within the site's palette — the icons
+   do the identifying and the colour only groups them. */
+.tv-pin[data-activity='hiking'],
+.tv-pin[data-activity='vtt'] {
+  background: var(--color-brand);
+}
+.tv-pin[data-activity='cycling'] {
+  background: var(--color-brandInk);
+}
+.tv-pin[data-activity='climbing'] {
+  background: var(--color-clayDeep);
+}
+.tv-pin[data-activity='camping'] {
+  background: var(--color-ember);
+}
+.tv-pin[data-activity='surfing'],
+.tv-pin[data-activity='diving'] {
+  background: var(--color-sea);
+}
+.tv-pin[data-activity='waterfall'] {
+  background: var(--color-deep);
+}
+
+/* The explore map's popup is a card, so MapLibre's own padding and tip have to
+   get out of the way — otherwise the photograph sits in a white margin. */
+.maplibregl-popup-content:has(.tv-card) {
+  padding: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 22px 48px -26px rgb(31 42 36 / 0.55);
+}
+.tv-card {
+  width: 15rem;
+  font-family: var(--font-sans);
+}
+.tv-card img {
+  display: block;
+  width: 100%;
+  height: 7.5rem;
+  object-fit: cover;
+}
+.tv-card .tv-card-body {
+  padding: 0.85rem 0.95rem 0.95rem;
+}
+.tv-card .tv-card-name {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  color: var(--color-ink);
+}
+.tv-card .tv-card-meta {
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--color-dim);
+}
+.tv-card .tv-card-facts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--color-line);
+  font-size: 0.75rem;
+  color: var(--color-dim);
+}
+.tv-card .tv-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.tv-card .tv-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-line);
+}
+.tv-card .tv-dots i.on {
+  background: var(--color-brand);
+}
+.tv-card a {
+  display: block;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-brandInk);
+  text-decoration: none;
+}
+.tv-card a:hover {
+  color: var(--color-brand);
+}
+.tv-card .tv-card-empty {
+  display: grid;
+  place-items: center;
+  height: 7.5rem;
+  background: var(--color-panel);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-dim);
 }

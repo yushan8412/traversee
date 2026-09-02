@@ -4,6 +4,7 @@ import type { Locale } from '../../../i18n/routing'
 import { listPublishedPlaces } from '../../../lib/places/repository'
 import { resolveText } from '../../../lib/places/text'
 import { PlaceMap, type MapMarker } from './place-map'
+import { resolveTileSource } from '../../../lib/maps/tile-source'
 import { PlacePhoto } from './photo'
 import { TranslatedText } from './translated-text'
 
@@ -31,11 +32,11 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
   }))
 
   return (
-    <main>
+    <main className="mx-auto max-w-3xl px-6 pb-20 pt-10">
       <h1 className="mb-2 text-2xl font-semibold tracking-tight">{t('title')}</h1>
       <p className="mb-6 text-sm text-dim">{t('count', { count: places.length })}</p>
 
-      {markers.length > 0 && <PlaceMap markers={markers} className="mb-8 h-80 w-full" />}
+      {markers.length > 0 && <PlaceMap markers={markers} tileSource={resolveTileSource()} className="mb-8 h-80 w-full" />}
 
       {places.length === 0 ? (
         <p className="text-dim">{t('empty')}</p>

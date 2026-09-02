@@ -85,8 +85,8 @@ describe('buildRouteSubmission', () => {
 
   it('rejects a track that leaves the covered region', () => {
     // The coordinates come from a file this site did not produce, so a track
-    // recorded elsewhere must not publish onto a site about the north.
-    const elsewhere = track().map((p) => ({ ...p, position: [120.8, 21.95] as [number, number] }))
+    // recorded elsewhere must not publish onto a catalogue of Taiwan.
+    const elsewhere = track().map((p) => ({ ...p, position: [127.68, 26.21] as [number, number] }))
     const { errors } = buildRouteSubmission({ ...base, points: elsewhere }, context)
     expect(errors.map((e) => e.code)).toContain('outside-coverage')
   })

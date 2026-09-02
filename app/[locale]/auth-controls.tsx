@@ -32,8 +32,12 @@ export async function AuthControls() {
           await signIn('google')
         }}
       >
-        <button type="submit" className="text-accent hover:underline">
-          {t('signIn')}
+        {/* "Sign in with Google" is three wrapped lines in a 390px header, so
+            the narrow layout keeps only the verb. The provider is still named
+            on the button the visitor actually lands on. */}
+        <button type="submit" className="whitespace-nowrap text-accent hover:underline">
+          <span className="sm:hidden">{t('signInShort')}</span>
+          <span className="hidden sm:inline">{t('signIn')}</span>
         </button>
       </form>
     )
@@ -41,7 +45,9 @@ export async function AuthControls() {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-dim">{session.user.name ?? session.user.email}</span>
+      <span className="hidden truncate text-dim sm:inline">
+        {session.user.name ?? session.user.email}
+      </span>
       {session.user.role === 'admin' && (
         <span className="rounded border border-line px-1.5 py-0.5 text-xs text-dim">
           {t('admin')}
@@ -53,7 +59,7 @@ export async function AuthControls() {
           await signOut()
         }}
       >
-        <button type="submit" className="text-accent hover:underline">
+        <button type="submit" className="whitespace-nowrap text-accent hover:underline">
           {t('signOut')}
         </button>
       </form>

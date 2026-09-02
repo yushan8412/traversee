@@ -1,19 +1,20 @@
 {
   "site": {
     "name": "Traversee",
-    "tagline": "Outdoor places in northern Taiwan"
+    "tagline": "Outdoor places across Taiwan"
   },
   "nav": {
     "places": "All places",
     "switchLanguage": "中文",
     "submit": "Add a place",
-    "review": "Review"
+    "review": "Review",
+    "explore": "Explore"
   },
   "places": {
     "title": "All places",
-    "intro": "Outdoor places across Taipei, New Taipei and Keelung — hiking, cycling, camping, surfing and waterfalls.",
+    "intro": "Outdoor places across Taiwan — hiking, cycling, camping, surfing, diving and waterfalls.",
     "empty": "No published places yet.",
-    "count": "{count} places",
+    "count": "{count, plural, one {# place} other {# places}}",
     "notTranslated": "Not yet translated",
     "notTranslatedHint": "This has no English version yet; the original is shown below.",
     "backToList": "Back to all places",
@@ -26,12 +27,32 @@
       "cycling": "Cycling",
       "camping": "Camping",
       "surfing": "Surfing",
-      "waterfall": "Waterfall"
+      "waterfall": "Waterfall",
+      "climbing": "Climbing",
+      "vtt": "Mountain biking",
+      "diving": "Diving"
     },
     "city": {
       "taipei": "Taipei",
       "newTaipei": "New Taipei",
-      "keelung": "Keelung"
+      "keelung": "Keelung",
+      "taoyuan": "Taoyuan",
+      "hsinchuCity": "Hsinchu City",
+      "hsinchuCounty": "Hsinchu County",
+      "miaoli": "Miaoli",
+      "taichung": "Taichung",
+      "changhua": "Changhua",
+      "nantou": "Nantou",
+      "yunlin": "Yunlin",
+      "chiayiCity": "Chiayi City",
+      "chiayiCounty": "Chiayi County",
+      "tainan": "Tainan",
+      "kaohsiung": "Kaohsiung",
+      "pingtung": "Pingtung",
+      "yilan": "Yilan",
+      "hualien": "Hualien",
+      "taitung": "Taitung",
+      "penghu": "Penghu"
     },
     "metrics": {
       "distance": "Distance",
@@ -60,8 +81,32 @@
       "unavailable": "The map could not be loaded."
     }
   },
+  "explore": {
+    "title": "Explore the map",
+    "showFilters": "Filters",
+    "hideFilters": "Hide filters",
+    "activity": "Activity",
+    "difficulty": "Difficulty",
+    "region": "Region",
+    "showing": "{count} shown",
+    "clear": "Clear filters",
+    "noMatches": "Nothing matches. Try loosening a filter.",
+    "ungradedHidden": "{count} more places have no difficulty grade, so filtering by it leaves them out.",
+    "viewDetail": "See full details",
+    "noPhoto": "No photo yet",
+    "grade": "Grade {value}",
+    "regionEmpty": "Nothing here yet",
+    "regions": {
+      "north": "North",
+      "central": "Central",
+      "south": "South",
+      "east": "East",
+      "islands": "Islands"
+    }
+  },
   "auth": {
     "signIn": "Sign in with Google",
+    "signInShort": "Sign in",
     "signOut": "Sign out",
     "admin": "Admin"
   },
@@ -87,7 +132,7 @@
       "not-allowed": "You do not have permission to add places.",
       "invalid-city": "Choose a city.",
       "needs-an-activity": "Choose at least one activity.",
-      "outside-coverage": "Those coordinates are outside northern Taiwan.",
+      "outside-coverage": "Those coordinates are outside Taiwan. (Kinmen and Matsu are not covered yet.)",
       "spot-needs-point": "A spot needs a single coordinate.",
       "difficulty-out-of-range": "Difficulty must be between 1 and 5.",
       "unknown": "Submission failed. Please try again.",
@@ -132,5 +177,88 @@
       "transition-not-allowed": "That status change is not allowed."
     },
     "cancel": "Cancel"
+  },
+  "home": {
+    "heroTitle": "Where the city ends,",
+    "heroTitle2": "the wild begins.",
+    "heroSub": "Hiking, cycling, camping, surfing, diving, waterfalls. Distance and ascent come from real tracks, and every duration says whether it was measured or estimated.",
+    "searchPlaceholder": "Search routes, mountains, areas…",
+    "openMap": "Open the map",
+    "mapTitle": "Find it on the map",
+    "mapSub": "See where it is and what surrounds it before deciding.",
+    "all": "All",
+    "seeAll": "See all {count} places",
+    "aboutKicker": "About this site",
+    "aboutTitle": "A hand-kept catalogue of outdoor places across Taiwan",
+    "aboutBody": "No live weather, surf reports or campsite availability here — others already do those well. This answers a different question: what is this place like, and does it suit me. Distance and ascent come from real tracks, and every duration says whether it was measured or estimated.",
+    "factPlaces": "places",
+    "factActivities": "activities",
+    "factCities": "cities",
+    "startExploring": "Start exploring",
+    "empty": "No published places yet.",
+    "activitiesKicker": "What you can do",
+    "activitiesTitle": "Eight ways to go out,",
+    "activitiesTitle2": "one island.",
+    "activitiesSub": "Each activity has its own difficulty scale, because they are not comparable.",
+    "countPlaces": "{count, plural, one {# place} other {# places}}",
+    "gathering": "Collecting",
+    "prev": "Previous",
+    "next": "Next",
+    "seeActivity": "See {activity} places",
+    "lead": {
+      "hiking": "Off the metro, on the ridge within ninety minutes.",
+      "cycling": "Riverside, then up. The tarmac never breaks.",
+      "vtt": "The pleasure isn't speed. It's reading the ground.",
+      "climbing": "The sea is underneath you, louder than the wind.",
+      "camping": "Dark arrives earlier than you planned for.",
+      "surfing": "It is only a break when the wind agrees.",
+      "waterfall": "By the time you hear it, you are still ten minutes out.",
+      "diving": "Underwater, Taiwan is a different island."
+    },
+    "blurb": {
+      "hiking": "The trails across Yangmingshan and the city's edge are well signed and easy to plan alone. Each route here carries a measured distance and total ascent, and every duration is labelled — walked, or estimated.",
+      "cycling": "Where the riverside path meets the mountain roads, gradient and surface change several times in one ride. Each route comes with its elevation profile, so you know what you are shifting into before you leave.",
+      "vtt": "Forestry and farm tracks that change character with the rain. We record the line and the gradient; the surface is left to whoever rode it last, with the date attached.",
+      "climbing": "Longdong's sandstone sea cliffs are Taiwan's principal natural crag. We record the location, the approach and where the route information came from — not grades, which belong to the crag's own consensus.",
+      "camping": "Sites range from full hook-ups to nothing at all. What is recorded here is how you get there, the terrain and the elevation; pitches and fees belong to the site itself.",
+      "surfing": "The north coast and the north-east each have their season and their wind. No live conditions here — that is well covered already — only what the spot is like and how you get in.",
+      "waterfall": "The valleys around Pingxi and Sanxia hide falls of every size, most at the end of a trail. We record the walk in, the drop, and whether to go after rain.",
+      "diving": "Green Island, Xiaoliuqiu, Kenting and the north-east coast all have places to get in, and depth, current and season differ sharply between them. Recorded here: where it is, how to reach it, and whether it is a shore or boat entry. Conditions and visibility belong to local reports on the day."
+    },
+    "offerKicker": "What this site gives you",
+    "offerTitle": "Not a coordinate,",
+    "offerTitle2": "enough to decide on.",
+    "offerBody": "Distance and ascent computed from a real track, a duration that says where it came from, and notes from someone who has been. Deciding whether a place suits you takes more than knowing where it is.",
+    "offer1": "Route tracks",
+    "offer1d": "From real GPX",
+    "offer2": "Difficulty",
+    "offer2d": "Per activity",
+    "offer3": "Time basis",
+    "offer3d": "Measured or estimated",
+    "offer4": "Field notes",
+    "offer4d": "Surface, parking, water",
+    "offerCta": "Explore all places",
+    "featuredKicker": "Featured",
+    "featuredScribble": "step into the wild!",
+    "featuredTitle": "Recently added,",
+    "featuredTitle2": "one place at a time.",
+    "noPhoto": "No photo yet",
+    "view": "View"
+  },
+  "closing": {
+    "scribble": "keep going!",
+    "title": "A lot of this island",
+    "title2": "is still unwritten.",
+    "body": "{count} places so far, added one at a time. Start with what is already here.",
+    "cta": "Browse all places",
+    "credit": "Nanya rock formations · fullfen666 / CC BY-SA 2.0"
+  },
+  "footer": {
+    "blurb": "A record of outdoor places across Taiwan — hiking, cycling, camping, surfing, diving, waterfalls, climbing and mountain biking. Still small, and growing one entry at a time.",
+    "browse": "Browse",
+    "about": "About",
+    "source": "Source on GitHub",
+    "credits": "Place photography comes from Wikimedia Commons, each credited to its author and licence. Activity and hero footage are free-licensed stock, being replaced with original work.",
+    "legal": "Traversee — an open portfolio project. Borrowed imagery is used under CC licences; credits appear on each photograph."
   }
 }

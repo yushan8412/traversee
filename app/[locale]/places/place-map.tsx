@@ -12,12 +12,40 @@ import {
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { LineString, Point } from '../../../lib/places/types'
+import type { TileSource } from '../../../lib/maps/tile-source'
 
 // Verified against the account rather than taken from documentation: at this
 // api-version the tileset answers with 256px PNG tiles, so a raster source is
 // correct here and a hand-written vector style would be wasted work.
-const TILE_URL =
+const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
+
+/**
+ * Free stand-in for anywhere that is not production. See lib/maps/tile-source.
+ *
+ * OpenStreetMap's own tiles, chosen for their labels.
+ *
+ * Every alternative was rejected on the same point once it was rendered rather
+ * than read about. Esri's Topographic and Light Gray both look calmer and both
+ * romanise Taiwanese place names — Taipei, Taichung — which on a Traditional
+ * Chinese site is a worse loss than any amount of visual noise. Carto Positron
+ * answers 200 without a key and stamps API KEY REQUIRED across every tile,
+ * which no status-code check catches. OpenTopoMap's relief is strong enough to
+ * swallow the pins.
+ *
+ * The known cost, accepted deliberately: this style paints territorial
+ * boundaries as a purple line, which draws a box out in the sea around Taiwan.
+ * It is baked into the raster, so it cannot be styled away — the only fix is a
+ * different source, and every one of those costs the Chinese labels. If that
+ * trade ever needs revisiting, self-hosted vector tiles are the answer, because
+ * then the style is ours.
+ *
+ * Development and previews only; production draws from Azure Maps. OSM's tile
+ * usage policy is why this is not the default anywhere.
+ */
+const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 
 // maplibre-gl resolves its worker through import.meta.url, which Next's bundler
 // rewrites to a build-machine file:// path. The request then falls through to
@@ -42,7 +70,10 @@ export function PlaceMap({
   markers,
   geometry,
   className,
+  tileSource,
 }: {
+  /** Decided on the server; see lib/maps/tile-source.ts for why. */
+  tileSource: TileSource
   markers: MapMarker[]
   /** Drawn only where the caller already holds it — the list query omits it on purpose. */
   geometry?: LineString | Point | null
@@ -61,7 +92,8 @@ export function PlaceMap({
   //
   // Keying on the serialised content instead means the map is rebuilt when the
   // data actually differs and not when React merely hands over a new array.
-  const dataKey = JSON.stringify({ markers, geometry })
+  const useAzure = tileSource === 'azure'
+  const dataKey = JSON.stringify({ markers, geometry, tileSource })
   const latest = useRef({ markers, geometry })
   latest.current = { markers, geometry }
 
@@ -71,16 +103,22 @@ export function PlaceMap({
     let cancelled = false
 
     async function start() {
-      let credentials: MapCredentials
-      try {
-        const response = await fetch('/api/maps-token')
-        if (!response.ok) throw new Error(`token endpoint responded ${response.status}`)
-        credentials = (await response.json()) as MapCredentials
-      } catch {
-        // The map is an enhancement; the page's information is all in the text
-        // beside it. Failing quietly to a note beats an error overlay.
-        if (!cancelled) setFailed(true)
-        return
+      // Only Azure's tiles need a credential. Minting one for OpenStreetMap
+      // would be a pointless round trip, and it would make the map depend on
+      // Azure being configured at all — which is the opposite of what the
+      // development tile source is for.
+      let credentials: MapCredentials = { token: '', clientId: '' }
+      if (useAzure) {
+        try {
+          const response = await fetch('/api/maps-token')
+          if (!response.ok) throw new Error(`token endpoint responded ${response.status}`)
+          credentials = (await response.json()) as MapCredentials
+        } catch {
+          // The map is an enhancement; the page's information is all in the text
+          // beside it. Failing quietly to a note beats an error overlay.
+          if (!cancelled) setFailed(true)
+          return
+        }
       }
       if (cancelled || !container.current) return
 
@@ -115,7 +153,13 @@ export function PlaceMap({
         style: {
           version: 8,
           sources: {
-            azure: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: 18 },
+            azure: {
+              type: 'raster',
+              tiles: [useAzure ? AZURE_TILES : OSM_TILES],
+              tileSize: 256,
+              maxzoom: 18,
+              ...(useAzure ? {} : { attribution: OSM_ATTRIBUTION }),
+            },
             ...(track ? { track: { type: 'geojson' as const, data: track } } : {}),
           },
           layers: [
@@ -141,10 +185,10 @@ export function PlaceMap({
         // grant of 5,000 billable transactions a month. Bounding the map is a
         // product decision that happens to cap the worst case.
         maxBounds: [
-          [121.0, 24.7],
-          [122.3, 25.5],
+          [119.3, 21.75],
+          [122.1, 25.4],
         ],
-        minZoom: 8,
+        minZoom: 7,
         maxZoom: 17,
         // Every tile request carries the short-lived token. The credential never
         // reaches the tile URL itself, so it cannot end up in a browser history
@@ -202,7 +246,7 @@ export function PlaceMap({
       map.current?.remove()
       map.current = null
     }
-  }, [dataKey])
+  }, [dataKey, useAzure])
 
   if (failed) {
     return (

@@ -5,8 +5,8 @@ import type { Place } from './types'
 // exist to exercise the code, not to navigate by. Real content arrives with the
 // OSM import in M6.
 //
-// Difficulty is set only for hiking and cycling. The camping, surfing and
-// waterfall scales are deliberately undefined in the spec's appendix because
+// Difficulty is set only for hiking and cycling. The camping, surfing, diving
+// and waterfall scales are deliberately undefined in the spec's appendix because
 // difficulty is what someone uses to judge their own safety, and inventing a
 // scale here would put a number on the site that nobody stands behind.
 

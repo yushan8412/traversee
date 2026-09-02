@@ -17,7 +17,15 @@ export interface SubmitResult {
 }
 
 const CITIES: City[] = ['taipei', 'newTaipei', 'keelung']
-const ACTIVITIES: Activity[] = ['hiking', 'cycling', 'camping', 'surfing', 'waterfall']
+const ACTIVITIES: Activity[] = [
+  'hiking',
+  'cycling',
+  'camping',
+  'surfing',
+  'waterfall',
+  'climbing',
+  'vtt',
+]
 
 /** Large enough for a long day's recording, small enough to bound the request. */
 const MAX_GPX_BYTES = 10 * 1024 * 1024

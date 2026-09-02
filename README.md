@@ -2,7 +2,7 @@
 
 > A community-driven outdoor destination hub for Northern Taiwan.
 
-Find somewhere to go outdoors across Taipei, New Taipei, and Keelung — trails, rides, campsites, surf breaks, waterfalls, and more. Traversee starts with places sourced from OpenStreetMap and grows through what the community shares.
+Find somewhere to go outdoors across Taiwan — trails, rides, campsites, surf breaks, dive sites, waterfalls, and more. Traversee starts with places sourced from OpenStreetMap and grows through what the community shares.
 
 ## Status
 

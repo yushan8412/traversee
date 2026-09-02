@@ -55,3 +55,14 @@ coverage/
 # Copied from node_modules by scripts/copy-maplibre-worker.mjs at build time.
 # Not committed: vendored copies drift out of step with the installed version.
 public/maplibre/
+
+# Scratch from the design tooling: a surface brief that goes stale the moment
+# the page changes, and a build queue. Neither describes the shipped site, and a
+# stale description is worse than none.
+.impeccable/
+
+# Hero footage. Git keeps every blob forever, so a 12 MB placeholder clip would
+# still be in the history after it is replaced — and then so would its
+# replacement. Video is served from Blob Storage instead; see
+# public/hero/PROVENANCE.md for what is expected here and where it comes from.
+public/hero/*.mp4

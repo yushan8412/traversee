@@ -4,20 +4,64 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { LngLatBounds, MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import type { TileSource } from '../../../lib/maps/tile-source'
 import { submitSpot, type SubmitResult } from './actions'
 
 setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
 
-const TILE_URL =
+const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
+/**
+ * Free stand-in for anywhere that is not production. See lib/maps/tile-source.
+ *
+ * OpenStreetMap's own tiles, chosen for their labels.
+ *
+ * Every alternative was rejected on the same point once it was rendered rather
+ * than read about. Esri's Topographic and Light Gray both look calmer and both
+ * romanise Taiwanese place names — Taipei, Taichung — which on a Traditional
+ * Chinese site is a worse loss than any amount of visual noise. Carto Positron
+ * answers 200 without a key and stamps API KEY REQUIRED across every tile,
+ * which no status-code check catches. OpenTopoMap's relief is strong enough to
+ * swallow the pins.
+ *
+ * The known cost, accepted deliberately: this style paints territorial
+ * boundaries as a purple line, which draws a box out in the sea around Taiwan.
+ * It is baked into the raster, so it cannot be styled away — the only fix is a
+ * different source, and every one of those costs the Chinese labels. If that
+ * trade ever needs revisiting, self-hosted vector tiles are the answer, because
+ * then the style is ours.
+ *
+ * Development and previews only; production draws from Azure Maps. OSM's tile
+ * usage policy is why this is not the default anywhere.
+ */
+const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 
-const CITIES = ['taipei', 'newTaipei', 'keelung'] as const
-const ACTIVITIES = ['hiking', 'cycling', 'camping', 'surfing', 'waterfall'] as const
+// Every county the coverage box reaches, in the order they run down the island.
+// This list was still Taipei/New Taipei/Keelung after the scope widened, so the
+// form could not submit anywhere the validator was by then happy to accept.
+const CITIES = [
+  'taipei', 'newTaipei', 'keelung', 'taoyuan', 'hsinchuCity', 'hsinchuCounty',
+  'miaoli', 'taichung', 'changhua', 'nantou', 'yunlin', 'chiayiCity',
+  'chiayiCounty', 'tainan', 'kaohsiung', 'pingtung', 'yilan', 'hualien',
+  'taitung', 'penghu',
+] as const
+const ACTIVITIES = [
+  'hiking',
+  'cycling',
+  'camping',
+  'surfing',
+  'waterfall',
+  'climbing',
+  'vtt',
+] as const
 
 const FIELD = 'w-full rounded border border-line bg-panel px-3 py-2 text-sm'
 const LABEL = 'mb-1 block text-xs font-medium text-dim'
 
-export function SpotForm() {
+export function SpotForm({ tileSource }: { tileSource: TileSource }) {
+  const useAzure = tileSource === 'azure'
   const t = useTranslations('submit')
   const tp = useTranslations('places')
   const container = useRef<HTMLDivElement>(null)
@@ -33,12 +77,16 @@ export function SpotForm() {
     let cancelled = false
 
     async function start() {
-      let credentials: { token: string; clientId: string }
-      try {
-        const response = await fetch('/api/maps-token')
-        credentials = (await response.json()) as { token: string; clientId: string }
-      } catch {
-        return
+      // Only Azure's tiles need a credential; OpenStreetMap's do not, and
+      // asking for one would make the map depend on Azure being configured.
+      let credentials = { token: '', clientId: '' }
+      if (useAzure) {
+        try {
+          const response = await fetch('/api/maps-token')
+          credentials = (await response.json()) as { token: string; clientId: string }
+        } catch {
+          return
+        }
       }
       if (cancelled || !container.current) return
 
@@ -46,12 +94,20 @@ export function SpotForm() {
         container: container.current,
         style: {
           version: 8,
-          sources: { azure: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: 18 } },
+          sources: {
+            azure: {
+              type: 'raster',
+              tiles: [useAzure ? AZURE_TILES : OSM_TILES],
+              tileSize: 256,
+              maxzoom: 18,
+              ...(useAzure ? {} : { attribution: OSM_ATTRIBUTION }),
+            },
+          },
           layers: [{ id: 'azure', type: 'raster', source: 'azure' }],
         },
         center: [121.56, 25.05],
         zoom: 9,
-        maxBounds: new LngLatBounds([121.0, 24.7], [122.3, 25.5]),
+        maxBounds: new LngLatBounds([119.3, 21.75], [122.1, 25.4]),
         minZoom: 8,
         maxZoom: 17,
         attributionControl: { compact: true },
@@ -85,7 +141,9 @@ export function SpotForm() {
       map.current = null
       marker.current = null
     }
-  }, [])
+    // The map is built once. `useAzure` is here only because it is read inside;
+    // it is derived from a prop that does not change while the form is open.
+  }, [useAzure])
 
   async function onSubmit(formData: FormData) {
     setPending(true)

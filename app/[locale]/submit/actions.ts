@@ -16,7 +16,15 @@ export interface SubmitResult {
 }
 
 const CITIES: City[] = ['taipei', 'newTaipei', 'keelung']
-const ACTIVITIES: Activity[] = ['hiking', 'cycling', 'camping', 'surfing', 'waterfall']
+const ACTIVITIES: Activity[] = [
+  'hiking',
+  'cycling',
+  'camping',
+  'surfing',
+  'waterfall',
+  'climbing',
+  'vtt',
+]
 
 function readNumber(value: FormDataEntryValue | null): number {
   // NaN rather than 0 for unparseable input: 0 is a real coordinate in the
