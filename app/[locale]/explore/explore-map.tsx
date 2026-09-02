@@ -15,19 +15,26 @@ const AZURE_TILES =
 /**
  * Free stand-in for anywhere that is not production. See lib/maps/tile-source.
  *
- * Esri's Light Gray Canvas rather than OpenStreetMap's own tiles. The default
- * OSM style paints administrative and territorial boundaries as heavy purple
- * lines, which on this map drew a box in the sea around Taiwan, and its bright
- * greens and reds fight a palette built to let photographs be the only
- * saturated thing on a page.
+ * Esri's World Topographic. Terrain, roads and place names, muted enough that
+ * the coloured pins stay the brightest thing on screen.
  *
- * Carto's Positron was the first choice and is out: its tiles still answer
- * without a key, but they now come back stamped API KEY REQUIRED across every
- * one. Esri's needs no key. Note the {z}/{y}/{x} order, which is not the usual
- * one. Attribution is required and is declared on the source.
+ * Three were rejected on the way, each for a reason worth not rediscovering.
+ * OpenStreetMap's own style paints administrative and territorial boundaries as
+ * heavy purple lines, which drew a box out in the sea around the whole island.
+ * Carto's Positron still answers without a key but stamps API KEY REQUIRED
+ * across every tile — visible only by rendering the map, not by reading a
+ * status code. Esri's Light Gray Canvas has neither problem and reads as a
+ * diagram rather than a map, which on a site about going outdoors is worse.
+ *
+ * The trade it does make: labels are romanised rather than Chinese. That is a
+ * real cost on a Traditional Chinese site, and it is accepted only because this
+ * basemap is for development and previews — production draws from Azure Maps.
+ *
+ * Note the {z}/{y}/{x} order, which is not the usual one. Attribution is
+ * required and is declared on the source.
  */
 const OSM_TILES =
-  'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
 const OSM_ATTRIBUTION = 'Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
 
 /**
