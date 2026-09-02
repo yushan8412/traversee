@@ -6,6 +6,7 @@ import { getPublishedPlaceBySlug } from '../../../../lib/places/repository'
 import { resolveText } from '../../../../lib/places/text'
 import type { RouteMetrics } from '../../../../lib/places/types'
 import { PlaceMap } from '../place-map'
+import { resolveTileSource } from '../../../../lib/maps/tile-source'
 import { PlacePhoto } from '../photo'
 import { TranslatedText } from '../translated-text'
 
@@ -80,6 +81,7 @@ export default async function PlacePage({
       {/* The detail query returns the whole document, so the simplified track is
           already in hand and drawing it costs nothing extra. */}
       <PlaceMap
+        tileSource={resolveTileSource()}
         markers={[{ slug: place.slug, name: name?.value ?? place.slug, point: place.startPoint }]}
         geometry={place.geometry}
         className="mt-6 h-96 w-full"

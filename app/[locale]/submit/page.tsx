@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { auth } from '../../../auth'
 import { KindPicker } from './kind-picker'
+import { resolveTileSource } from '../../../lib/maps/tile-source'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,7 @@ export default async function SubmitPage({ params }: { params: Promise<{ locale:
   return (
     <main>
       <h1 className="mb-6 text-2xl font-semibold tracking-tight">{t('title')}</h1>
-      <KindPicker />
+      <KindPicker tileSource={resolveTileSource()} />
     </main>
   )
 }

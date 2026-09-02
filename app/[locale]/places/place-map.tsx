@@ -12,6 +12,7 @@ import {
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { LineString, Point } from '../../../lib/places/types'
+import type { TileSource } from '../../../lib/maps/tile-source'
 
 // Verified against the account rather than taken from documentation: at this
 // api-version the tileset answers with 256px PNG tiles, so a raster source is
@@ -19,23 +20,8 @@ import type { LineString, Point } from '../../../lib/places/types'
 const AZURE_TILES =
   'https://atlas.microsoft.com/map/tile?api-version=2024-04-01&tilesetId=microsoft.base.road&zoom={z}&x={x}&y={y}'
 
-/**
- * Development does not spend the production grant.
- *
- * Measured 2026-09-02: opening this map costs 27 tile requests, and a visit with
- * nine gestures costs 164. The grant is 5,000 billable transactions a month and
- * base tiles bill at one per fifteen requests, so it covers about 75,000
- * requests — and 78,726 went in a single day of design review with no visitors
- * at all. Every reload and every screenshot run was hitting the metered
- * endpoint, which is where the month went.
- *
- * OpenStreetMap's tiles stand in locally. Their usage policy rules them out for
- * a deployed site, which is precisely why this switches on the environment
- * rather than becoming the default.
- */
+/** Free stand-in for anywhere that is not production. See lib/maps/tile-source. */
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-const USE_AZURE_TILES = process.env.NODE_ENV === 'production'
-const TILE_URL = USE_AZURE_TILES ? AZURE_TILES : OSM_TILES
 
 // maplibre-gl resolves its worker through import.meta.url, which Next's bundler
 // rewrites to a build-machine file:// path. The request then falls through to
@@ -60,7 +46,10 @@ export function PlaceMap({
   markers,
   geometry,
   className,
+  tileSource,
 }: {
+  /** Decided on the server; see lib/maps/tile-source.ts for why. */
+  tileSource: TileSource
   markers: MapMarker[]
   /** Drawn only where the caller already holds it — the list query omits it on purpose. */
   geometry?: LineString | Point | null
@@ -79,7 +68,8 @@ export function PlaceMap({
   //
   // Keying on the serialised content instead means the map is rebuilt when the
   // data actually differs and not when React merely hands over a new array.
-  const dataKey = JSON.stringify({ markers, geometry })
+  const useAzure = tileSource === 'azure'
+  const dataKey = JSON.stringify({ markers, geometry, tileSource })
   const latest = useRef({ markers, geometry })
   latest.current = { markers, geometry }
 
@@ -94,7 +84,7 @@ export function PlaceMap({
       // Azure being configured at all — which is the opposite of what the
       // development tile source is for.
       let credentials: MapCredentials = { token: '', clientId: '' }
-      if (USE_AZURE_TILES) {
+      if (useAzure) {
         try {
           const response = await fetch('/api/maps-token')
           if (!response.ok) throw new Error(`token endpoint responded ${response.status}`)
@@ -139,7 +129,7 @@ export function PlaceMap({
         style: {
           version: 8,
           sources: {
-            azure: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: 18 },
+            azure: { type: 'raster', tiles: [useAzure ? AZURE_TILES : OSM_TILES], tileSize: 256, maxzoom: 18 },
             ...(track ? { track: { type: 'geojson' as const, data: track } } : {}),
           },
           layers: [
@@ -226,7 +216,7 @@ export function PlaceMap({
       map.current?.remove()
       map.current = null
     }
-  }, [dataKey])
+  }, [dataKey, useAzure])
 
   if (failed) {
     return (

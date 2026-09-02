@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { RouteForm } from './route-form'
 import { SpotForm } from './spot-form'
+import type { TileSource } from '../../../lib/maps/tile-source'
 
 /**
  * The first question, because it decides everything after it. A route is a line
  * and arrives as a GPX file; a spot is a point and is marked on the map. Asking
  * up front keeps each form to the fields its own kind actually needs.
  */
-export function KindPicker() {
+export function KindPicker({ tileSource }: { tileSource: TileSource }) {
   const t = useTranslations('submit')
   const [kind, setKind] = useState<'route' | 'spot'>('route')
 
@@ -31,7 +32,7 @@ export function KindPicker() {
         ))}
       </div>
 
-      {kind === 'route' ? <RouteForm /> : <SpotForm />}
+      {kind === 'route' ? <RouteForm tileSource={tileSource} /> : <SpotForm tileSource={tileSource} />}
     </div>
   )
 }
