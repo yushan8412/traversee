@@ -8,6 +8,9 @@ import { PlaceMap } from '../places/place-map'
 import type { TileSource } from '../../../lib/maps/tile-source'
 import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import { submitRoute, type SubmitResult } from './route-actions'
+import { shrinkPhotos } from '../../../lib/photos/downscale'
+import { LIMIT_MESSAGE_VALUES } from '../../../lib/photos/limits'
+import { SubmissionErrors } from './submission-errors'
 
 
 const FIELD = 'w-full rounded border border-line bg-panel px-3 py-2 text-sm'
@@ -46,7 +49,7 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
   async function onSubmit(formData: FormData) {
     setPending(true)
     try {
-      setResult(await submitRoute(formData))
+      setResult(await submitRoute(await shrinkPhotos(formData)))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
     } finally {
@@ -167,16 +170,10 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
           multiple
           className="text-sm"
         />
-        <p className="mt-1 text-xs text-dim">{t('photosHint')}</p>
+        <p className="mt-1 text-xs text-dim">{t('photosHint', LIMIT_MESSAGE_VALUES)}</p>
       </div>
 
-      {result && !result.ok && (
-        <ul className="rounded border border-line bg-panel p-4 text-sm">
-          {result.errors.map((code) => (
-            <li key={code}>{t(`errors.${code}` as never)}</li>
-          ))}
-        </ul>
-      )}
+      {result && !result.ok && <SubmissionErrors codes={result.errors} />}
 
       <button
         type="submit"

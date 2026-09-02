@@ -7,6 +7,9 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { TileSource } from '../../../lib/maps/tile-source'
 import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import { submitSpot, type SubmitResult } from './actions'
+import { shrinkPhotos } from '../../../lib/photos/downscale'
+import { LIMIT_MESSAGE_VALUES } from '../../../lib/photos/limits'
+import { SubmissionErrors } from './submission-errors'
 
 setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
 
@@ -134,7 +137,7 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
   async function onSubmit(formData: FormData) {
     setPending(true)
     try {
-      setResult(await submitSpot(formData))
+      setResult(await submitSpot(await shrinkPhotos(formData)))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
     } finally {
@@ -227,16 +230,10 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
           multiple
           className="text-sm"
         />
-        <p className="mt-1 text-xs text-dim">{t('photosHint')}</p>
+        <p className="mt-1 text-xs text-dim">{t('photosHint', LIMIT_MESSAGE_VALUES)}</p>
       </div>
 
-      {result && !result.ok && (
-        <ul className="rounded border border-line bg-panel p-4 text-sm">
-          {result.errors.map((code) => (
-            <li key={code}>{t(`errors.${code}` as never)}</li>
-          ))}
-        </ul>
-      )}
+      {result && !result.ok && <SubmissionErrors codes={result.errors} />}
 
       <button
         type="submit"
