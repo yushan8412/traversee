@@ -13,7 +13,7 @@ import { ActivityIcon } from '../activity-icon'
 import { PhotoPicker } from './photo-picker'
 import { PlaceSearch } from './place-search'
 import { SubmissionErrors } from './submission-errors'
-import { TranslatablePair } from './translatable-pair'
+import { ProseFields } from './prose-fields'
 import {
   BUTTON_PRIMARY,
   CHIP,
@@ -50,8 +50,12 @@ const AZURE_TILES =
  * trade ever needs revisiting, self-hosted vector tiles are the answer, because
  * then the style is ours.
  *
- * Development and previews only; production draws from Azure Maps. OSM's tile
- * usage policy is why this is not the default anywhere.
+ * Not the default anywhere — see lib/maps/tile-source.ts. Production runs on it
+ * as of 2026-09-02, set deliberately through MAPS_TILE_SOURCE, because the
+ * Chinese place names matter more than the licensed tiles and Azure's basemap
+ * does not offer zh-Hant labels. That is a choice about OpenStreetMap's tile
+ * usage policy, which permits low-volume use and requires the attribution
+ * below; it is revisited the moment this site has real traffic.
  */
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 const OSM_ATTRIBUTION =
@@ -272,9 +276,7 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
             ))}
           </div>
 
-          {(['summary', 'description'] as const).map((field) => (
-            <TranslatablePair key={field} field={field} />
-          ))}
+          <ProseFields />
         </div>
       </section>
 

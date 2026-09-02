@@ -173,7 +173,11 @@
     "searching": "Searching…",
     "searchNoResults": "Nothing in Taiwan matches “{query}”. You can still tap the map.",
     "searchFailed": "Search is unavailable right now. Tap the map to place the pin.",
-    "searchResults": "Search results"
+    "searchResults": "Search results",
+    "translate": "Translate to English",
+    "translating": "Translating…",
+    "translateFailed": "Translation failed. You can write the English yourself.",
+    "translated": "Translated. Edit it as you like."
   },
   "review": {
     "title": "Awaiting review",

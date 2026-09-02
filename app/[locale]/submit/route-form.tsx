@@ -13,7 +13,7 @@ import { attachPhotos } from '../../../lib/photos/selection'
 import { ActivityIcon } from '../activity-icon'
 import { PhotoPicker } from './photo-picker'
 import { SubmissionErrors } from './submission-errors'
-import { TranslatablePair } from './translatable-pair'
+import { ProseFields } from './prose-fields'
 import {
   BUTTON_PRIMARY,
   BUTTON_QUIET,
@@ -217,9 +217,7 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
             ))}
           </div>
 
-          {(['summary', 'description'] as const).map((field) => (
-            <TranslatablePair key={field} field={field} />
-          ))}
+          <ProseFields />
         </div>
       </section>
 

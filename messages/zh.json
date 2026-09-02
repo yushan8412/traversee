@@ -173,7 +173,11 @@
     "searching": "搜尋中…",
     "searchNoResults": "在台灣範圍內找不到「{query}」。直接在地圖上點選也可以。",
     "searchFailed": "搜尋暫時無法使用，請直接在地圖上點選位置。",
-    "searchResults": "搜尋結果"
+    "searchResults": "搜尋結果",
+    "translate": "翻譯成英文",
+    "translating": "翻譯中…",
+    "translateFailed": "翻譯失敗，英文可以自己填。",
+    "translated": "已翻譯，可以直接修改。"
   },
   "review": {
     "title": "待審核",
