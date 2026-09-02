@@ -64,7 +64,7 @@ export default async function LocaleLayout({
               because a full-bleed hero and a column of prose want different ones
               and a layout that picks for them makes one of the two wrong. */}
           <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur">
-            <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-5 sm:gap-7 sm:px-6">
+            <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:gap-7 sm:px-6">
               <Link
                 href="/"
                 className="flex shrink-0 items-center gap-2.5 whitespace-nowrap text-lg font-semibold tracking-tight no-underline"
@@ -76,7 +76,13 @@ export default async function LocaleLayout({
                 </span>
                 {t('name')}
               </Link>
-              <nav className="flex items-center gap-5 text-sm sm:ml-1 sm:gap-6">
+              <nav className="flex items-center gap-4 text-sm sm:ml-1 sm:gap-6">
+                <Link
+                  href="/explore"
+                  className="whitespace-nowrap font-medium text-dim no-underline hover:text-ink"
+                >
+                  {nav('explore')}
+                </Link>
                 <Link
                   href="/places"
                   className="whitespace-nowrap font-medium text-dim no-underline hover:text-ink"

@@ -7,7 +7,8 @@
     "places": "All places",
     "switchLanguage": "中文",
     "submit": "Add a place",
-    "review": "Review"
+    "review": "Review",
+    "explore": "Explore"
   },
   "places": {
     "title": "All places",
@@ -79,6 +80,19 @@
       "overview": "Overview map",
       "unavailable": "The map could not be loaded."
     }
+  },
+  "explore": {
+    "title": "Explore the map",
+    "showFilters": "Filters",
+    "hideFilters": "Hide filters",
+    "activity": "Activity",
+    "difficulty": "Difficulty",
+    "region": "Region",
+    "upTo": "{value} or under",
+    "showing": "{count} shown",
+    "clear": "Clear filters",
+    "noMatches": "Nothing matches. Try loosening a filter.",
+    "ungradedHidden": "{count} more places have no difficulty grade, so filtering by it leaves them out."
   },
   "auth": {
     "signIn": "Sign in with Google",
