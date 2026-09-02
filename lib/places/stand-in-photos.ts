@@ -19,31 +19,8 @@ export interface StandInPhoto extends Pick<Photo, 'path'> {
 }
 
 export const standInPhotos: Record<string, StandInPhoto[]> = {
-  'lengshuikeng-loop': [
-    { path: '/places/lengshuikeng-loop/1.webp', credit: "Syced / CC0" },
-    { path: '/places/lengshuikeng-loop/2.webp', credit: "羅源森 / CC BY-SA 4.0" },
-  ],
-  'old-caoling-circular': [
-    { path: '/places/old-caoling-circular/1.webp', credit: "陳銘宏 / CC BY-SA 4.0" },
-    { path: '/places/old-caoling-circular/2.webp', credit: "lienyuan lee / CC BY 3.0" },
-  ],
-  'fulong-beach': [
-    { path: '/places/fulong-beach/1.webp', credit: "Allervous / CC BY-SA 4.0" },
-    { path: '/places/fulong-beach/2.webp', credit: "Любарский Сергей Николаевич / CC BY-SA 4.0" },
-  ],
-  'wanggu-waterfall': [
-    { path: '/places/wanggu-waterfall/1.webp', credit: "Devey Chiou / CC BY-SA 4.0" },
-  ],
-  'wangyou-valley': [
-    { path: '/places/wangyou-valley/1.webp', credit: "Taiwankengo / CC BY-SA 4.0" },
-    { path: '/places/wangyou-valley/2.webp', credit: "lienyuan lee / CC BY 3.0" },
-  ],
   'taipei-loop': [
     { path: '/places/taipei-loop/1.webp', credit: "玄史生 / CC BY-SA 3.0" },
     { path: '/places/taipei-loop/2.webp', credit: "C.L. Kao (eddie5150) / CC BY-SA 3.0" },
-  ],
-  'mt-datun-navigation-station-1': [
-    { path: '/places/mt-datun-navigation-station-1/1.webp', credit: "Ianbu / CC BY-SA 4.0" },
-    { path: '/places/mt-datun-navigation-station-1/2.webp', credit: "MiNe / CC BY 2.0" },
   ],
 }
