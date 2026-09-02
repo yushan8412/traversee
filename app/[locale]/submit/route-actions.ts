@@ -8,6 +8,7 @@ import { createPlace, slugExists } from '../../../lib/places/repository'
 import { checkUploads } from '../../../lib/photos/paths'
 import { storePhotos } from '../../../lib/photos/store'
 import { uploadToPending } from '../../../lib/storage/blob'
+import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import type { Activity, City } from '../../../lib/places/types'
 
 export interface SubmitResult {
@@ -16,16 +17,6 @@ export interface SubmitResult {
   slug?: string
 }
 
-const CITIES: City[] = ['taipei', 'newTaipei', 'keelung']
-const ACTIVITIES: Activity[] = [
-  'hiking',
-  'cycling',
-  'camping',
-  'surfing',
-  'waterfall',
-  'climbing',
-  'vtt',
-]
 
 /** Large enough for a long day's recording, small enough to bound the request. */
 const MAX_GPX_BYTES = 10 * 1024 * 1024

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import { LngLatBounds, MapLibreMap, Marker, NavigationControl, setWorkerUrl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { TileSource } from '../../../lib/maps/tile-source'
+import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import { submitSpot, type SubmitResult } from './actions'
 
 setWorkerUrl('/maplibre/maplibre-gl-worker.mjs')
@@ -41,21 +42,6 @@ const OSM_ATTRIBUTION =
 // Every county the coverage box reaches, in the order they run down the island.
 // This list was still Taipei/New Taipei/Keelung after the scope widened, so the
 // form could not submit anywhere the validator was by then happy to accept.
-const CITIES = [
-  'taipei', 'newTaipei', 'keelung', 'taoyuan', 'hsinchuCity', 'hsinchuCounty',
-  'miaoli', 'taichung', 'changhua', 'nantou', 'yunlin', 'chiayiCity',
-  'chiayiCounty', 'tainan', 'kaohsiung', 'pingtung', 'yilan', 'hualien',
-  'taitung', 'penghu',
-] as const
-const ACTIVITIES = [
-  'hiking',
-  'cycling',
-  'camping',
-  'surfing',
-  'waterfall',
-  'climbing',
-  'vtt',
-] as const
 
 const FIELD = 'w-full rounded border border-line bg-panel px-3 py-2 text-sm'
 const LABEL = 'mb-1 block text-xs font-medium text-dim'
