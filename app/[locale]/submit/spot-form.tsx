@@ -14,27 +14,29 @@ const AZURE_TILES =
 /**
  * Free stand-in for anywhere that is not production. See lib/maps/tile-source.
  *
- * Esri's World Topographic. Terrain, roads and place names, muted enough that
- * the coloured pins stay the brightest thing on screen.
+ * OpenStreetMap's own tiles, chosen for their labels.
  *
- * Three were rejected on the way, each for a reason worth not rediscovering.
- * OpenStreetMap's own style paints administrative and territorial boundaries as
- * heavy purple lines, which drew a box out in the sea around the whole island.
- * Carto's Positron still answers without a key but stamps API KEY REQUIRED
- * across every tile — visible only by rendering the map, not by reading a
- * status code. Esri's Light Gray Canvas has neither problem and reads as a
- * diagram rather than a map, which on a site about going outdoors is worse.
+ * Every alternative was rejected on the same point once it was rendered rather
+ * than read about. Esri's Topographic and Light Gray both look calmer and both
+ * romanise Taiwanese place names — Taipei, Taichung — which on a Traditional
+ * Chinese site is a worse loss than any amount of visual noise. Carto Positron
+ * answers 200 without a key and stamps API KEY REQUIRED across every tile,
+ * which no status-code check catches. OpenTopoMap's relief is strong enough to
+ * swallow the pins.
  *
- * The trade it does make: labels are romanised rather than Chinese. That is a
- * real cost on a Traditional Chinese site, and it is accepted only because this
- * basemap is for development and previews — production draws from Azure Maps.
+ * The known cost, accepted deliberately: this style paints territorial
+ * boundaries as a purple line, which draws a box out in the sea around Taiwan.
+ * It is baked into the raster, so it cannot be styled away — the only fix is a
+ * different source, and every one of those costs the Chinese labels. If that
+ * trade ever needs revisiting, self-hosted vector tiles are the answer, because
+ * then the style is ours.
  *
- * Note the {z}/{y}/{x} order, which is not the usual one. Attribution is
- * required and is declared on the source.
+ * Development and previews only; production draws from Azure Maps. OSM's tile
+ * usage policy is why this is not the default anywhere.
  */
-const OSM_TILES =
-  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
-const OSM_ATTRIBUTION = 'Esri, HERE, Garmin, &copy; OpenStreetMap contributors'
+const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+const OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 
 // Every county the coverage box reaches, in the order they run down the island.
 // This list was still Taipei/New Taipei/Keelung after the scope widened, so the
