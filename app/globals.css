@@ -18,7 +18,11 @@
   --color-panel: #eaeee9;
   --color-line: #dde3dc;
   --color-ink: #1e2a24;
-  --color-dim: #71807a;
+  /* Secondary text. At its previous value it measured 4.14:1 on paper and
+     4.05:1 on the canvas, both under the 4.5:1 floor for text this size — and
+     it carries every hint and field note, which is the copy someone reads when
+     they are stuck. Darkened until both surfaces clear 4.5:1. */
+  --color-dim: #66756f;
 
   /* Morandi green: the action colour, and the second line of a display heading. */
   --color-brand: #5a7f6a;
@@ -254,4 +258,48 @@ body {
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-dim);
+}
+
+/*
+ * The parts of the interface the browser draws.
+ *
+ * Selection, the caret, the focus ring and the fill of a native checkbox all
+ * ship in the platform's blue. On a page whose entire palette is Morandi green
+ * they are the loudest colour on screen, and they appear the moment anybody
+ * actually uses a form rather than looks at one — which is why they went
+ * unnoticed until the submit page got its first real attention.
+ *
+ * accent-color is what themes a checkbox and a radio without replacing them.
+ * Rebuilding those controls would cost their keyboard and assistive behaviour
+ * for the sake of a colour.
+ */
+::selection {
+  background: color-mix(in oklab, var(--color-brand) 26%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+input,
+textarea,
+select {
+  accent-color: var(--color-brand);
+  caret-color: var(--color-brand);
+}
+
+/*
+ * A row that scrolls sideways without advertising it. The header nav uses this
+ * so an administrator's extra links slide instead of wrapping out of a
+ * fixed-height bar; a visible scrollbar inside a 64px header would be worse
+ * than the overflow it fixes.
+ */
+.tv-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tv-scroll-x::-webkit-scrollbar {
+  display: none;
 }

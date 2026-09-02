@@ -152,7 +152,22 @@
     "storedPoints": "Points after simplification",
     "noTimestamps": "The file has no timestamps",
     "photos": "Photos",
-    "photosHint": "Up to {max}. They are resized before upload and their location data removed."
+    "photosHint": "Up to {max}. They are resized before upload and their location data removed.",
+    "choosePhotos": "Choose photos",
+    "addMorePhotos": "Add more",
+    "removePhoto": "Remove {name}",
+    "sectionWhere": "Where",
+    "sectionWhereNote": "Tap the map to drop the pin. Tap again to move it.",
+    "sectionAbout": "Name and description",
+    "sectionAboutNote": "Write it in Chinese and translate; you can still edit the English.",
+    "sectionActivitiesNote": "Choose as many as apply. This decides which pin it gets on the map.",
+    "kindLabel": "What are you adding?",
+    "noLocationYet": "No location chosen yet",
+    "sectionTrack": "Track file",
+    "sectionTrackNote": "Choose a GPX and the track and its numbers appear below to check.",
+    "chooseGpx": "Choose a GPX file",
+    "replaceGpx": "Choose a different file",
+    "sectionRegionActivities": "Region and activities"
   },
   "review": {
     "title": "Awaiting review",

@@ -152,7 +152,22 @@
     "storedPoints": "簡化後的點數",
     "noTimestamps": "檔案沒有時間戳",
     "photos": "照片",
-    "photosHint": "最多 {max} 張，上傳前會自動縮圖，並移除位置資訊"
+    "photosHint": "最多 {max} 張，上傳前會自動縮圖，並移除位置資訊",
+    "choosePhotos": "選擇照片",
+    "addMorePhotos": "再加一張",
+    "removePhoto": "移除 {name}",
+    "sectionWhere": "位置",
+    "sectionWhereNote": "在地圖上點一下就會標記，可以再點一次修正。",
+    "sectionAbout": "名稱與描述",
+    "sectionAboutNote": "中文寫完可以自動翻成英文，翻完還能修改。",
+    "sectionActivitiesNote": "可以複選。這會決定它在地圖上用哪一種圖示。",
+    "kindLabel": "要新增什麼？",
+    "noLocationYet": "尚未選擇位置",
+    "sectionTrack": "路線檔案",
+    "sectionTrackNote": "選一個 GPX，軌跡和數據會先顯示出來讓你確認。",
+    "chooseGpx": "選擇 GPX 檔案",
+    "replaceGpx": "換一個檔案",
+    "sectionRegionActivities": "地區與活動"
   },
   "review": {
     "title": "待審核",
