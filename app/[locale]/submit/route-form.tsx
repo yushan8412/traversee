@@ -9,19 +9,32 @@ import type { TileSource } from '../../../lib/maps/tile-source'
 import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import { submitRoute, type SubmitResult } from './route-actions'
 import { shrinkPhotos } from '../../../lib/photos/downscale'
-import { LIMIT_MESSAGE_VALUES } from '../../../lib/photos/limits'
+import { attachPhotos } from '../../../lib/photos/selection'
+import { ActivityIcon } from '../activity-icon'
+import { PhotoPicker } from './photo-picker'
 import { SubmissionErrors } from './submission-errors'
-
-
-const FIELD = 'w-full rounded border border-line bg-panel px-3 py-2 text-sm'
-const LABEL = 'mb-1 block text-xs font-medium text-dim'
+import { ProseFields } from './prose-fields'
+import {
+  BUTTON_PRIMARY,
+  BUTTON_QUIET,
+  CHIP,
+  CHIP_OFF,
+  FIELD,
+  LABEL,
+  OPTIONAL,
+  SECTION,
+  SECTION_NOTE,
+  SECTION_TITLE,
+} from './field-styles'
 
 export function RouteForm({ tileSource }: { tileSource: TileSource }) {
   const t = useTranslations('submit')
   const tp = useTranslations('places')
 
   const [summary, setSummary] = useState<TrackSummary | null>(null)
+  const [fileName, setFileName] = useState<string | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
+  const [photos, setPhotos] = useState<File[]>([])
   const [result, setResult] = useState<SubmitResult | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -32,6 +45,7 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
     const file = event.target.files?.[0]
     setSummary(null)
     setParseError(null)
+    setFileName(file?.name ?? null)
     if (!file) return
 
     try {
@@ -49,7 +63,7 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
   async function onSubmit(formData: FormData) {
     setPending(true)
     try {
-      setResult(await submitRoute(await shrinkPhotos(formData)))
+      setResult(await submitRoute(await shrinkPhotos(attachPhotos(formData, photos))))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
     } finally {
@@ -59,129 +73,169 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
 
   if (result?.ok) {
     return (
-      <p className="rounded border border-line bg-panel p-5 text-sm">
+      <p className={`${SECTION} text-[15px]`}>
         {t('submitted')} <span className="font-mono text-dim">{result.slug}</span>
       </p>
     )
   }
 
   return (
-    <form action={onSubmit} className="space-y-5">
-      <div>
-        <label className={LABEL} htmlFor="gpx">
-          {t('gpxFile')}
-        </label>
-        <input
-          id="gpx"
-          name="gpx"
-          type="file"
-          accept=".gpx,application/gpx+xml,application/xml,text/xml"
-          required
-          onChange={onFile}
-          className="text-sm"
-        />
-        {parseError && <p className="mt-1 text-sm text-dim">{t(`errors.${parseError}` as never)}</p>}
-      </div>
+    <form action={onSubmit} className="space-y-4 sm:space-y-5">
+      <section className={SECTION}>
+        <h2 className={SECTION_TITLE}>{t('sectionTrack')}</h2>
+        <p className={SECTION_NOTE}>{t('sectionTrackNote')}</p>
 
-      {summary && (
-        <div className="space-y-3">
-          <PlaceMap
-            tileSource={tileSource}
-            markers={[{ slug: 'preview', name: t('preview'), point: summary.startPoint }]}
-            geometry={summary.geometry}
-            className="h-72 w-full"
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <input
+            id="gpx"
+            name="gpx"
+            type="file"
+            accept=".gpx,application/gpx+xml,application/xml,text/xml"
+            required
+            onChange={onFile}
+            className="peer sr-only"
           />
-          <dl className="grid grid-cols-[9rem_1fr] gap-y-1 text-sm">
-            <dt className="text-dim">{tp('metrics.distance')}</dt>
-            <dd>{tp('metrics.kilometres', { value: summary.distanceKm })}</dd>
-            <dt className="text-dim">{tp('metrics.elevationGain')}</dt>
-            <dd>{tp('metrics.metres', { value: summary.elevationGainM })}</dd>
-            <dt className="text-dim">{tp('metrics.duration')}</dt>
-            <dd>
-              {summary.duration.basis === 'gpx'
-                ? tp('metrics.minutes', {
-                    min: summary.duration.minMinutes,
-                    max: summary.duration.maxMinutes,
-                  })
-                : t('noTimestamps')}
-              <span className="ml-2 text-xs text-dim">
-                {tp(`basis.${summary.duration.basis}` as never)}
-              </span>
-            </dd>
-            <dt className="text-dim">{t('storedPoints')}</dt>
-            <dd>{summary.geometry.coordinates.length}</dd>
-          </dl>
-        </div>
-      )}
-
-      <div>
-        <label className={LABEL} htmlFor="city">
-          {t('city')}
-        </label>
-        <select id="city" name="city" className={FIELD} defaultValue="taipei">
-          {CITIES.map((city) => (
-            <option key={city} value={city}>
-              {tp(`city.${city}`)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <fieldset>
-        <legend className={LABEL}>{t('activities')}</legend>
-        <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          {ACTIVITIES.map((activity) => (
-            <label key={activity} className="flex items-center gap-1.5">
-              <input type="checkbox" name="activities" value={activity} />
-              {tp(`activity.${activity}`)}
-            </label>
-          ))}
-        </div>
-      </fieldset>
-
-      {(['nameZh', 'nameEn', 'summaryZh', 'summaryEn'] as const).map((field) => (
-        <div key={field}>
-          <label className={LABEL} htmlFor={field}>
-            {t(field)}
+          <label
+            htmlFor="gpx"
+            className={`${BUTTON_QUIET} peer-focus-visible:outline peer-focus-visible:outline-2
+              peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand`}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 18c3-1 3.5-6 6.5-6s3.5 4 6 4 2.5-6 3.5-8" />
+              <circle cx="4" cy="18" r="1.6" />
+              <circle cx="20" cy="8" r="1.6" />
+            </svg>
+            {fileName ? t('replaceGpx') : t('chooseGpx')}
           </label>
-          <input id={field} name={field} className={FIELD} />
+          {fileName && <span className="text-[13px] text-dim">{fileName}</span>}
         </div>
-      ))}
 
-      {(['descriptionZh', 'descriptionEn'] as const).map((field) => (
-        <div key={field}>
-          <label className={LABEL} htmlFor={field}>
-            {t(field)}
+        {parseError && (
+          <p className="mt-3 text-[13px] text-clayDeep">{t(`errors.${parseError}` as never)}</p>
+        )}
+
+        {summary && (
+          <div className="mt-4 space-y-3">
+            <div className="overflow-hidden rounded-xl border border-line">
+              <PlaceMap
+                tileSource={tileSource}
+                markers={[{ slug: 'preview', name: t('preview'), point: summary.startPoint }]}
+                geometry={summary.geometry}
+                className="h-[300px] w-full sm:h-[380px]"
+              />
+            </div>
+            <dl className="grid grid-cols-[8.5rem_1fr] gap-y-1.5 text-[15px]">
+              <dt className="text-dim">{tp('metrics.distance')}</dt>
+              <dd className="tabular-nums">{tp('metrics.kilometres', { value: summary.distanceKm })}</dd>
+              <dt className="text-dim">{tp('metrics.elevationGain')}</dt>
+              <dd className="tabular-nums">{tp('metrics.metres', { value: summary.elevationGainM })}</dd>
+              <dt className="text-dim">{tp('metrics.duration')}</dt>
+              <dd className="tabular-nums">
+                {summary.duration.basis === 'gpx'
+                  ? tp('metrics.minutes', {
+                      min: summary.duration.minMinutes,
+                      max: summary.duration.maxMinutes,
+                    })
+                  : t('noTimestamps')}
+                <span className="ml-2 text-[13px] text-dim">
+                  {tp(`basis.${summary.duration.basis}` as never)}
+                </span>
+              </dd>
+              <dt className="text-dim">{t('storedPoints')}</dt>
+              <dd className="tabular-nums">{summary.geometry.coordinates.length}</dd>
+            </dl>
+          </div>
+        )}
+      </section>
+
+      <section className={SECTION}>
+        <h2 className={SECTION_TITLE}>{t('sectionRegionActivities')}</h2>
+        <p className={SECTION_NOTE}>{t('sectionActivitiesNote')}</p>
+
+        <div className="mt-4">
+          <label className={LABEL} htmlFor="city">
+            {t('city')}
           </label>
-          <textarea id={field} name={field} rows={4} className={FIELD} />
+          <div className="relative">
+            <select
+              id="city"
+              name="city"
+              defaultValue="taipei"
+              className={`${FIELD} appearance-none pr-10`}
+            >
+              {CITIES.map((city) => (
+                <option key={city} value={city}>
+                  {tp(`city.${city}`)}
+                </option>
+              ))}
+            </select>
+            <svg
+              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-dim"
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </div>
         </div>
-      ))}
 
+        <fieldset className="mt-5">
+          <legend className={LABEL}>{t('activities')}</legend>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {ACTIVITIES.map((activity) => (
+              <label
+                key={activity}
+                className={`${CHIP} ${CHIP_OFF} has-[:checked]:border-brand has-[:checked]:bg-brand
+                  has-[:checked]:text-white has-[:focus-visible]:outline
+                  has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2
+                  has-[:focus-visible]:outline-brand`}
+              >
+                <input type="checkbox" name="activities" value={activity} className="sr-only" />
+                <ActivityIcon activity={activity} size={17} />
+                {tp(`activity.${activity}`)}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </section>
 
-      <div>
-        <label className={LABEL} htmlFor="photos">
-          {t('photos')} <span className="font-normal">({t('optional')})</span>
-        </label>
-        <input
-          id="photos"
-          name="photos"
-          type="file"
-          accept="image/*"
-          multiple
-          className="text-sm"
-        />
-        <p className="mt-1 text-xs text-dim">{t('photosHint', LIMIT_MESSAGE_VALUES)}</p>
-      </div>
+      <section className={SECTION}>
+        <h2 className={SECTION_TITLE}>{t('sectionAbout')}</h2>
+        <p className={SECTION_NOTE}>{t('sectionAboutNote')}</p>
+
+        <div className="mt-4 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(['nameZh', 'nameEn'] as const).map((field) => (
+              <div key={field}>
+                <label className={LABEL} htmlFor={field}>
+                  {t(field)}{' '}
+                  {field === 'nameEn' && <span className={OPTIONAL}>({t('optional')})</span>}
+                </label>
+                <input id={field} name={field} className={FIELD} />
+              </div>
+            ))}
+          </div>
+
+          <ProseFields />
+        </div>
+      </section>
+
+      <section className={SECTION}>
+        <PhotoPicker photos={photos} onChange={setPhotos} />
+      </section>
 
       {result && !result.ok && <SubmissionErrors codes={result.errors} />}
 
-      <button
-        type="submit"
-        disabled={pending || !summary}
-        className="rounded border border-line bg-panel px-4 py-2 text-accent hover:underline disabled:opacity-50"
-      >
-        {pending ? t('submitting') : t('submit')}
-      </button>
+      <div className="pt-1">
+        <button
+          type="submit"
+          disabled={pending || !summary}
+          className={`${BUTTON_PRIMARY} w-full sm:w-auto`}
+        >
+          {pending ? t('submitting') : t('submit')}
+        </button>
+      </div>
     </form>
   )
 }

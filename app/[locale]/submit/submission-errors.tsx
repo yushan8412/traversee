@@ -18,7 +18,13 @@ export function SubmissionErrors({ codes }: { codes: string[] }) {
   ) => string
 
   return (
-    <ul className="rounded border border-line bg-panel p-4 text-sm">
+    <ul
+      // Announced rather than merely rendered: submission is a server round trip,
+      // so by the time this appears the button no longer has focus and a screen
+      // reader would otherwise say nothing at all.
+      role="alert"
+      className="space-y-1 rounded-2xl border border-clayLight bg-clayLight/15 p-4 text-[15px] text-clayDeep"
+    >
       {codes.map((code) => (
         <li key={code}>{t(code, LIMIT_MESSAGE_VALUES)}</li>
       ))}

@@ -90,6 +90,17 @@ module maps 'maps.bicep' = {
   }
 }
 
+module translator 'translator.bicep' = {
+  name: 'translator'
+  scope: resourceGroup
+  params: {
+    // The name becomes the account's custom subdomain, which is a public DNS
+    // label, so it carries the same uniqueness suffix as Cosmos and Storage.
+    name: toLower('tr-${take(appName, 20)}-${uniqueSuffix}')
+    location: location
+  }
+}
+
 module monitoring 'monitoring.bicep' = {
   name: 'monitoring'
   scope: resourceGroup
@@ -107,4 +118,6 @@ output cosmosEndpoint string = cosmos.outputs.endpoint
 output storageAccountName string = storage.outputs.accountName
 output blobEndpoint string = storage.outputs.blobEndpoint
 output mapsAccountName string = maps.outputs.accountName
+output translatorAccountName string = translator.outputs.accountName
+output translatorEndpoint string = translator.outputs.endpoint
 output appInsightsName string = monitoring.outputs.insightsName

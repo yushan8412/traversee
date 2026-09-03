@@ -76,7 +76,12 @@ export default async function LocaleLayout({
                 </span>
                 {t('name')}
               </Link>
-              <nav className="flex items-center gap-4 text-sm sm:ml-1 sm:gap-6">
+              {/* Scrolls rather than wraps. Signing in as an administrator adds
+                  two more links, which on a phone pushed the row onto a second
+                  line and out through the bottom of a fixed-height header — so
+                  the header looked broken on the surface an admin uses most. A
+                  drawer is the fuller answer; this stops it being wrong. */}
+              <nav className="tv-scroll-x flex min-w-0 flex-1 items-center gap-4 text-sm sm:ml-1 sm:gap-6 [&>*]:shrink-0">
                 <Link
                   href="/explore"
                   className="whitespace-nowrap font-medium text-dim no-underline hover:text-ink"
@@ -91,7 +96,7 @@ export default async function LocaleLayout({
                 </Link>
                 <AdminNav />
               </nav>
-              <div className="ml-auto flex items-center gap-4 whitespace-nowrap text-sm">
+              <div className="ml-auto flex shrink-0 items-center gap-4 whitespace-nowrap text-sm">
                 <LanguageSwitcher target={other} label={nav('switchLanguage')} />
                 <AuthControls />
               </div>

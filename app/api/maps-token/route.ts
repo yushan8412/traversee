@@ -1,4 +1,4 @@
-import { ClientSecretCredential } from '@azure/identity'
+import { mapsToken } from '../../../lib/maps/token'
 
 // Map tiles are fetched by the browser, so some credential has to reach the
 // client. This endpoint issues a short-lived Entra token instead of the account
@@ -13,29 +13,6 @@ import { ClientSecretCredential } from '@azure/identity'
 // catch; a rate cap would need SAS tokens, which are unavailable while local
 // auth is disabled.
 
-const SCOPE = 'https://atlas.microsoft.com/.default'
-
-// Entra tokens last about an hour. Minting one per page load would add a
-// round trip to every visit for no benefit, so the token is held until shortly
-// before it expires.
-const RENEW_BEFORE_MS = 5 * 60 * 1000
-
-let cached: { token: string; expiresOnTimestamp: number } | null = null
-let credential: ClientSecretCredential | null = null
-
-function getCredential(): ClientSecretCredential {
-  if (!credential) {
-    const tenantId = process.env.AZURE_TENANT_ID
-    const clientId = process.env.AZURE_CLIENT_ID
-    const clientSecret = process.env.AZURE_CLIENT_SECRET
-    if (!tenantId || !clientId || !clientSecret) {
-      throw new Error('AZURE_TENANT_ID, AZURE_CLIENT_ID and AZURE_CLIENT_SECRET must all be set.')
-    }
-    credential = new ClientSecretCredential(tenantId, clientId, clientSecret)
-  }
-  return credential
-}
-
 export const dynamic = 'force-dynamic'
 
 export async function GET(): Promise<Response> {
@@ -45,13 +22,9 @@ export async function GET(): Promise<Response> {
   }
 
   try {
-    if (!cached || cached.expiresOnTimestamp - Date.now() < RENEW_BEFORE_MS) {
-      const token = await getCredential().getToken(SCOPE)
-      cached = { token: token.token, expiresOnTimestamp: token.expiresOnTimestamp }
-    }
-
+    const { token, expiresOnTimestamp } = await mapsToken()
     return Response.json(
-      { token: cached.token, clientId, expiresOn: cached.expiresOnTimestamp },
+      { token, clientId, expiresOn: expiresOnTimestamp },
       { headers: { 'cache-control': 'no-store' } },
     )
   } catch (error) {
