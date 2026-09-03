@@ -457,3 +457,65 @@ select {
     animation: none;
   }
 }
+
+/*
+ * Photographs drifting as they pass through the viewport.
+ *
+ * This is the one thing that makes scrolling itself feel like something: the
+ * arrival animation plays once and the page is inert afterwards, which is the
+ * whole of "the page is boring" once you have scrolled past the first screen.
+ *
+ * Driven by `view()` rather than a scroll listener — the browser runs it off the
+ * main thread, so it cannot stutter behind React, and there is no JS at all.
+ *
+ * `translate` rather than `transform`, because the image also carries a Tailwind
+ * `scale` utility and the two standalone properties compose. Writing this into
+ * `transform` would overwrite the scale that gives the drift its headroom, and
+ * the picture would slide its own edge into frame.
+ */
+@keyframes tv-drift-y {
+  from {
+    translate: 0 -3.5%;
+  }
+  to {
+    translate: 0 3.5%;
+  }
+}
+
+/*
+ * The timeline is declared on the grid item, not taken from `view()` on the
+ * image.
+ *
+ * `view()` resolves against the nearest scroll container, and the frame around
+ * each photograph is `overflow: hidden` — which makes it one. The timeline was
+ * therefore measuring the image's position inside its own 248px clip, where it
+ * never moves, and every photograph sat frozen at exactly 50% progress however
+ * far the page scrolled. Measured before believing it: playState running,
+ * ViewTimeline attached, currentTime 50% at four different scroll positions.
+ *
+ * A name declared on the list item, which clips nothing, is resolved by the
+ * image beneath it and tracks the real scrollport.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tv-drift-host {
+      view-timeline-name: --tv-card;
+      view-timeline-axis: block;
+    }
+
+    .tv-drift img {
+      /* `auto`, and not via the `animation` shorthand, which resets duration to
+         0s — the animation then sits frozen at its midpoint however far the page
+         has scrolled. A scroll-driven animation takes its duration from the
+         timeline range, and that is what `auto` means here. */
+      animation-name: tv-drift-y;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --tv-card;
+      /* The full pass through the viewport, so the drift is never the reason a
+         photograph is moving quickly — it is moving because the page is. */
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}

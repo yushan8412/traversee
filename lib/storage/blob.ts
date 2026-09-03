@@ -69,3 +69,18 @@ export const promoteToPublic = (path: string) => move(PENDING, PUBLIC, path)
  * mean nothing.
  */
 export const demoteToPending = (path: string) => move(PUBLIC, PENDING, path)
+
+/**
+ * Removes a file for good, from whichever container currently holds it.
+ *
+ * A blob lives in exactly one of the two, and which one depends on the entry's
+ * status at the moment of deletion — which is not worth reading first, because
+ * deleting from the container that does not hold it is a no-op. Trying both is
+ * cheaper and cannot get the answer wrong.
+ */
+export async function removeEverywhere(path: string): Promise<void> {
+  await Promise.all([
+    client(PENDING).getBlockBlobClient(path).deleteIfExists(),
+    client(PUBLIC).getBlockBlobClient(path).deleteIfExists(),
+  ])
+}

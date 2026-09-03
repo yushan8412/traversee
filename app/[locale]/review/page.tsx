@@ -68,7 +68,12 @@ export default async function ReviewPage({ params }: { params: Promise<{ locale:
                 )}
 
                 <div className="flex flex-wrap items-center gap-3">
-                  <ReviewActions id={place.id} city={place.city} status={place.status} />
+                  <ReviewActions
+                    id={place.id}
+                    city={place.city}
+                    status={place.status}
+                    name={name?.value ?? place.slug}
+                  />
                   <Link
                     href={`/places/${place.slug}/edit`}
                     className="text-[13px] text-dim no-underline hover:text-ink"

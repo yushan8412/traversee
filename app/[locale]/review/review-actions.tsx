@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { reviewPlace, type ReviewResult } from './actions'
+import { removePlace, reviewPlace, type ReviewResult } from './actions'
 import { SaveButton } from '../save-button'
 import { BUTTON_QUIET } from '../submit/field-styles'
 import type { Status } from '../../../lib/places/types'
@@ -11,15 +11,36 @@ import type { Status } from '../../../lib/places/types'
 // publishing something look less consequential than choosing a photo.
 const BUTTON = `${BUTTON_QUIET} px-3.5 text-[14px]`
 
-export function ReviewActions({ id, city, status }: { id: string; city: string; status: Status }) {
+export function ReviewActions({
+  id,
+  city,
+  status,
+  name,
+}: {
+  id: string
+  city: string
+  status: Status
+  /** Named in the confirmation, so the thing being destroyed is the thing on screen. */
+  name: string
+}) {
   const t = useTranslations('review')
   const [result, setResult] = useState<ReviewResult | null>(null)
   // The reason box only appears for a rejection, since that is the only place it
   // is required, and an always-visible field invites filling it in for approvals.
   const [rejecting, setRejecting] = useState(false)
+  // Deletion is the one action here with nothing behind it. A second, named step
+  // is the whole safeguard, so it is a state rather than a window.confirm — the
+  // browser dialog is dismissible by habit and cannot show what it is about.
+  const [deleting, setDeleting] = useState(false)
 
   async function run(formData: FormData) {
     setResult(await reviewPlace(formData))
+  }
+
+  async function destroy(formData: FormData) {
+    const outcome = await removePlace(formData)
+    setResult(outcome)
+    if (!outcome.ok) setDeleting(false)
   }
 
   // Each action is its own form, so each button reads its own form's status —
@@ -61,10 +82,38 @@ export function ReviewActions({ id, city, status }: { id: string; city: string; 
           </button>
         )}
 
+        {!deleting && (
+          <button
+            type="button"
+            onClick={() => setDeleting(true)}
+            className={`${BUTTON} text-clayDeep hover:border-clayLight hover:bg-clayLight/15`}
+          >
+            {t('delete')}
+          </button>
+        )}
+
         {result && !result.ok && result.error && (
           <span className="text-sm text-dim">{t(`errors.${result.error}` as never)}</span>
         )}
       </div>
+
+      {deleting && (
+        <form action={destroy} className="rounded-xl border border-clayLight bg-clayLight/15 p-4">
+          <p className="text-[15px] text-clayDeep">{t('confirmDelete', { name })}</p>
+          <input type="hidden" name="id" value={id} />
+          <input type="hidden" name="city" value={city} />
+          <div className="mt-3 flex flex-wrap gap-2">
+            <SaveButton
+              label={t('confirmDeleteYes')}
+              busyLabel={t('deleteBusy')}
+              className={`${BUTTON} border-clayDeep text-clayDeep hover:bg-clayLight/30`}
+            />
+            <button type="button" onClick={() => setDeleting(false)} className={BUTTON}>
+              {t('cancel')}
+            </button>
+          </div>
+        </form>
+      )}
 
       {status === 'pending' && rejecting && (
         <form action={run} className="space-y-2">

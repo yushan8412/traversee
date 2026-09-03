@@ -39,3 +39,34 @@ describe('cardSpans', () => {
     }
   })
 })
+
+describe('cardSpans with photographs', () => {
+  const some = (n: number, without: number[]) =>
+    Array.from({ length: n }, (_, i) => !without.includes(i))
+
+  it('passes the large card to the next place that has a photograph of its own', () => {
+    // The largest card is the page's claim about what is worth looking at. The
+    // first entry had no photograph and drew a borrowed stand-in of somewhere
+    // that is not even Taiwan, at twice the size of everything around it.
+    const spans = cardSpans(7, some(7, [0]))
+    expect(spans[0]).toBe('normal')
+    expect(spans[1]).toBe('feature')
+  })
+
+  it('leaves the large card alone when the first place has its own photograph', () => {
+    expect(cardSpans(7, some(7, []))[0]).toBe('feature')
+  })
+
+  it('enlarges nothing when no place has a photograph', () => {
+    expect(cardSpans(7, some(7, [0, 1, 2, 3, 4, 5, 6]))).not.toContain('feature')
+  })
+
+  it('still never leaves a card alone on the last row once the feature has moved', () => {
+    for (let total = 2; total <= 40; total += 1) {
+      const spans = cardSpans(total, some(total, [0]))
+      const cells = spans.map((s) => (s === 'feature' ? 4 : s === 'wide' ? 3 : 1))
+      const before = cells.slice(0, -1).reduce((sum, n) => sum + n, 0)
+      expect(before % 3 === 0 && cells[cells.length - 1] === 1, `total ${total}`).toBe(false)
+    }
+  })
+})
