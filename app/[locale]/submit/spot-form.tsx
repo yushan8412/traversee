@@ -10,6 +10,7 @@ import { submitSpot, type SubmitResult } from './actions'
 import { shrinkPhotos } from '../../../lib/photos/downscale'
 import { attachPhotos } from '../../../lib/photos/selection'
 import { ActivityIcon } from '../activity-icon'
+import { SaveButton } from '../save-button'
 import { PhotoPicker } from './photo-picker'
 import { PlaceSearch } from './place-search'
 import { SubmissionErrors } from './submission-errors'
@@ -72,7 +73,6 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
   const [position, setPosition] = useState<{ lng: number; lat: number } | null>(null)
   const [photos, setPhotos] = useState<File[]>([])
   const [result, setResult] = useState<SubmitResult | null>(null)
-  const [pending, setPending] = useState(false)
 
   // One way to place the pin, whether it came from a tap or from search. Two
   // copies of "set the state, then move or create the marker" is how the two
@@ -156,13 +156,10 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
   }, [useAzure, dropPin])
 
   async function onSubmit(formData: FormData) {
-    setPending(true)
     try {
       setResult(await submitSpot(await shrinkPhotos(attachPhotos(formData, photos))))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
-    } finally {
-      setPending(false)
     }
   }
 
@@ -277,9 +274,11 @@ export function SpotForm({ tileSource }: { tileSource: TileSource }) {
       {result && !result.ok && <SubmissionErrors codes={result.errors} />}
 
       <div className="pt-1">
-        <button type="submit" disabled={pending} className={`${BUTTON_PRIMARY} w-full sm:w-auto`}>
-          {pending ? t('submitting') : t('submit')}
-        </button>
+        <SaveButton
+          label={t('submit')}
+          busyLabel={t('submitting')}
+          className={`${BUTTON_PRIMARY} w-full sm:w-auto`}
+        />
       </div>
     </form>
   )

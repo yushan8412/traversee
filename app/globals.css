@@ -303,3 +303,51 @@ select {
 .tv-scroll-x::-webkit-scrollbar {
   display: none;
 }
+
+/*
+ * Saving, drawn as the mark being traced.
+ *
+ * A button that changed its text to "儲存中…" was too quiet to notice, so it was
+ * never clear whether a save had happened. The ridgeline draws itself, runs off
+ * the end, and starts again.
+ *
+ * 55 is the path's own length, measured with getTotalLength() rather than
+ * guessed — a dasharray shorter than the path leaves a permanent gap in the
+ * outline, and a longer one never appears to complete.
+ */
+@keyframes tv-trace {
+  0% {
+    stroke-dashoffset: 55;
+  }
+  50% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -55;
+  }
+}
+
+@keyframes tv-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.tv-tracing path {
+  stroke-dasharray: 55;
+  animation: tv-trace 1.4s ease-in-out infinite;
+}
+
+/* A line that redraws itself is motion, and for some people motion is the
+   problem rather than the feedback. The state still has to be legible, so it
+   becomes a change in weight instead of a change in position. */
+@media (prefers-reduced-motion: reduce) {
+  .tv-tracing path {
+    stroke-dasharray: none;
+    animation: tv-breathe 1.6s ease-in-out infinite;
+  }
+}
