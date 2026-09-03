@@ -84,6 +84,7 @@ export function PlaceCard({
   span?: CardSpan
 }) {
   const photo = item.photos[0]
+  const second = item.photos[1]
 
   // From the `sm` breakpoint up the grid sets the row height, so no card fixes
   // its own: the text takes what it needs and the picture takes the rest. Any
@@ -109,9 +110,24 @@ export function PlaceCard({
         ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:shadow-[0_18px_40px_-28px_rgb(31_42_36/0.55)]
         active:scale-[0.985] motion-reduce:active:scale-100"
     >
-      <div className={`relative overflow-hidden bg-panel ${frame}`}>
+      <div className={`tv-drift relative overflow-hidden bg-panel ${frame}`}>
         {photo ? (
           <>
+            {/* Underneath, and first in the DOM rather than pushed back with a
+                negative z-index — which put it behind the frame's own
+                background, so the hover revealed an empty panel. Stacking by
+                order needs no z-index at all. */}
+            {second && (
+              // eslint-disable-next-line @next/next/no-img-element -- blob URLs
+              <img
+                src={second.src}
+                alt=""
+                loading="lazy"
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full scale-[1.08] object-cover
+                  motion-reduce:scale-100"
+              />
+            )}
             {/* eslint-disable-next-line @next/next/no-img-element -- blob storage
                 URLs, which next/image would proxy through the function for no
                 gain; the stored file is already the published size. */}
@@ -119,12 +135,16 @@ export function PlaceCard({
               src={photo.src}
               alt={item.name}
               loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 ease-out
-                group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+              className={`relative h-full w-full scale-[1.08] object-cover
+                transition-[scale,opacity] duration-500 ease-out
+                motion-reduce:scale-100 motion-reduce:transition-none ${
+                  second ? 'group-hover:opacity-0' : 'group-hover:scale-[1.13]'
+                }`}
             />
-            {photo.credit && (
+            {(photo.credit || second?.credit) && (
               <span className="absolute bottom-2 right-2 rounded bg-ink/55 px-1.5 py-0.5 text-[10px] text-white">
-                {photo.credit}
+                <span className={second ? 'group-hover:hidden' : ''}>{photo.credit}</span>
+                {second?.credit && <span className="hidden group-hover:inline">{second.credit}</span>}
               </span>
             )}
           </>

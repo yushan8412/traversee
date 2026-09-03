@@ -20,13 +20,26 @@ const EVERY = 6
  * And a card that would begin the final row on its own is widened to fill that
  * row. Seven places in three columns is what prompted this: the seventh sat
  * alone under two full rows and read as dropped rather than placed.
+ *
+ * `hasPhoto` moves the large card past anything with no photograph of its own.
+ * The largest card is the page's claim about what is worth looking at, and the
+ * first entry had none — so it drew a borrowed stand-in of somewhere that is not
+ * even Taiwan, at twice the size of everything around it.
  */
-export function cardSpans(total: number): CardSpan[] {
-  const spans: CardSpan[] = []
+export function cardSpans(total: number, hasPhoto?: boolean[]): CardSpan[] {
+  const spans: CardSpan[] = new Array(total).fill('normal')
+  const eligible = (index: number) => hasPhoto === undefined || hasPhoto[index] === true
 
-  for (let index = 0; index < total; index += 1) {
-    const room = total - index
-    spans.push(index % EVERY === 0 && room >= 4 && total > 4 ? 'feature' : 'normal')
+  for (let start = 0; start < total; start += EVERY) {
+    if (total - start < 4 || total <= 4) break
+    // Within this cycle only: a feature dragged into the next one would collide
+    // with that cycle's own.
+    for (let index = start; index < Math.min(start + EVERY, total); index += 1) {
+      if (!eligible(index)) continue
+      if (total - index < 4) break
+      spans[index] = 'feature'
+      break
+    }
   }
 
   const last = total - 1
