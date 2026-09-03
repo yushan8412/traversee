@@ -2,10 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { auth } from '../../../auth'
-import { getPlaceById, replacePlace } from '../../../lib/places/repository'
+import { deletePlace, getPlaceById, replacePlace } from '../../../lib/places/repository'
 import { applyTransition } from '../../../lib/places/moderation'
 import { filesOf } from '../../../lib/places/files'
-import { demoteToPending, promoteToPublic } from '../../../lib/storage/blob'
+import { demoteToPending, promoteToPublic, removeEverywhere } from '../../../lib/storage/blob'
 import type { Status } from '../../../lib/places/types'
 
 export interface ReviewResult {
@@ -20,6 +20,50 @@ export interface ReviewResult {
 }
 
 const STATUSES: Status[] = ['pending', 'published', 'rejected']
+
+/**
+ * Removes an entry and everything it owns.
+ *
+ * There is no soft delete and no undo. That is a decision rather than an
+ * omission: a status of "deleted" is a fourth moderation state that every query
+ * in the codebase would have to remember to exclude, and the one that forgets
+ * is the one that publishes something somebody asked to be gone. The
+ * confirmation step in the console is where the caution lives instead.
+ *
+ * The document goes first — see deletePlace. Files that fail to delete are
+ * logged and swallowed: the entry is already gone, and refusing to report
+ * success would invite pressing the button again on something that no longer
+ * exists.
+ */
+export async function removePlace(formData: FormData): Promise<ReviewResult> {
+  const session = await auth()
+  if (!session?.user || session.user.role !== 'admin') return { ok: false, error: 'not-allowed' }
+
+  const id = String(formData.get('id') ?? '')
+  const city = String(formData.get('city') ?? '')
+  if (!id || !city) return { ok: false, error: 'missing-entry' }
+
+  const place = await getPlaceById(id, city)
+  if (!place) return { ok: false, error: 'not-found' }
+
+  const files = filesOf(place)
+  await deletePlace(id, city)
+
+  for (const path of files) {
+    try {
+      await removeEverywhere(path)
+    } catch (error) {
+      console.error('Deleted the entry but could not remove one of its files', path, error)
+    }
+  }
+
+  revalidatePath('/[locale]/review', 'page')
+  revalidatePath('/[locale]/places', 'page')
+  revalidatePath('/[locale]', 'page')
+  revalidatePath('/[locale]/explore', 'page')
+
+  return { ok: true }
+}
 
 export async function reviewPlace(formData: FormData): Promise<ReviewResult> {
   const session = await auth()

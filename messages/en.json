@@ -209,7 +209,11 @@
     "cancel": "Cancel",
     "publishBusy": "Publishing…",
     "unpublishBusy": "Unpublishing…",
-    "rejectBusy": "Rejecting…"
+    "rejectBusy": "Rejecting…",
+    "delete": "Delete",
+    "deleteBusy": "Deleting…",
+    "confirmDelete": "Delete “{name}” for good? Its photographs go too, and this cannot be undone.",
+    "confirmDeleteYes": "Delete it"
   },
   "home": {
     "heroTitle": "Where the city ends,",

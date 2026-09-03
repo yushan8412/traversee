@@ -177,6 +177,21 @@ export async function savePlace(place: Place, previousCity: string): Promise<voi
   await getContainer().item(place.id, previousCity).delete()
 }
 
+/**
+ * Removes an entry for good.
+ *
+ * The document goes before its files, deliberately. If the document is gone and
+ * a file lingers, the leftover is invisible and costs a fraction of a cent; if a
+ * file is gone and the document survives, the entry stays on the site with
+ * broken images. Only one of those two failures is one a visitor can see.
+ */
+export async function deletePlace(id: string, city: string): Promise<void> {
+  if (shouldUseFixtures()) {
+    throw new Error('Cosmos is not configured; refusing to pretend a deletion happened.')
+  }
+  await getContainer().item(id, city).delete()
+}
+
 /** Slugs appear in URLs, so a collision would make one entry unreachable. */
 export async function slugExists(slug: string): Promise<boolean> {
   if (shouldUseFixtures()) {

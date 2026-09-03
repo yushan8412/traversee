@@ -209,7 +209,11 @@
     "cancel": "取消",
     "publishBusy": "發布中…",
     "unpublishBusy": "下架中…",
-    "rejectBusy": "退回中…"
+    "rejectBusy": "退回中…",
+    "delete": "刪除",
+    "deleteBusy": "刪除中…",
+    "confirmDelete": "永久刪除「{name}」？照片和檔案會一起刪掉，無法復原。",
+    "confirmDeleteYes": "確定刪除"
   },
   "home": {
     "heroTitle": "城市的盡頭",
