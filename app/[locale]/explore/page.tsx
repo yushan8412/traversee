@@ -8,6 +8,7 @@ import { standInPhotos } from '../../../lib/places/stand-in-photos'
 import type { Activity, Locale } from '../../../lib/places/types'
 import { REGIONS, regionOf } from '../../../lib/places/regions'
 import { ExploreMap, type ExplorePin } from './explore-map'
+import { placeMetrics } from '../../../lib/places/metrics'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,9 +63,7 @@ export default async function Explore({ params }: { params: Promise<{ locale: st
           ? null
           : `${tp('metrics.difficulty')} ${tp('metrics.difficultyValue', { value })}`,
       photo,
-      metrics: place.route
-        ? `${tp('metrics.kilometres', { value: place.route.distanceKm })} · ↑${tp('metrics.metres', { value: place.route.elevationGainM })}`
-        : tp(`kind.${place.kind}`),
+      metrics: placeMetrics(place.route, tp as never),
       lng,
       lat,
     }

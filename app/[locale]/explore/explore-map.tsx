@@ -528,14 +528,20 @@ function card(pin: ExplorePin, detail: { label: string; noPhoto: string; locale:
   <div class="tv-card-body">
     <span class="tv-card-name">${escapeHtml(pin.name)}</span>
     <div class="tv-card-meta">${escapeHtml([pin.cityLabel, ...pin.activityLabels].join(' · '))}</div>
-    <div class="tv-card-facts">
+    ${
+      // No row rather than an empty one: the row carries a rule above it, and a
+      // divider over nothing is what made the card look unfinished.
+      pin.metrics || pin.difficultyLabel
+        ? `<div class="tv-card-facts">
       <span>${escapeHtml(pin.metrics)}</span>
       ${
         pin.difficultyLabel
           ? `<span><span class="tv-dots">${dots}</span> ${escapeHtml(pin.difficultyLabel)}</span>`
           : ''
       }
-    </div>
+    </div>`
+        : ''
+    }
     <a href="/${escapeHtml(detail.locale)}/places/${escapeHtml(pin.slug)}">${escapeHtml(detail.label)} →</a>
   </div>
 </div>`
