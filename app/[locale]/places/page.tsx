@@ -41,7 +41,11 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
                 key={place.id}
                 className={`flex ${
                   span === 'feature'
-                    ? 'sm:col-span-2 lg:row-span-2'
+                    // Two rows at every width that has rows. At `sm` the two
+                    // columns leave nothing to sit beside it, so without this
+                    // the feature is a full-width card one row tall — a 124px
+                    // strip of photograph under a 752px card.
+                    ? 'sm:col-span-2 sm:row-span-2'
                     : span === 'wide'
                       ? 'sm:col-span-2 lg:col-span-3'
                       : ''

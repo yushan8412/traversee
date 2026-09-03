@@ -85,15 +85,13 @@ export function PlaceCard({
 }) {
   const photo = item.photos[0]
 
-  // A feature card is two rows tall, so its picture cannot be a fixed ratio —
-  // it takes whatever height the row pair leaves after the text. A wide one is
-  // a single row across the grid, where 4:3 would be a wall of photograph.
-  const frame =
-    span === 'feature'
-      ? 'min-h-[15rem] flex-1'
-      : span === 'wide'
-        ? 'aspect-[21/9]'
-        : 'aspect-[4/3] sm:aspect-auto sm:min-h-[13rem] sm:flex-1'
+  // From the `sm` breakpoint up the grid sets the row height, so no card fixes
+  // its own: the text takes what it needs and the picture takes the rest. Any
+  // ratio here fights that — a 21:9 frame in a 248px row is 473px tall, and the
+  // card clips rather than grows. Below `sm` there is one column and no row
+  // height to divide, so a ratio is what stops every card being a different
+  // shape.
+  const frame = 'aspect-[4/3] sm:aspect-auto sm:min-h-[7rem] sm:flex-1'
 
   return (
     <Link
@@ -130,10 +128,11 @@ export function PlaceCard({
         <ActivityPills activities={item.activities} />
       </div>
 
-      {/* Natural height, so the picture takes whatever the row leaves rather
-          than the two of them splitting it. A card stretched to match a taller
-          neighbour should grow its photograph, not its margins. */}
-      <div className={`flex flex-col p-4 sm:p-5 ${span === 'normal' ? 'flex-1' : ''}`}>
+      {/* Never flex-1. It had it, and with the picture also asking to grow the
+          two split the row between them — which on a fixed 248px row left the
+          body 40px for text that needs eighty, and the card clipped the name
+          and dropped the line under it entirely. */}
+      <div className="flex flex-col p-4 sm:p-5">
         <span
           className={`font-[family-name:var(--font-display)] leading-snug text-ink ${
             span === 'feature' ? 'text-2xl' : 'text-lg'
