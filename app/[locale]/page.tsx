@@ -2,13 +2,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '../../i18n/navigation'
 import type { Locale } from '../../i18n/routing'
 import { listPublishedPlacesOrNone } from '../../lib/places/repository'
-import { resolveText } from '../../lib/places/text'
-import { publicPhotoUrl } from '../../lib/photos/store'
-import { standInPhotos } from '../../lib/places/stand-in-photos'
 import { ActivityCarousel } from './activity-carousel'
 import { ClosingBand } from './closing-band'
 import { DoodleField, type DoodleMark } from './doodle'
 import { FeaturedRail, type RailItem } from './featured-rail'
+import { toCardData } from './place-card-data'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,55 +33,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     for (const activity of place.activities) counts[activity] = (counts[activity] ?? 0) + 1
   }
 
-  const rail: RailItem[] = places.map((place) => {
-    // The cover first, then the next photograph that is not the cover — that
-    // second one is what the card reveals on hover.
-    const cover = place.photos[place.coverPhotoIndex]
-    const own = [cover, ...place.photos.filter((photo) => photo !== cover)]
-      .filter((photo) => photo !== undefined)
-      .slice(0, 2)
-      .map((photo) => ({ src: publicPhotoUrl(photo.path), credit: null }))
-
-    // Stand-ins fill in only for a place with no photograph at all. Mixing
-    // them with a real one would put somebody else's picture beside the
-    // author's under the same silent frame.
-    const photos =
-      own.length > 0
-        ? own
-        : (standInPhotos[place.slug] ?? []).map((photo) => ({
-            src: photo.path,
-            credit: photo.credit,
-          }))
-
-    // Difficulty is per activity because the scales are not comparable, so the
-    // card shows the one belonging to the activity it leads with, and nothing
-    // at all where nobody has graded it.
-    const graded = place.activities.find((activity) => place.difficulty[activity] !== undefined)
-    const value = graded ? place.difficulty[graded] : undefined
-
-    return {
-      slug: place.slug,
-      name: resolveText(place.name, locale as Locale)?.value ?? place.slug,
-      meta: [tp(`city.${place.city}`), ...place.activities.map((a) => tp(`activity.${a}`))].join(
-        ' · ',
-      ),
-      metrics: place.route
-        ? `${tp('metrics.kilometres', { value: place.route.distanceKm })} · ↑${tp('metrics.metres', { value: place.route.elevationGainM })}`
-        : tp(`kind.${place.kind}`),
-      activities: place.activities.map((activity) => ({
-        key: activity,
-        label: tp(`activity.${activity}`),
-      })),
-      difficulty:
-        value === undefined
-          ? null
-          : {
-              value,
-              label: `${tp('metrics.difficulty')} ${tp('metrics.difficultyValue', { value })}`,
-            },
-      photos,
-    }
-  })
+  const rail: RailItem[] = places.map((place) => toCardData(place, locale as Locale, tp as never))
 
   // The band's top and bottom padding, not its side margins. The reading
   // column was widened to make the prose and the photographs bigger, which left

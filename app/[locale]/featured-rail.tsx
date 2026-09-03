@@ -3,33 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link } from '../../i18n/navigation'
-import type { Activity } from '../../lib/places/types'
-import { ActivityIcon } from './activity-icon'
+import { ActivityPills, DifficultyDots, type PlaceCardData } from './place-card'
 import { DoodleField, type DoodleMark } from './doodle'
 
-export interface RailItem {
-  slug: string
-  name: string
-  meta: string
-  metrics: string
-  activities: { key: Activity; label: string }[]
-  /**
-   * Null wherever no one has graded it. Camping, surfing and waterfall have no
-   * scale defined at all, on purpose — difficulty is what somebody uses to
-   * judge their own safety, so an invented number is worse than none. A card
-   * without a grade simply carries one fewer fact.
-   */
-  difficulty: { label: string; value: number } | null
-  /**
-   * Up to two: the cover, and whatever the card reveals on hover. `credit` is
-   * set on borrowed photography and printed on the picture, because the licence
-   * requires it and because nobody should mistake a stand-in for the
-   * catalogue's own work.
-   */
-  photos: { src: string; credit: string | null }[]
-}
-
-const DIFFICULTY_STEPS = 5
+export type RailItem = PlaceCardData
 
 /** Gap between cards, in pixels. Wide enough that a card growing on hover
  *  reads as growing rather than as crowding its neighbour. */
@@ -303,17 +280,7 @@ export function FeaturedRail({ items, emphasis }: { items: RailItem[]; emphasis:
                     </span>
                   )}
 
-                  <span className="absolute left-4 top-4 flex gap-1.5">
-                    {item.activities.map((activity) => (
-                      <span
-                        key={activity.key}
-                        title={activity.label}
-                        className="grid h-8 w-8 place-items-center rounded-full bg-paper/95 text-brandInk"
-                      >
-                        <ActivityIcon activity={activity.key} />
-                      </span>
-                    ))}
-                  </span>
+                  <ActivityPills activities={item.activities} />
 
                   <span className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-paper text-[11px] font-medium tracking-wide text-ink opacity-0 transition group-hover:opacity-100">
                     {t('view')}
@@ -328,21 +295,7 @@ export function FeaturedRail({ items, emphasis }: { items: RailItem[]; emphasis:
 
                   <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3">
                     <span className="text-xs text-dim">{item.metrics}</span>
-                    {item.difficulty && (
-                      <span className="flex shrink-0 items-center gap-1.5 text-xs text-dim">
-                        <span className="flex gap-[3px]" aria-hidden="true">
-                          {Array.from({ length: DIFFICULTY_STEPS }, (_, step) => (
-                            <span
-                              key={step}
-                              className={`h-1.5 w-1.5 rounded-full ${
-                                step < item.difficulty!.value ? 'bg-brand' : 'bg-line'
-                              }`}
-                            />
-                          ))}
-                        </span>
-                        {item.difficulty.label}
-                      </span>
-                    )}
+                    <DifficultyDots difficulty={item.difficulty} />
                   </div>
                 </div>
               </Link>

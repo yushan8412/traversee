@@ -8,7 +8,12 @@
     "switchLanguage": "中文",
     "submit": "Add a place",
     "review": "Review",
-    "explore": "Explore"
+    "explore": "Explore",
+    "home": "Home",
+    "menu": "Menu",
+    "closeMenu": "Close menu",
+    "mainPages": "Pages",
+    "more": "More"
   },
   "places": {
     "title": "All places",
