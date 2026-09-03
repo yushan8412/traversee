@@ -1,5 +1,6 @@
 import { publicPhotoUrl } from '../../lib/photos/store'
 import { standInPhotos } from '../../lib/places/stand-in-photos'
+import { placeMetrics } from '../../lib/places/metrics'
 import { resolveText } from '../../lib/places/text'
 import type { PlaceSummary } from '../../lib/places/types'
 import type { Locale } from '../../i18n/routing'
@@ -48,9 +49,7 @@ export function toCardData(
     slug: place.slug,
     name: resolveText(place.name, locale)?.value ?? place.slug,
     meta: [t(`city.${place.city}`), ...place.activities.map((a) => t(`activity.${a}`))].join(' · '),
-    metrics: place.route
-      ? `${t('metrics.kilometres', { value: place.route.distanceKm })} · ↑${t('metrics.metres', { value: place.route.elevationGainM })}`
-      : t(`kind.${place.kind}`),
+    metrics: placeMetrics(place.route, t),
     activities: place.activities.map((activity) => ({
       key: activity,
       label: t(`activity.${activity}`),
