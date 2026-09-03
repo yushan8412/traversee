@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import type { Locale } from '../../../i18n/routing'
 import { listPublishedPlaces } from '../../../lib/places/repository'
+import { cardSpans } from '../../../lib/places/layout'
 import { toCardData } from '../place-card-data'
 import { PlaceCard } from '../place-card'
 
@@ -17,6 +18,7 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
 
   const t = await getTranslations('places')
   const places = await listPublishedPlaces()
+  const spans = cardSpans(places.length)
 
   return (
     <main className="mx-auto w-full max-w-6xl px-5 pb-24 pt-10 sm:px-6 sm:pt-14">
@@ -31,15 +33,28 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
       {places.length === 0 ? (
         <p className="mt-10 text-dim">{t('empty')}</p>
       ) : (
-        <ul className="mt-8 grid gap-5 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3">
-          {places.map((place) => (
-            <li key={place.id} className="flex">
-              <PlaceCard
-                item={toCardData(place, locale as Locale, t as never)}
-                noPhoto={t('noPhoto')}
-              />
-            </li>
-          ))}
+        <ul className="mt-8 grid grid-flow-dense gap-5 sm:mt-10 sm:auto-rows-[15.5rem] sm:grid-cols-2 lg:grid-cols-3">
+          {places.map((place, index) => {
+            const span = spans[index] ?? 'normal'
+            return (
+              <li
+                key={place.id}
+                className={`flex ${
+                  span === 'feature'
+                    ? 'sm:col-span-2 lg:row-span-2'
+                    : span === 'wide'
+                      ? 'sm:col-span-2 lg:col-span-3'
+                      : ''
+                }`}
+              >
+                <PlaceCard
+                  item={toCardData(place, locale as Locale, t as never)}
+                  noPhoto={t('noPhoto')}
+                  span={span}
+                />
+              </li>
+            )
+          })}
         </ul>
       )}
     </main>
