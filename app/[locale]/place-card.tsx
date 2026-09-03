@@ -1,5 +1,6 @@
 import { Link } from '../../i18n/navigation'
 import type { Activity } from '../../lib/places/types'
+import type { CardSpan } from '../../lib/places/layout'
 import { ActivityIcon } from './activity-icon'
 
 export interface PlaceCardData {
@@ -73,16 +74,35 @@ export function DifficultyDots({ difficulty }: { difficulty: PlaceCardData['diff
  * a landscape taken on a camera make the same shape in the grid. Ragged card
  * heights are what makes a grid read as a list that failed.
  */
-export function PlaceCard({ item, noPhoto }: { item: PlaceCardData; noPhoto: string }) {
+export function PlaceCard({
+  item,
+  noPhoto,
+  span = 'normal',
+}: {
+  item: PlaceCardData
+  noPhoto: string
+  span?: CardSpan
+}) {
   const photo = item.photos[0]
+
+  // A feature card is two rows tall, so its picture cannot be a fixed ratio —
+  // it takes whatever height the row pair leaves after the text. A wide one is
+  // a single row across the grid, where 4:3 would be a wall of photograph.
+  const frame =
+    span === 'feature'
+      ? 'min-h-[15rem] flex-1'
+      : span === 'wide'
+        ? 'aspect-[21/9]'
+        : 'aspect-[4/3] sm:aspect-auto sm:min-h-[13rem] sm:flex-1'
 
   return (
     <Link
       href={`/places/${item.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-paper
-        no-underline transition-shadow duration-200 hover:shadow-[0_18px_40px_-28px_rgb(31_42_36/0.55)]"
+      className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line
+        bg-paper no-underline transition-shadow duration-200
+        hover:shadow-[0_18px_40px_-28px_rgb(31_42_36/0.55)]"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-panel">
+      <div className={`relative overflow-hidden bg-panel ${frame}`}>
         {photo ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element -- blob storage
@@ -110,8 +130,15 @@ export function PlaceCard({ item, noPhoto }: { item: PlaceCardData; noPhoto: str
         <ActivityPills activities={item.activities} />
       </div>
 
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
-        <span className="font-[family-name:var(--font-display)] text-lg leading-snug text-ink">
+      {/* Natural height, so the picture takes whatever the row leaves rather
+          than the two of them splitting it. A card stretched to match a taller
+          neighbour should grow its photograph, not its margins. */}
+      <div className={`flex flex-col p-4 sm:p-5 ${span === 'normal' ? 'flex-1' : ''}`}>
+        <span
+          className={`font-[family-name:var(--font-display)] leading-snug text-ink ${
+            span === 'feature' ? 'text-2xl' : 'text-lg'
+          }`}
+        >
           {item.name}
         </span>
         <span className="mt-1 text-xs text-dim">{item.meta}</span>
