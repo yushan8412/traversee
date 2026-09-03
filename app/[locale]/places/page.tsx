@@ -38,7 +38,7 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
       {places.length === 0 ? (
         <p className="mt-10 text-dim">{t('empty')}</p>
       ) : (
-        <ul className="mt-8 grid grid-flow-dense gap-5 sm:mt-10 sm:auto-rows-[15.5rem] sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-8 grid grid-flow-dense gap-5 sm:mt-10 sm:auto-rows-[20rem] sm:grid-cols-2 lg:grid-cols-3">
           {places.map((place, index) => {
             const span = spans[index] ?? 'normal'
             return (
