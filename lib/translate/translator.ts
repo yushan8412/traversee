@@ -5,9 +5,11 @@
  * description had to be written twice or the English side of the catalogue
  * stayed empty. Place names are still written by hand — a name is a decision,
  * and 象鼻岩 is not "Elephant Trunk Rock" because a service said so — but the
- * prose is translated and then left editable, so what publishes is still
- * something a person looked at.
+ * prose is written once, in whatever language the page is in, and the other
+ * half is produced while the submission is being saved.
  */
+
+import type { Language } from './plan'
 
 export interface Translatable {
   index: number
@@ -33,9 +35,12 @@ export function readTranslations(payload: unknown): string[] {
 }
 
 /**
+ * The direction is a parameter because the form is filled in whatever language
+ * the page is in, so English submissions translate the other way.
+ *
  * `zh-Hant` rather than `zh`: the service treats them as different languages and
  * the site is written in Traditional Chinese.
  */
-export function translateUrl(endpoint: string): string {
-  return `${endpoint.replace(/\/+$/, '')}/translator/text/v3.0/translate?api-version=3.0&from=zh-Hant&to=en`
+export function translateUrl(endpoint: string, from: Language, to: Language): string {
+  return `${endpoint.replace(/\/+$/, '')}/translator/text/v3.0/translate?api-version=3.0&from=${from}&to=${to}`
 }

@@ -6,6 +6,7 @@ import { createPlace, slugExists } from '../../../lib/places/repository'
 import { checkUploads } from '../../../lib/photos/limits'
 import { storePhotos } from '../../../lib/photos/store'
 import { buildSpotSubmission, type SpotSubmissionInput } from '../../../lib/places/submission'
+import { proseFrom } from '../../../lib/translate/service'
 import { ACTIVITIES, CITIES } from '../../../lib/places/types'
 import type { Activity, City } from '../../../lib/places/types'
 
@@ -53,10 +54,11 @@ export async function submitSpot(formData: FormData): Promise<SubmitResult> {
     activities,
     nameZh: String(formData.get('nameZh') ?? ''),
     nameEn: String(formData.get('nameEn') ?? ''),
-    summaryZh: String(formData.get('summaryZh') ?? ''),
-    summaryEn: String(formData.get('summaryEn') ?? ''),
-    descriptionZh: String(formData.get('descriptionZh') ?? ''),
-    descriptionEn: String(formData.get('descriptionEn') ?? ''),
+    // Translated before validating rather than after, which spends a few
+    // hundred characters on a submission that then turns out to be invalid.
+    // The allowance is two million a month; the alternative is patching the
+    // built document afterwards, and that is more code than the saving is worth.
+    ...(await proseFrom(formData)),
     difficulty: {},
     lng: readNumber(formData.get('lng')),
     lat: readNumber(formData.get('lat')),

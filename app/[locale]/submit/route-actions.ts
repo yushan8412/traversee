@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { auth } from '../../../auth'
 import { parseGpx } from '../../../lib/gpx/parse'
 import { buildRouteSubmission } from '../../../lib/places/route-submission'
+import { proseFrom } from '../../../lib/translate/service'
 import { createPlace, slugExists } from '../../../lib/places/repository'
 import { checkUploads } from '../../../lib/photos/limits'
 import { storePhotos } from '../../../lib/photos/store'
@@ -61,10 +62,7 @@ export async function submitRoute(formData: FormData): Promise<SubmitResult> {
         .filter((v): v is Activity => ACTIVITIES.includes(v as Activity)),
       nameZh: String(formData.get('nameZh') ?? ''),
       nameEn: String(formData.get('nameEn') ?? ''),
-      summaryZh: String(formData.get('summaryZh') ?? ''),
-      summaryEn: String(formData.get('summaryEn') ?? ''),
-      descriptionZh: String(formData.get('descriptionZh') ?? ''),
-      descriptionEn: String(formData.get('descriptionEn') ?? ''),
+      ...(await proseFrom(formData)),
       difficulty: {},
       points,
       gpxPath,

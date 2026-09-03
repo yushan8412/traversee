@@ -120,10 +120,6 @@
     "activities": "活動類型",
     "nameZh": "名稱（中文）",
     "nameEn": "名稱（英文）",
-    "summaryZh": "簡介（中文）",
-    "summaryEn": "簡介（英文）",
-    "descriptionZh": "詳細描述（中文）",
-    "descriptionEn": "詳細描述（英文）",
     "submit": "送出",
     "submitting": "送出中…",
     "submitted": "已送出，狀態為待審核。",
@@ -159,7 +155,7 @@
     "sectionWhere": "位置",
     "sectionWhereNote": "在地圖上點一下就會標記，可以再點一次修正。",
     "sectionAbout": "名稱與描述",
-    "sectionAboutNote": "中文寫完可以自動翻成英文，翻完還能修改。",
+    "sectionAboutNote": "用你目前的語言寫就好，另一個語言會在送出時自動翻譯。",
     "sectionActivitiesNote": "可以複選。這會決定它在地圖上用哪一種圖示。",
     "kindLabel": "要新增什麼？",
     "noLocationYet": "尚未選擇位置",
@@ -174,10 +170,8 @@
     "searchNoResults": "在台灣範圍內找不到「{query}」。直接在地圖上點選也可以。",
     "searchFailed": "搜尋暫時無法使用，請直接在地圖上點選位置。",
     "searchResults": "搜尋結果",
-    "translate": "翻譯成英文",
-    "translating": "翻譯中…",
-    "translateFailed": "翻譯失敗，英文可以自己填。",
-    "translated": "已翻譯，可以直接修改。"
+    "summary": "簡介",
+    "description": "詳細描述"
   },
   "review": {
     "title": "待審核",

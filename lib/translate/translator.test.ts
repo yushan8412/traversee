@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { readTranslations, translatableTexts } from './translator'
+import { readTranslations, translatableTexts, translateUrl } from './translator'
 
 describe('translatableTexts', () => {
   it('sends only what has been written', () => {
@@ -32,5 +32,17 @@ describe('readTranslations', () => {
     expect(readTranslations({ error: { code: 401000 } })).toEqual([])
     expect(readTranslations([{ translations: [] }])).toEqual([])
     expect(readTranslations([{ translations: [{ to: 'en' }] }])).toEqual([])
+  })
+})
+
+describe('translateUrl', () => {
+  it('carries the direction, because an English submission translates the other way', () => {
+    expect(translateUrl('https://tr.example.com/', 'en', 'zh-Hant')).toBe(
+      'https://tr.example.com/translator/text/v3.0/translate?api-version=3.0&from=en&to=zh-Hant',
+    )
+  })
+
+  it('does not double the slash when the endpoint carries one', () => {
+    expect(translateUrl('https://tr.example.com/', 'zh-Hant', 'en')).toContain('.com/translator')
   })
 })
