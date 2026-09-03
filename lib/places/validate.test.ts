@@ -4,6 +4,7 @@ import type { Place } from './types'
 
 const route: Partial<Place> = {
   kind: 'route',
+  name: { zh: '大屯山主峰步道', en: 'Mount Datun Main Peak Trail' },
   activities: ['hiking'],
   difficulty: { hiking: 3 },
   attributes: {},
@@ -26,6 +27,10 @@ const route: Partial<Place> = {
 
 const spot: Partial<Place> = {
   kind: 'spot',
+  // Both fixtures were nameless until 2026-09-03, which is the reason nothing
+  // caught a nameless place reaching production: the thing the suite called
+  // well-formed was itself missing a name.
+  name: { zh: '福隆海水浴場', en: 'Fulong Beach' },
   activities: ['surfing'],
   difficulty: {},
   attributes: { surfing: { breakType: 'beach' } },
@@ -96,5 +101,38 @@ describe('validateSubmission', () => {
     const codes = errorsFor({ ...route, activities: [], route: null })
     expect(codes).toContain('needs-an-activity')
     expect(codes).toContain('route-needs-metrics')
+  })
+})
+
+describe('a place must be called something', () => {
+  /**
+   * On 2026-09-03 an entry reached production with no name in either language.
+   * Nothing refused it: the slug fell back to `place-<uuid>`, which is what
+   * appeared on the site, and it was published from the review console like any
+   * other. Yulia read the identifier as garbled text, which is a fair reading of
+   * `place-fc1767f1-e552-4699-8af0-a79ef2890138`.
+   *
+   * Every other rule here is structural — geometry matching kind, difficulty
+   * inside range. This one is not, and that is why it was missing: a nameless
+   * place is perfectly well-formed and completely useless.
+   */
+  it('refuses a place with no name in either language', () => {
+    const codes = errorsFor({ ...spot, name: { zh: null, en: null } })
+    expect(codes).toContain('needs-a-name')
+  })
+
+  it('accepts a name in Chinese alone, which is the normal case here', () => {
+    const codes = errorsFor({ ...spot, name: { zh: '大屯山', en: null } })
+    expect(codes).not.toContain('needs-a-name')
+  })
+
+  it('accepts a name in English alone, because the form follows the page language', () => {
+    const codes = errorsFor({ ...spot, name: { zh: null, en: 'Mount Datun' } })
+    expect(codes).not.toContain('needs-a-name')
+  })
+
+  it('treats a name of only whitespace as no name', () => {
+    const codes = errorsFor({ ...spot, name: { zh: '   ', en: '' } })
+    expect(codes).toContain('needs-a-name')
   })
 })

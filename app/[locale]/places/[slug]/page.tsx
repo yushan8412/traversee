@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server'
+import { auth } from '../../../../auth'
 import { notFound } from 'next/navigation'
 import { Link } from '../../../../i18n/navigation'
 import type { Locale } from '../../../../i18n/routing'
@@ -10,6 +11,7 @@ import { resolveTileSource } from '../../../../lib/maps/tile-source'
 import { PlacePhoto } from '../photo'
 import { standInPhotos } from '../../../../lib/places/stand-in-photos'
 import { TranslatedText } from '../translated-text'
+import { canEdit } from '../../../../lib/places/editing'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,6 +27,12 @@ export default async function PlacePage({
   if (!place) notFound()
 
   const t = await getTranslations('places')
+  const te = await getTranslations('edit')
+  const session = await auth()
+  const mayEdit = canEdit(
+    place,
+    session?.user ? { id: session.user.id, role: session.user.role } : null,
+  )
   const name = resolveText(place.name, locale as Locale)
   const summary = resolveText(place.summary, locale as Locale)
   const description = resolveText(place.description, locale as Locale)
@@ -52,9 +60,21 @@ export default async function PlacePage({
         ← {t('backToList')}
       </Link>
 
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-        {name ? <TranslatedText text={name} as="span" /> : place.slug}
-      </h1>
+      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {name ? <TranslatedText text={name} as="span" /> : place.slug}
+        </h1>
+        {/* Only for whoever may actually save the change; an edit link that
+            leads to a refusal is worse than no link. */}
+        {mayEdit && (
+          <Link
+            href={`/places/${place.slug}/edit`}
+            className="text-[13px] text-dim no-underline hover:text-ink"
+          >
+            {te('edit')}
+          </Link>
+        )}
+      </div>
 
       <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-dim">
         <span>{t(`city.${place.city}`)}</span>

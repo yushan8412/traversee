@@ -150,6 +150,33 @@ export async function replacePlace(place: Place): Promise<void> {
   await getContainer().item(place.id, place.city).replace(place)
 }
 
+/**
+ * Saves an edit, including one that changes the county.
+ *
+ * `city` is the partition key, and a partition key cannot be updated — Cosmos
+ * has no operation for it. Moving an entry means writing it into the new
+ * partition and removing it from the old one, and there is no transaction
+ * spanning the two.
+ *
+ * So the order is deliberate: create first, delete second. A failure after the
+ * create leaves the same entry filed under two counties, which is visible and
+ * repairable. The other order loses the entry outright if the second step
+ * fails, and a submission is somebody's afternoon written up.
+ */
+export async function savePlace(place: Place, previousCity: string): Promise<void> {
+  if (shouldUseFixtures()) {
+    throw new Error('Cosmos is not configured; refusing to pretend an edit was saved.')
+  }
+
+  if (place.city === previousCity) {
+    await replacePlace(place)
+    return
+  }
+
+  await getContainer().items.create(place)
+  await getContainer().item(place.id, previousCity).delete()
+}
+
 /** Slugs appear in URLs, so a collision would make one entry unreachable. */
 export async function slugExists(slug: string): Promise<boolean> {
   if (shouldUseFixtures()) {
@@ -163,6 +190,26 @@ export async function slugExists(slug: string): Promise<boolean> {
     })
     .fetchAll()
   return (resources[0] ?? 0) > 0
+}
+
+/**
+ * Any status, for the edit page. A pending or rejected entry is exactly the one
+ * somebody is most likely to be here to correct, so the published filter would
+ * hide the cases that matter most.
+ */
+export async function getPlaceBySlug(slug: string): Promise<Place | null> {
+  if (shouldUseFixtures()) {
+    return fixturePlaces.find((p) => p.slug === slug) ?? null
+  }
+
+  const { resources } = await getContainer()
+    .items.query<Place>({
+      query: 'SELECT * FROM c WHERE c.slug = @slug',
+      parameters: [{ name: '@slug', value: slug }],
+    })
+    .fetchAll()
+
+  return resources[0] ?? null
 }
 
 export async function getPublishedPlaceBySlug(slug: string): Promise<Place | null> {
