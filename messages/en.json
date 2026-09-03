@@ -120,10 +120,6 @@
     "activities": "Activities",
     "nameZh": "Name (Chinese)",
     "nameEn": "Name (English)",
-    "summaryZh": "Summary (Chinese)",
-    "summaryEn": "Summary (English)",
-    "descriptionZh": "Description (Chinese)",
-    "descriptionEn": "Description (English)",
     "submit": "Submit",
     "submitting": "Submitting…",
     "submitted": "Submitted. It is now awaiting review.",
@@ -159,7 +155,7 @@
     "sectionWhere": "Where",
     "sectionWhereNote": "Tap the map to drop the pin. Tap again to move it.",
     "sectionAbout": "Name and description",
-    "sectionAboutNote": "Write it in Chinese and translate; you can still edit the English.",
+    "sectionAboutNote": "Write it in the language you are reading. The other one is translated when you submit.",
     "sectionActivitiesNote": "Choose as many as apply. This decides which pin it gets on the map.",
     "kindLabel": "What are you adding?",
     "noLocationYet": "No location chosen yet",
@@ -174,10 +170,8 @@
     "searchNoResults": "Nothing in Taiwan matches “{query}”. You can still tap the map.",
     "searchFailed": "Search is unavailable right now. Tap the map to place the pin.",
     "searchResults": "Search results",
-    "translate": "Translate to English",
-    "translating": "Translating…",
-    "translateFailed": "Translation failed. You can write the English yourself.",
-    "translated": "Translated. Edit it as you like."
+    "summary": "Summary",
+    "description": "Description"
   },
   "review": {
     "title": "Awaiting review",
