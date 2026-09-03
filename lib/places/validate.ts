@@ -2,6 +2,7 @@ import { isWithinCoverage } from '../gpx/geo'
 import type { Activity, Place } from './types'
 
 export type ValidationCode =
+  | 'needs-a-name'
   | 'needs-an-activity'
   | 'route-needs-linestring'
   | 'route-needs-metrics'
@@ -32,6 +33,14 @@ export interface ValidationError {
 export function validateSubmission(place: Partial<Place>): ValidationError[] {
   const errors: ValidationError[] = []
   const activities = place.activities ?? []
+
+  // Either language will do — the form follows the page, so an English page
+  // legitimately produces a place with no Chinese name. What is refused is a
+  // place with no name at all, which until 2026-09-03 reached production and
+  // published, appearing under its own identifier because the slug had nothing
+  // to be built from.
+  const named = [place.name?.zh, place.name?.en].some((value) => (value ?? '').trim() !== '')
+  if (!named) errors.push({ code: 'needs-a-name' })
 
   if (activities.length === 0) errors.push({ code: 'needs-an-activity' })
 

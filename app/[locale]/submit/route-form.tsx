@@ -13,6 +13,7 @@ import { attachPhotos } from '../../../lib/photos/selection'
 import { ActivityIcon } from '../activity-icon'
 import { PhotoPicker } from './photo-picker'
 import { SubmissionErrors } from './submission-errors'
+import { NameFields } from './name-fields'
 import { ProseFields } from './prose-fields'
 import {
   BUTTON_PRIMARY,
@@ -21,7 +22,6 @@ import {
   CHIP_OFF,
   FIELD,
   LABEL,
-  OPTIONAL,
   SECTION,
   SECTION_NOTE,
   SECTION_TITLE,
@@ -205,17 +205,7 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
         <p className={SECTION_NOTE}>{t('sectionAboutNote')}</p>
 
         <div className="mt-4 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {(['nameZh', 'nameEn'] as const).map((field) => (
-              <div key={field}>
-                <label className={LABEL} htmlFor={field}>
-                  {t(field)}{' '}
-                  {field === 'nameEn' && <span className={OPTIONAL}>({t('optional')})</span>}
-                </label>
-                <input id={field} name={field} className={FIELD} />
-              </div>
-            ))}
-          </div>
+          <NameFields />
 
           <ProseFields />
         </div>

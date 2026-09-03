@@ -139,7 +139,9 @@
       "route-needs-metrics": "Route metrics are missing.",
       "too-many-photos": "Up to {max} photos.",
       "photo-too-large": "Each photo must be under {limit} MB.",
-      "photo-not-an-image": "One of those files is not a readable image."
+      "photo-not-an-image": "One of those files is not a readable image.",
+      "needs-a-name": "Give it a name in at least one language.",
+      "not-found": "That entry does not exist."
     },
     "kindRoute": "Route (upload a GPX)",
     "kindSpot": "Spot (mark it on the map)",
@@ -171,7 +173,11 @@
     "searchFailed": "Search is unavailable right now. Tap the map to place the pin.",
     "searchResults": "Search results",
     "summary": "Summary",
-    "description": "Description"
+    "description": "Description",
+    "summaryZh": "Summary (Chinese)",
+    "summaryEn": "Summary (English)",
+    "descriptionZh": "Description (Chinese)",
+    "descriptionEn": "Description (English)"
   },
   "review": {
     "title": "Awaiting review",
@@ -279,5 +285,16 @@
     "source": "Source on GitHub",
     "credits": "Place photography comes from Wikimedia Commons, each credited to its author and licence. Activity and hero footage are free-licensed stock, being replaced with original work.",
     "legal": "Traversee — an open portfolio project. Borrowed imagery is used under CC licences; credits appear on each photograph."
+  },
+  "edit": {
+    "editTitle": "Edit place",
+    "editNote": "Name, description, county and activities can be changed. Coordinates and photos cannot yet.",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "edit": "Edit",
+    "cannotEdit": "You cannot edit this entry.",
+    "notFound": "That entry does not exist.",
+    "backToPlace": "Back to the place"
   }
 }

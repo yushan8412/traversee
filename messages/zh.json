@@ -139,7 +139,9 @@
       "route-needs-metrics": "缺少路線數據。",
       "too-many-photos": "照片最多 {max} 張。",
       "photo-too-large": "單張照片上限 {limit} MB。",
-      "photo-not-an-image": "有檔案不是可讀取的圖片。"
+      "photo-not-an-image": "有檔案不是可讀取的圖片。",
+      "needs-a-name": "請填名稱（中英文至少一個）。",
+      "not-found": "找不到這筆資料。"
     },
     "kindRoute": "路線（上傳 GPX）",
     "kindSpot": "地點（在地圖上標記）",
@@ -171,7 +173,11 @@
     "searchFailed": "搜尋暫時無法使用，請直接在地圖上點選位置。",
     "searchResults": "搜尋結果",
     "summary": "簡介",
-    "description": "詳細描述"
+    "description": "詳細描述",
+    "summaryZh": "簡介（中文）",
+    "summaryEn": "簡介（英文）",
+    "descriptionZh": "詳細描述（中文）",
+    "descriptionEn": "詳細描述（英文）"
   },
   "review": {
     "title": "待審核",
@@ -279,5 +285,16 @@
     "source": "原始碼（GitHub）",
     "credits": "地點照片來自 Wikimedia Commons，各自標示作者與授權。運動與首頁影片為免費授權素材，將陸續換成自己拍攝的內容。",
     "legal": "Traversee — 一個公開的作品集專案。內容以 CC 授權引用，出處見各張照片標示。"
+  },
+  "edit": {
+    "editTitle": "編輯地點",
+    "editNote": "名稱、描述、縣市和活動類型可以修改。座標和照片目前還不能，需要的話跟我說。",
+    "save": "儲存",
+    "saving": "儲存中…",
+    "saved": "已儲存。",
+    "edit": "編輯",
+    "cannotEdit": "你沒有編輯這筆資料的權限。",
+    "notFound": "找不到這筆資料。",
+    "backToPlace": "回到地點頁"
   }
 }
