@@ -39,7 +39,8 @@ export default async function PlacesPage({ params }: { params: Promise<{ locale:
             return (
               <li
                 key={place.id}
-                className={`flex ${
+                style={{ '--card-index': index } as React.CSSProperties}
+                className={`tv-card-in flex ${
                   span === 'feature'
                     // Two rows at every width that has rows. At `sm` the two
                     // columns leave nothing to sit beside it, so without this

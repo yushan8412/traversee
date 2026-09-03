@@ -412,3 +412,48 @@ select {
     transition: opacity 120ms ease-out;
   }
 }
+
+/*
+ * Cards arriving on the index.
+ *
+ * Jakub's enter recipe — opacity, a short rise, and blur resolving to sharp.
+ * The blur is the part that matters: it reads as the photograph coming into
+ * focus rather than a panel fading up, which suits a page whose content is
+ * photographs and nothing else.
+ *
+ * `backwards` is load-bearing, not decoration. Without it a card with a delay
+ * paints at full opacity for a frame, disappears when its animation starts, and
+ * fades in — a flash on every card past the first.
+ *
+ * The stagger caps at the eighth card. Delay proportional to index is fine for
+ * a screenful and absurd for a catalogue: the fortieth card would wait nearly
+ * two seconds to appear, long after it has been scrolled past.
+ */
+@keyframes tv-card-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.tv-card-in {
+  animation: tv-card-in 480ms cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  animation-delay: calc(min(var(--card-index, 0), 8) * 45ms);
+}
+
+/*
+ * Arrival is orientation, not information — nothing here is only knowable by
+ * having watched it move. So for somebody who asked not to be moved, the cards
+ * are simply there.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .tv-card-in {
+    animation: none;
+  }
+}
