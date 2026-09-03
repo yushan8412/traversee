@@ -116,10 +116,16 @@ export function PlaceCard({ item, noPhoto }: { item: PlaceCardData; noPhoto: str
         </span>
         <span className="mt-1 text-xs text-dim">{item.meta}</span>
 
-        <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3 text-xs text-dim">
-          <span>{item.metrics}</span>
-          <DifficultyDots difficulty={item.difficulty} />
-        </div>
+        {/* Same rule as the map popup: no row rather than an empty one. A spot
+            carries neither metrics nor, usually, a grade, and the rule above
+            this row was left drawing a line under nothing on five cards out of
+            seven. */}
+        {(item.metrics || item.difficulty) && (
+          <div className="mt-auto flex items-end justify-between gap-3 border-t border-line pt-3 text-xs text-dim">
+            <span>{item.metrics}</span>
+            <DifficultyDots difficulty={item.difficulty} />
+          </div>
+        )}
       </div>
     </Link>
   )
