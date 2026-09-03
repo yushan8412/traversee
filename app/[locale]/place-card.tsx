@@ -96,9 +96,18 @@ export function PlaceCard({
   return (
     <Link
       href={`/places/${item.slug}`}
+      // The press is the only feedback a phone gets — there is no hover there,
+      // and until now a tap did nothing at all until the next page arrived.
+      // 0.985 rather than something you would notice: it should register as the
+      // card acknowledging the finger, not as an effect.
+      //
+      // `scale`, not `transform`. Tailwind 4's scale utilities set the standalone
+      // `scale` property, so a transition naming `transform` leaves the press
+      // snapping instantly — which is what it did, measured, before this line.
       className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-line
-        bg-paper no-underline transition-shadow duration-200
-        hover:shadow-[0_18px_40px_-28px_rgb(31_42_36/0.55)]"
+        bg-paper no-underline transition-[box-shadow,scale] duration-200
+        ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:shadow-[0_18px_40px_-28px_rgb(31_42_36/0.55)]
+        active:scale-[0.985] motion-reduce:active:scale-100"
     >
       <div className={`relative overflow-hidden bg-panel ${frame}`}>
         {photo ? (
