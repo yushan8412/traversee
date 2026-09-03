@@ -8,7 +8,12 @@
     "switchLanguage": "English",
     "submit": "新增地點",
     "review": "待審核",
-    "explore": "探索地圖"
+    "explore": "探索地圖",
+    "home": "首頁",
+    "menu": "選單",
+    "closeMenu": "關閉選單",
+    "mainPages": "主要頁面",
+    "more": "其他"
   },
   "places": {
     "title": "所有地點",
