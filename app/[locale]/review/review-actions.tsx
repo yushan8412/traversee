@@ -3,27 +3,28 @@
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { reviewPlace, type ReviewResult } from './actions'
+import { SaveButton } from '../save-button'
+import { BUTTON_QUIET } from '../submit/field-styles'
 import type { Status } from '../../../lib/places/types'
 
-const BUTTON =
-  'rounded border border-line px-3 py-1.5 text-sm text-accent hover:underline disabled:opacity-50'
+// The same button as everywhere else. These were a link in a box, which made
+// publishing something look less consequential than choosing a photo.
+const BUTTON = `${BUTTON_QUIET} px-3.5 text-[14px]`
 
 export function ReviewActions({ id, city, status }: { id: string; city: string; status: Status }) {
   const t = useTranslations('review')
   const [result, setResult] = useState<ReviewResult | null>(null)
-  const [pending, setPending] = useState(false)
   // The reason box only appears for a rejection, since that is the only place it
   // is required, and an always-visible field invites filling it in for approvals.
   const [rejecting, setRejecting] = useState(false)
 
   async function run(formData: FormData) {
-    setPending(true)
-    try {
-      setResult(await reviewPlace(formData))
-    } finally {
-      setPending(false)
-    }
+    setResult(await reviewPlace(formData))
   }
+
+  // Each action is its own form, so each button reads its own form's status —
+  // which is also what makes the indicator appear on the button that was
+  // actually pressed rather than on all three.
 
   // Each action is its own form carrying the target status as a hidden field.
   // Putting it on the submit button instead relies on the browser sending which
@@ -43,18 +44,14 @@ export function ReviewActions({ id, city, status }: { id: string; city: string; 
         {status !== 'published' && (
           <form action={run}>
             {hidden('published')}
-            <button type="submit" disabled={pending} className={BUTTON}>
-              {t('publish')}
-            </button>
+            <SaveButton label={t('publish')} busyLabel={t('publishBusy')} className={BUTTON} />
           </form>
         )}
 
         {status === 'published' && (
           <form action={run}>
             {hidden('pending')}
-            <button type="submit" disabled={pending} className={BUTTON}>
-              {t('unpublish')}
-            </button>
+            <SaveButton label={t('unpublish')} busyLabel={t('unpublishBusy')} className={BUTTON} />
           </form>
         )}
 
@@ -80,9 +77,7 @@ export function ReviewActions({ id, city, status }: { id: string; city: string; 
             className="w-full rounded border border-line bg-canvas px-3 py-2 text-sm"
           />
           <div className="flex gap-2">
-            <button type="submit" disabled={pending} className={BUTTON}>
-              {t('reject')}
-            </button>
+            <SaveButton label={t('reject')} busyLabel={t('rejectBusy')} className={BUTTON} />
             <button type="button" onClick={() => setRejecting(false)} className={BUTTON}>
               {t('cancel')}
             </button>

@@ -201,7 +201,10 @@
       "missing-target": "No target status was received.",
       "transition-not-allowed": "That status change is not allowed."
     },
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "publishBusy": "Publishing…",
+    "unpublishBusy": "Unpublishing…",
+    "rejectBusy": "Rejecting…"
   },
   "home": {
     "heroTitle": "Where the city ends,",

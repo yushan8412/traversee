@@ -11,6 +11,7 @@ import { submitRoute, type SubmitResult } from './route-actions'
 import { shrinkPhotos } from '../../../lib/photos/downscale'
 import { attachPhotos } from '../../../lib/photos/selection'
 import { ActivityIcon } from '../activity-icon'
+import { SaveButton } from '../save-button'
 import { PhotoPicker } from './photo-picker'
 import { SubmissionErrors } from './submission-errors'
 import { NameFields } from './name-fields'
@@ -36,7 +37,6 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
   const [parseError, setParseError] = useState<string | null>(null)
   const [photos, setPhotos] = useState<File[]>([])
   const [result, setResult] = useState<SubmitResult | null>(null)
-  const [pending, setPending] = useState(false)
 
   // Parsed in the browser so the submitter sees the track before sending and can
   // tell at a glance they picked the right file. The server parses the bytes
@@ -61,13 +61,10 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
   }
 
   async function onSubmit(formData: FormData) {
-    setPending(true)
     try {
       setResult(await submitRoute(await shrinkPhotos(attachPhotos(formData, photos))))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
-    } finally {
-      setPending(false)
     }
   }
 
@@ -218,13 +215,12 @@ export function RouteForm({ tileSource }: { tileSource: TileSource }) {
       {result && !result.ok && <SubmissionErrors codes={result.errors} />}
 
       <div className="pt-1">
-        <button
-          type="submit"
-          disabled={pending || !summary}
+        <SaveButton
+          label={t('submit')}
+          busyLabel={t('submitting')}
+          disabled={!summary}
           className={`${BUTTON_PRIMARY} w-full sm:w-auto`}
-        >
-          {pending ? t('submitting') : t('submit')}
-        </button>
+        />
       </div>
     </form>
   )

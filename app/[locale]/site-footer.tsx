@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { Link } from '../../i18n/navigation'
 import { LanguageSwitcher } from './language-switcher'
+import { Mountain } from './mountain'
 import type { Locale } from '../../i18n/routing'
 
 const REPOSITORY = 'https://github.com/yushan8412/traversee'
@@ -24,9 +25,7 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
         <div>
           <span className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
             <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4">
-                <path d="M3 19l6-12 4 7 3-4 5 9z" />
-              </svg>
+              <Mountain stroke="#fff" />
             </span>
             {site('name')}
           </span>

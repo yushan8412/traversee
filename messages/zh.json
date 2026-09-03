@@ -201,7 +201,10 @@
       "missing-target": "沒有收到要改成哪個狀態。",
       "transition-not-allowed": "這個狀態轉換不被允許。"
     },
-    "cancel": "取消"
+    "cancel": "取消",
+    "publishBusy": "發布中…",
+    "unpublishBusy": "下架中…",
+    "rejectBusy": "退回中…"
   },
   "home": {
     "heroTitle": "城市的盡頭",

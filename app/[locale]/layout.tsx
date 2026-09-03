@@ -8,6 +8,7 @@ import { routing, type Locale } from '../../i18n/routing'
 import { AdminNav } from './admin-nav'
 import { AuthControls } from './auth-controls'
 import { LanguageSwitcher } from './language-switcher'
+import { Mountain } from './mountain'
 import { SiteFooter } from './site-footer'
 import '../globals.css'
 
@@ -70,9 +71,7 @@ export default async function LocaleLayout({
                 className="flex shrink-0 items-center gap-2.5 whitespace-nowrap text-lg font-semibold tracking-tight no-underline"
               >
                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4">
-                    <path d="M3 19l6-12 4 7 3-4 5 9z" />
-                  </svg>
+                  <Mountain stroke="#fff" />
                 </span>
                 {t('name')}
               </Link>

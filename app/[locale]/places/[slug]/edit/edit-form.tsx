@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { ACTIVITIES, CITIES, type Activity, type City } from '../../../../../lib/places/types'
 import { ActivityIcon } from '../../../activity-icon'
+import { SaveButton } from '../../../save-button'
 import { SubmissionErrors } from '../../../submit/submission-errors'
 import {
   BUTTON_PRIMARY,
@@ -48,16 +49,12 @@ export function EditForm({ place }: { place: EditablePlace }) {
   const tp = useTranslations('places')
   const locale = useLocale()
   const [result, setResult] = useState<EditResult | null>(null)
-  const [pending, setPending] = useState(false)
 
   async function onSubmit(formData: FormData) {
-    setPending(true)
     try {
       setResult(await editPlace(formData))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
-    } finally {
-      setPending(false)
     }
   }
 
@@ -181,9 +178,11 @@ export function EditForm({ place }: { place: EditablePlace }) {
       )}
 
       <div className="pt-1">
-        <button type="submit" disabled={pending} className={`${BUTTON_PRIMARY} w-full sm:w-auto`}>
-          {pending ? t('saving') : t('save')}
-        </button>
+        <SaveButton
+          label={t('save')}
+          busyLabel={t('saving')}
+          className={`${BUTTON_PRIMARY} w-full sm:w-auto`}
+        />
       </div>
     </form>
   )
