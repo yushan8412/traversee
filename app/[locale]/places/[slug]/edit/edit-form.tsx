@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { ACTIVITIES, CITIES, type Activity, type City } from '../../../../../lib/places/types'
 import { ActivityIcon } from '../../../activity-icon'
 import { SubmissionErrors } from '../../../submit/submission-errors'
@@ -30,18 +30,23 @@ export interface EditablePlace {
 }
 
 /**
- * Both languages, unlike the submission form.
+ * The same rule as the submission form: the form is in the language of the page.
  *
- * Submitting asks for one language and translates the other, because writing is
- * the expensive part and nobody wants to do it twice. Editing is the opposite:
- * you are here because something specific is wrong, and it may be the machine's
- * half that is wrong. Hiding it would mean the translated text could never be
- * corrected at all.
+ * This showed both languages at first, reasoning that the half most likely to
+ * need correcting is the machine-translated one. Yulia's answer was that the
+ * exception is worse than the problem — a form that is sometimes bilingual and
+ * sometimes not is a form you have to think about. Switching the page to English
+ * is how you edit the English, and the header already does that.
+ *
+ * The language not on screen rides along in hidden fields. Without them a save
+ * would post an empty string for it and applyEdit would faithfully clear it,
+ * so editing the Chinese would silently delete the English.
  */
 export function EditForm({ place }: { place: EditablePlace }) {
   const t = useTranslations('edit')
   const ts = useTranslations('submit')
   const tp = useTranslations('places')
+  const locale = useLocale()
   const [result, setResult] = useState<EditResult | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -56,12 +61,17 @@ export function EditForm({ place }: { place: EditablePlace }) {
     }
   }
 
-  // Each half names its own language, unlike the submission form, where the
-  // page's language is implied and only one half is asked for.
-  const pairs = [
-    { zh: 'nameZh', en: 'nameEn', rows: 0 },
-    { zh: 'summaryZh', en: 'summaryEn', rows: 2 },
-    { zh: 'descriptionZh', en: 'descriptionEn', rows: 5 },
+  const zh = locale === 'zh'
+  // Names are written by hand in both languages, exactly as on the submission
+  // form. Only the prose follows the page.
+  const names = zh ? (['nameZh', 'nameEn'] as const) : (['nameEn', 'nameZh'] as const)
+  const prose = [
+    { shown: zh ? 'summaryZh' : 'summaryEn', hidden: zh ? 'summaryEn' : 'summaryZh', rows: 2 },
+    {
+      shown: zh ? 'descriptionZh' : 'descriptionEn',
+      hidden: zh ? 'descriptionEn' : 'descriptionZh',
+      rows: 5,
+    },
   ] as const
 
   return (
@@ -76,31 +86,35 @@ export function EditForm({ place }: { place: EditablePlace }) {
         <p className={SECTION_NOTE}>{t('editNote')}</p>
 
         <div className="mt-4 space-y-4">
-          {pairs.map(({ zh, en, rows }) => (
-            <div key={zh} className="grid gap-4 sm:grid-cols-2">
-              {([zh, en] as const).map((name) => (
-                <div key={name}>
-                  <label className={LABEL} htmlFor={name}>
-                    {ts(name)}
-                  </label>
-                  {rows === 0 ? (
-                    <input
-                      id={name}
-                      name={name}
-                      defaultValue={place[name as keyof EditablePlace] as string}
-                      className={FIELD}
-                    />
-                  ) : (
-                    <textarea
-                      id={name}
-                      name={name}
-                      rows={rows}
-                      defaultValue={place[name as keyof EditablePlace] as string}
-                      className={`${FIELD} resize-y`}
-                    />
-                  )}
-                </div>
-              ))}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {names.map((name) => (
+              <div key={name}>
+                <label className={LABEL} htmlFor={name}>
+                  {ts(name)}
+                </label>
+                <input
+                  id={name}
+                  name={name}
+                  defaultValue={place[name]}
+                  className={FIELD}
+                />
+              </div>
+            ))}
+          </div>
+
+          {prose.map(({ shown, hidden, rows }) => (
+            <div key={shown}>
+              <label className={LABEL} htmlFor={shown}>
+                {shown.startsWith('summary') ? ts('summary') : ts('description')}
+              </label>
+              <textarea
+                id={shown}
+                name={shown}
+                rows={rows}
+                defaultValue={place[shown]}
+                className={`${FIELD} resize-y`}
+              />
+              <input type="hidden" name={hidden} value={place[hidden]} />
             </div>
           ))}
 
