@@ -13,6 +13,12 @@ import type { NextConfig } from 'next'
 //   Route rewrites        — must live here rather than in staticwebapp.config.json,
 //                           which does not support rewrites into a Next.js app.
 const nextConfig: NextConfig = {
+  // Turned on 2026-09-04, after production spent twelve hours refusing to warm
+  // up. The comment above reserved this lever for the Free plan's 250 MB app
+  // cap; a production dependency install measures 506 MB on its own, before the
+  // build output. Standalone ships only what the node file traces say each
+  // route needs, which is what the cap is actually about.
+  output: 'standalone',
   experimental: {
     serverActions: {
       // Server actions default to a 1 MB body, which is smaller than a single
