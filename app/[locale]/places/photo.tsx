@@ -1,4 +1,4 @@
-import { publicPhotoUrl } from '../../../lib/photos/store'
+import { publicPhotoUrl } from '../../../lib/photos/public-url'
 import type { Photo } from '../../../lib/places/types'
 
 /**
