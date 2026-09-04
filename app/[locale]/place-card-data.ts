@@ -1,4 +1,4 @@
-import { publicPhotoUrl } from '../../lib/photos/store'
+import { publicPhotoUrl } from '../../lib/photos/public-url'
 import { standInPhotos } from '../../lib/places/stand-in-photos'
 import { placeMetrics } from '../../lib/places/metrics'
 import { resolveText } from '../../lib/places/text'

@@ -43,9 +43,3 @@ export async function storePhotos(placeId: string, files: File[]): Promise<Photo
   return stored
 }
 
-/** Where an approved photo can be read from. */
-export function publicPhotoUrl(path: string): string {
-  const base = process.env.BLOB_PUBLIC_BASE_URL
-  if (!base) throw new Error('BLOB_PUBLIC_BASE_URL is not set.')
-  return `${base.replace(/\/+$/, '')}/${path}`
-}
