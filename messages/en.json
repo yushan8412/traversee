@@ -182,7 +182,8 @@
     "summaryZh": "Summary (Chinese)",
     "summaryEn": "Summary (English)",
     "descriptionZh": "Description (Chinese)",
-    "descriptionEn": "Description (English)"
+    "descriptionEn": "Description (English)",
+    "confirmCity": "The location moved — check the county"
   },
   "review": {
     "title": "Awaiting review",

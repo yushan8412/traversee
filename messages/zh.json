@@ -182,7 +182,8 @@
     "summaryZh": "簡介（中文）",
     "summaryEn": "簡介（英文）",
     "descriptionZh": "詳細描述（中文）",
-    "descriptionEn": "詳細描述（英文）"
+    "descriptionEn": "詳細描述（英文）",
+    "confirmCity": "位置變了，請確認縣市"
   },
   "review": {
     "title": "待審核",
