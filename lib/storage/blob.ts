@@ -20,15 +20,28 @@ function client(container: string): ContainerClient {
   return service.getContainerClient(container)
 }
 
-export async function uploadToPending(
+export async function upload(
+  container: string,
   path: string,
   body: Buffer,
   contentType: string,
 ): Promise<string> {
-  const blob = client(PENDING).getBlockBlobClient(path)
+  const blob = client(container).getBlockBlobClient(path)
   await blob.upload(body, body.byteLength, { blobHTTPHeaders: { blobContentType: contentType } })
   return path
 }
+
+/**
+ * Where a submission's files go, which is everything arriving through review.
+ *
+ * Replacing the track on an entry that is *already published* writes to PUBLIC
+ * instead, because `filesOf` and the promote/demote pair both assume a file
+ * sits in the container its entry's status implies. A new file dropped into
+ * PENDING for a published entry would be invisible to readers and would be
+ * "promoted" a second time by the next approval.
+ */
+export const uploadToPending = (path: string, body: Buffer, contentType: string) =>
+  upload(PENDING, path, body, contentType)
 
 /**
  * Moves a file between the two containers.
