@@ -1,14 +1,40 @@
 import { isWithinCoverage } from '../gpx/geo'
+import { AZURE_DISTRICTS, type City } from '../places/types'
 
 export interface SearchResult {
   name: string
   kind: string
   lng: number
   lat: number
+  /** Null when the response did not say, which a national park never does. */
+  city: City | null
 }
 
 /** More than a phone screen wants to scroll past under a map. */
 const MOST_RESULTS = 5
+
+/**
+ * The county Azure filed this result under, where it named one.
+ *
+ * The county is the **last** entry: a direct municipality repeats itself as
+ * `[臺北市, 臺北市]` while a county is prefixed by its province as
+ * `[臺灣省, 苗栗縣]`, so the first entry is the province for fourteen of the
+ * twenty. Measured against live responses on 2026-09-07.
+ *
+ * This costs nothing. The call has already been made and paid for and the field
+ * is already in the body — it was simply being discarded, which left the form
+ * asking for something it had just been told.
+ */
+function cityFrom(address: unknown): City | null {
+  const districts = (address as { adminDistricts?: unknown })?.adminDistricts
+  if (!Array.isArray(districts) || districts.length === 0) return null
+
+  const shortName = districts[districts.length - 1]?.shortName
+  if (typeof shortName !== 'string') return null
+
+  // An unknown district yields null rather than a guess, and the form then asks.
+  return AZURE_DISTRICTS[shortName] ?? null
+}
 
 /**
  * Turns Azure Maps' geocoding response into somewhere the form can be sent.
@@ -42,10 +68,17 @@ export function readSearchResults(payload: unknown): SearchResult[] {
     if (typeof lng !== 'number' || typeof lat !== 'number') continue
     if (!isWithinCoverage([lng, lat])) continue
 
-    const name = feature?.properties?.address?.formattedAddress
+    const address = feature?.properties?.address
+    const name = address?.formattedAddress
     if (typeof name !== 'string' || name === '') continue
 
-    results.push({ name, kind: String(feature?.properties?.type ?? ''), lng, lat })
+    results.push({
+      name,
+      kind: String(feature?.properties?.type ?? ''),
+      lng,
+      lat,
+      city: cityFrom(address),
+    })
     if (results.length === MOST_RESULTS) break
   }
 
