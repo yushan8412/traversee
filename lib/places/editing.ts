@@ -1,4 +1,5 @@
-import type { Activity, City, Place } from './types'
+import type { Activity, City, Place, Point } from './types'
+import type { TrackSummary } from './route-submission'
 
 /**
  * Correcting an entry after it has been submitted.
@@ -10,6 +11,22 @@ import type { Activity, City, Place } from './types'
  * property for a shared database than the original bug.
  */
 
+/**
+ * A whole new shape for an entry, never a partial adjustment.
+ *
+ * Yulia's rule, 2026-09-07: replacing a location means discarding the old one.
+ * There is no vertex editing and no nudging a pin, so this carries everything
+ * needed to rebuild the geometry from nothing — which is also why it can move
+ * an entry between kinds. Somebody who pinned a trailhead from their phone can
+ * supply the recorded track later, and the entry becomes the route it always was.
+ *
+ * Absent means the geometry is not touched at all, which is every edit that is
+ * only fixing words.
+ */
+export type GeometryReplacement =
+  | { kind: 'spot'; lng: number; lat: number }
+  | { kind: 'route'; summary: TrackSummary; gpxPath: string }
+
 export interface PlaceEdit {
   nameZh: string
   nameEn: string
@@ -19,6 +36,7 @@ export interface PlaceEdit {
   descriptionEn: string
   city: City
   activities: Activity[]
+  geometry?: GeometryReplacement
 }
 
 export interface Editor {
@@ -58,7 +76,7 @@ const orNull = (value: string) => {
  * on this form at all.
  */
 export function applyEdit(place: Place, edit: PlaceEdit, now: string): Place {
-  return {
+  const edited: Place = {
     ...place,
     city: edit.city,
     activities: edit.activities,
@@ -66,5 +84,47 @@ export function applyEdit(place: Place, edit: PlaceEdit, now: string): Place {
     summary: { zh: orNull(edit.summaryZh), en: orNull(edit.summaryEn) },
     description: { zh: orNull(edit.descriptionZh), en: orNull(edit.descriptionEn) },
     updatedAt: now,
+  }
+
+  return edit.geometry ? replaceGeometry(edited, edit.geometry) : edited
+}
+
+/**
+ * The four transitions, in one place rather than as branches at the call site.
+ *
+ * `approach` is deliberately absent from both cases. Nothing in the app can
+ * write it — both submission paths hardcode it to null — so a rule for what a
+ * kind change should do to it would be invented rather than derived. Left
+ * alone, and recorded in the spec so it is not later read as an oversight.
+ */
+function replaceGeometry(place: Place, replacement: GeometryReplacement): Place {
+  if (replacement.kind === 'spot') {
+    const point: Point = { type: 'Point', coordinates: [replacement.lng, replacement.lat] }
+    return {
+      ...place,
+      kind: 'spot',
+      geometry: point,
+      startPoint: point,
+      // Distance and elevation gain describe travelling a line, so a point
+      // cannot carry them — which is exactly what `spot-cannot-have-route-metrics`
+      // refuses, and validateSubmission runs on the result of this.
+      route: null,
+    }
+  }
+
+  const { summary, gpxPath } = replacement
+  return {
+    ...place,
+    kind: 'route',
+    geometry: summary.geometry,
+    startPoint: summary.startPoint,
+    route: {
+      distanceKm: summary.distanceKm,
+      elevationGainM: summary.elevationGainM,
+      // Taken wholesale from the new track, including when that means replacing
+      // a recorded time with "unknown". The form says so before the save.
+      duration: summary.duration,
+      gpxPath,
+    },
   }
 }

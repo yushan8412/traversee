@@ -1,11 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import { readSearchResults } from './search'
 
-function feature(name: string, type: string, coordinates: [number, number]) {
+function feature(
+  name: string,
+  type: string,
+  coordinates: [number, number],
+  districts?: string[],
+) {
   return {
     type: 'Feature',
     geometry: { type: 'Point', coordinates },
-    properties: { type, address: { formattedAddress: name } },
+    properties: {
+      type,
+      address: {
+        formattedAddress: name,
+        // Absent entirely for some results — a national park carries only a
+        // country. Shaped as the service actually shapes it: the county is the
+        // last entry, and a county is prefixed by its province.
+        ...(districts ? { adminDistricts: districts.map((shortName) => ({ shortName })) } : {}),
+      },
+    },
   }
 }
 
@@ -15,7 +29,7 @@ describe('readSearchResults', () => {
       features: [feature('Datunshan, 台灣', 'Mountain', [121.5231, 25.1754])],
     })
     expect(results).toEqual([
-      { name: 'Datunshan, 台灣', kind: 'Mountain', lng: 121.5231, lat: 25.1754 },
+      { name: 'Datunshan, 台灣', kind: 'Mountain', lng: 121.5231, lat: 25.1754, city: null },
     ])
   })
 
@@ -52,5 +66,47 @@ describe('readSearchResults', () => {
       feature(`Peak ${i}`, 'Mountain', [121.5 + i * 0.001, 25.1]),
     )
     expect(readSearchResults({ features: many })).toHaveLength(5)
+  })
+})
+
+describe('the county that comes back with a result', () => {
+  it('reads the county off the end of adminDistricts, not the front', () => {
+    // [臺灣省, 宜蘭縣] — reading the front would file every county entry under
+    // a province that is not one of ours.
+    const results = readSearchResults({
+      features: [feature('礁溪, 台灣', 'PopulatedPlace', [121.77, 24.83], ['臺灣省', '宜蘭縣'])],
+    })
+    expect(results[0]!.city).toBe('yilan')
+  })
+
+  it('handles a direct municipality, which repeats itself', () => {
+    const results = readSearchResults({
+      features: [feature('松高路, 台灣', 'Address', [121.567, 25.036], ['臺北市', '臺北市'])],
+    })
+    expect(results[0]!.city).toBe('taipei')
+  })
+
+  it('knows Penghu by the name the service actually uses', () => {
+    const results = readSearchResults({
+      features: [feature('馬公, 台灣', 'PopulatedPlace', [119.566, 23.565], ['澎湖群島'])],
+    })
+    expect(results[0]!.city).toBe('penghu')
+  })
+
+  it('offers the result anyway when the response carries no county', () => {
+    // A national park is exactly this case, and parks are most of what this
+    // site catalogues. The form then asks rather than guessing.
+    const results = readSearchResults({
+      features: [feature('陽明山國家公園, 台灣', 'Park', [121.56, 25.16])],
+    })
+    expect(results).toHaveLength(1)
+    expect(results[0]!.city).toBeNull()
+  })
+
+  it('says nothing rather than something wrong for a district it does not know', () => {
+    const results = readSearchResults({
+      features: [feature('somewhere, 台灣', 'PopulatedPlace', [121.5, 25.0], ['臺灣省'])],
+    })
+    expect(results[0]!.city).toBeNull()
   })
 })

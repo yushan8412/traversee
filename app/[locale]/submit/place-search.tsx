@@ -19,7 +19,19 @@ type State =
  * character name. The delay is not a limitation to design around — a place name
  * is short and you know it before you start typing.
  */
-export function PlaceSearch({ onSelect }: { onSelect: (result: SearchResult) => void }) {
+export function PlaceSearch({
+  onSelect,
+  onUnavailable,
+}: {
+  onSelect: (result: SearchResult) => void
+  /**
+   * Fires when this account may not search at all, as opposed to a search that
+   * merely failed. The endpoint is administrator-only while `canEdit` admits
+   * the submitter, so a contributor correcting their own entry is answered 403
+   * every time — a control that looks live and never works is worse than none.
+   */
+  onUnavailable?: () => void
+}) {
   const t = useTranslations('submit')
   const [query, setQuery] = useState('')
   const [state, setState] = useState<State>({ at: 'idle' })
@@ -32,6 +44,11 @@ export function PlaceSearch({ onSelect }: { onSelect: (result: SearchResult) => 
     setState({ at: 'searching' })
     try {
       const response = await fetch(`/api/place-search?q=${encodeURIComponent(asked)}`)
+      if (response.status === 403) {
+        setState({ at: 'idle' })
+        onUnavailable?.()
+        return
+      }
       if (!response.ok) throw new Error(String(response.status))
       const { results } = (await response.json()) as { results: SearchResult[] }
       setState({ at: 'results', results, query: asked })

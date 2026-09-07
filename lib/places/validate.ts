@@ -1,17 +1,29 @@
 import { isWithinCoverage } from '../gpx/geo'
 import type { Activity, Place } from './types'
 
-export type ValidationCode =
-  | 'needs-a-name'
-  | 'needs-an-activity'
-  | 'route-needs-linestring'
-  | 'route-needs-metrics'
-  | 'spot-needs-point'
-  | 'spot-cannot-have-route-metrics'
-  | 'attributes-outside-activities'
-  | 'difficulty-outside-activities'
-  | 'difficulty-out-of-range'
-  | 'outside-coverage'
+/**
+ * Every way a submission can be refused, as values rather than as a union.
+ *
+ * The same reason `CITIES` and `ACTIVITIES` are arrays: a code with no message
+ * behind it renders to the reader as its own identifier, and nothing in the
+ * type system notices. Deriving the type from the list lets a test walk it
+ * against both message files. `spot-cannot-have-route-metrics` was in exactly
+ * that state until 2026-09-07, when replacing a geometry made it reachable.
+ */
+export const VALIDATION_CODES = [
+  'needs-a-name',
+  'needs-an-activity',
+  'route-needs-linestring',
+  'route-needs-metrics',
+  'spot-needs-point',
+  'spot-cannot-have-route-metrics',
+  'attributes-outside-activities',
+  'difficulty-outside-activities',
+  'difficulty-out-of-range',
+  'outside-coverage',
+] as const
+
+export type ValidationCode = (typeof VALIDATION_CODES)[number]
 
 export interface ValidationError {
   code: ValidationCode

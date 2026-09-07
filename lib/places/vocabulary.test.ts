@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import zh from '../../messages/zh.json'
 import en from '../../messages/en.json'
-import { ACTIVITIES, CITIES } from './types'
+import { ACTIVITIES, AZURE_DISTRICTS, CITIES } from './types'
 import { REGION_CITIES } from './regions'
+import { VALIDATION_CODES } from './validate'
 
 /**
  * The vocabulary has to line up with everything that reads it.
@@ -51,5 +52,37 @@ describe('vocabulary', () => {
   it('carries no label for a city or activity that no longer exists', () => {
     expect(Object.keys(zh.places.city).sort()).toEqual([...CITIES].sort())
     expect(Object.keys(zh.places.activity).sort()).toEqual([...ACTIVITIES].sort())
+  })
+})
+
+describe('AZURE_DISTRICTS', () => {
+  it('can reach every county the site files entries under', () => {
+    // A county missing here is not a crash — the form simply stops offering to
+    // fill it in, silently, for that one county. Which is the kind of gap that
+    // survives for months, so it is a test rather than a hope.
+    const reachable = new Set(Object.values(AZURE_DISTRICTS))
+    for (const city of CITIES) expect(reachable).toContain(city)
+  })
+
+  it('maps to nothing outside CITIES', () => {
+    for (const city of Object.values(AZURE_DISTRICTS)) expect(CITIES).toContain(city)
+  })
+
+  it('does not treat the province as a county', () => {
+    // Counties arrive as [臺灣省, 苗栗縣]. If 臺灣省 ever gained an entry here,
+    // reading the wrong end of that array would start silently succeeding.
+    expect(AZURE_DISTRICTS['臺灣省']).toBeUndefined()
+  })
+})
+
+describe('every reason a submission can be refused has words', () => {
+  // A code with no message renders as its own identifier, and the type checker
+  // cannot see it. `spot-cannot-have-route-metrics` sat unwritten until
+  // replacing a geometry made it reachable.
+  it.each(['zh', 'en'] as const)('is written in %s', (locale) => {
+    const messages = (locale === 'zh' ? zh : en).submit.errors as Record<string, string>
+    for (const code of VALIDATION_CODES) {
+      expect(messages[code], `${code} has no ${locale} message`).toBeTruthy()
+    }
   })
 })

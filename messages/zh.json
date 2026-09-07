@@ -146,7 +146,11 @@
       "photo-too-large": "單張照片上限 {limit} MB。",
       "photo-not-an-image": "有檔案不是可讀取的圖片。",
       "needs-a-name": "請填名稱（中英文至少一個）。",
-      "not-found": "找不到這筆資料。"
+      "not-found": "找不到這筆資料。",
+      "replacement-incomplete": "你選了要更換位置，但還沒指定新的位置。",
+      "spot-cannot-have-route-metrics": "地標不能帶著路線的距離與爬升，那是用來描述一條線的。",
+      "attributes-outside-activities": "有一項細節屬於這個地點沒有選擇的活動類型。",
+      "difficulty-outside-activities": "有一個難度屬於這個地點沒有選擇的活動類型。"
     },
     "kindRoute": "路線（上傳 GPX）",
     "kindSpot": "地點（在地圖上標記）",
@@ -182,7 +186,9 @@
     "summaryZh": "簡介（中文）",
     "summaryEn": "簡介（英文）",
     "descriptionZh": "詳細描述（中文）",
-    "descriptionEn": "詳細描述（英文）"
+    "descriptionEn": "詳細描述（英文）",
+    "confirmCity": "位置變了，請確認縣市",
+    "durationWillBeLost": "這個檔案沒有時間紀錄，原本的 {min}–{max} 分鐘會變成「未知」。"
   },
   "review": {
     "title": "待審核",
@@ -300,13 +306,20 @@
   },
   "edit": {
     "editTitle": "編輯地點",
-    "editNote": "名稱、描述、縣市和活動類型可以修改。表單只顯示目前的語言——要改英文版，切換到 English 再進來編輯。座標和照片目前還不能改。",
+    "editNote": "名稱、描述、縣市、活動類型和位置都可以修改。表單只顯示目前的語言——要改英文版，切換到 English 再進來編輯。照片目前還不能改。",
     "save": "儲存",
     "saving": "儲存中…",
     "saved": "已儲存。",
     "edit": "編輯",
     "cannotEdit": "你沒有編輯這筆資料的權限。",
     "notFound": "找不到這筆資料。",
-    "backToPlace": "回到地點頁"
+    "backToPlace": "回到地點頁",
+    "sectionLocation": "位置",
+    "currentPin": "目前記錄的位置。",
+    "currentTrack": "目前記錄的路線。",
+    "replaceLocation": "更換位置",
+    "replaceTrack": "更換路線",
+    "replaceNote": "更換會丟掉現在的位置資料，不是修改它。也可以在這裡把地標換成路線、或把路線換成地標。",
+    "cancelReplace": "保留現在的位置"
   }
 }

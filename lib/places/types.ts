@@ -41,6 +41,59 @@ export const CITIES = [
 
 export type City = (typeof CITIES)[number]
 
+/**
+ * What Azure's geocoder calls each county, mapped onto what we call it.
+ *
+ * Another hand-written list keyed to `CITIES`, which is exactly the shape that
+ * has broken this codebase before — counties once lived in four files and three
+ * were stale. It cannot be derived, because the strings belong to the geocoder
+ * rather than to us, so the drift is caught by test instead: every county must
+ * be reachable through this table, and nothing may map outside `CITIES`.
+ *
+ * Every value below was read off a live response on 2026-09-07, not taken from
+ * documentation. Three things that only showed up by looking:
+ *
+ * - `adminDistricts` is an array whose **last** entry is the county. Direct
+ *   municipalities repeat themselves — `[臺北市, 臺北市]` — while counties are
+ *   prefixed by the province: `[臺灣省, 苗栗縣]`. Reading the first entry would
+ *   have returned 臺灣省 for all fourteen counties.
+ * - 臺灣省 is therefore deliberately absent, so it maps to nothing.
+ * - Penghu comes back as 澎湖群島, not 澎湖縣.
+ *
+ * 臺 and 台 are both listed where the county name contains one; the service
+ * uses 臺 in these fields but 台 elsewhere in the same response. English forms
+ * are not listed because none were observed — if one ever appears the county
+ * comes back null and the form asks instead of guessing, which is the safe way
+ * to be wrong.
+ */
+export const AZURE_DISTRICTS: Record<string, City> = {
+  臺北市: 'taipei',
+  台北市: 'taipei',
+  新北市: 'newTaipei',
+  基隆市: 'keelung',
+  桃園市: 'taoyuan',
+  新竹市: 'hsinchuCity',
+  新竹縣: 'hsinchuCounty',
+  苗栗縣: 'miaoli',
+  臺中市: 'taichung',
+  台中市: 'taichung',
+  彰化縣: 'changhua',
+  南投縣: 'nantou',
+  雲林縣: 'yunlin',
+  嘉義市: 'chiayiCity',
+  嘉義縣: 'chiayiCounty',
+  臺南市: 'tainan',
+  台南市: 'tainan',
+  高雄市: 'kaohsiung',
+  屏東縣: 'pingtung',
+  宜蘭縣: 'yilan',
+  花蓮縣: 'hualien',
+  臺東縣: 'taitung',
+  台東縣: 'taitung',
+  澎湖縣: 'penghu',
+  澎湖群島: 'penghu',
+}
+
 /** Shape only. A waterfall is a spot with an `approach`, not a third kind. */
 export type Kind = 'route' | 'spot'
 
