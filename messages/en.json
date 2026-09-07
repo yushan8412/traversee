@@ -306,7 +306,7 @@
   },
   "edit": {
     "editTitle": "Edit place",
-    "editNote": "Name, description, county and activities can be changed. The form is in the language of the page — switch to 中文 to edit the Chinese. Coordinates and photos cannot be changed yet.",
+    "editNote": "Name, description, county, activities and location can all be changed. The form is in the language of the page — switch to 中文 to edit the Chinese. Photos cannot be changed yet.",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved.",
