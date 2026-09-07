@@ -5,6 +5,7 @@ import { getPlaceBySlug } from '../../../../../lib/places/repository'
 import { canEdit } from '../../../../../lib/places/editing'
 import { resolveText } from '../../../../../lib/places/text'
 import type { Locale } from '../../../../../i18n/routing'
+import { resolveTileSource } from '../../../../../lib/maps/tile-source'
 import { EditForm } from './edit-form'
 
 export const dynamic = 'force-dynamic'
@@ -59,6 +60,19 @@ export default async function EditPlacePage({
 
       <div className="mt-7 sm:mt-9">
         <EditForm
+          tileSource={resolveTileSource()}
+          current={{
+            kind: place.kind,
+            geometry: place.geometry,
+            startPoint: place.startPoint,
+            route: place.route
+              ? {
+                  distanceKm: place.route.distanceKm,
+                  elevationGainM: place.route.elevationGainM,
+                  duration: place.route.duration,
+                }
+              : null,
+          }}
           place={{
             id: place.id,
             city: place.city,

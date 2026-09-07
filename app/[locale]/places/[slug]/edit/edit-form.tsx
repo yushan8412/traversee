@@ -16,6 +16,8 @@ import {
   SECTION_NOTE,
   SECTION_TITLE,
 } from '../../../submit/field-styles'
+import type { TileSource } from '../../../../../lib/maps/tile-source'
+import { GeometrySection, type CurrentGeometry } from './geometry-section'
 import { editPlace, type EditResult } from './actions'
 
 export interface EditablePlace {
@@ -43,12 +45,28 @@ export interface EditablePlace {
  * would post an empty string for it and applyEdit would faithfully clear it,
  * so editing the Chinese would silently delete the English.
  */
-export function EditForm({ place }: { place: EditablePlace }) {
+export function EditForm({
+  place,
+  current,
+  tileSource,
+}: {
+  place: EditablePlace
+  current: CurrentGeometry
+  tileSource: TileSource
+}) {
   const t = useTranslations('edit')
   const ts = useTranslations('submit')
   const tp = useTranslations('places')
   const locale = useLocale()
   const [result, setResult] = useState<EditResult | null>(null)
+  // The county is controlled here rather than by the select alone, because a
+  // searched place fills it in — Azure names the county in the response the
+  // search has already paid for.
+  const [city, setCity] = useState<City>(place.city)
+  const [cityConfirmed, setCityConfirmed] = useState(true)
+  // A replacement that has been started but has nothing in it yet. Saving would
+  // otherwise discard what the user just asked for, silently.
+  const [awaitingReplacement, setAwaitingReplacement] = useState(false)
 
   async function onSubmit(formData: FormData) {
     try {
@@ -115,6 +133,17 @@ export function EditForm({ place }: { place: EditablePlace }) {
             </div>
           ))}
 
+          <GeometrySection
+            tileSource={tileSource}
+            current={current}
+            onCityGuess={(guessed) => {
+              setCity(guessed)
+              setCityConfirmed(true)
+            }}
+            onMove={() => setCityConfirmed(false)}
+            onBlockingChange={setAwaitingReplacement}
+          />
+
           <div>
             <label className={LABEL} htmlFor="city">
               {ts('city')}
@@ -123,7 +152,11 @@ export function EditForm({ place }: { place: EditablePlace }) {
               <select
                 id="city"
                 name="city"
-                defaultValue={place.city}
+                value={city}
+                onChange={(event) => {
+                  setCity(event.target.value as City)
+                  setCityConfirmed(true)
+                }}
                 className={`${FIELD} appearance-none pr-10`}
               >
                 {CITIES.map((city) => (
@@ -141,6 +174,13 @@ export function EditForm({ place }: { place: EditablePlace }) {
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </div>
+            {/* The county does not follow the pin: `isWithinCoverage` refuses a
+                point outside Taiwan but notices nothing about one in the wrong
+                county, and the county is the Cosmos partition key. Saying the
+                answer may be stale is what can be known for free. */}
+            {!cityConfirmed && (
+              <p className="mt-1.5 text-[13px] text-clayDeep">{ts('confirmCity')}</p>
+            )}
           </div>
 
           <fieldset>
@@ -181,6 +221,7 @@ export function EditForm({ place }: { place: EditablePlace }) {
         <SaveButton
           label={t('save')}
           busyLabel={t('saving')}
+          disabled={awaitingReplacement}
           className={`${BUTTON_PRIMARY} w-full sm:w-auto`}
         />
       </div>

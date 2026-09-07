@@ -3,6 +3,7 @@ import zh from '../../messages/zh.json'
 import en from '../../messages/en.json'
 import { ACTIVITIES, AZURE_DISTRICTS, CITIES } from './types'
 import { REGION_CITIES } from './regions'
+import { VALIDATION_CODES } from './validate'
 
 /**
  * The vocabulary has to line up with everything that reads it.
@@ -71,5 +72,17 @@ describe('AZURE_DISTRICTS', () => {
     // Counties arrive as [臺灣省, 苗栗縣]. If 臺灣省 ever gained an entry here,
     // reading the wrong end of that array would start silently succeeding.
     expect(AZURE_DISTRICTS['臺灣省']).toBeUndefined()
+  })
+})
+
+describe('every reason a submission can be refused has words', () => {
+  // A code with no message renders as its own identifier, and the type checker
+  // cannot see it. `spot-cannot-have-route-metrics` sat unwritten until
+  // replacing a geometry made it reachable.
+  it.each(['zh', 'en'] as const)('is written in %s', (locale) => {
+    const messages = (locale === 'zh' ? zh : en).submit.errors as Record<string, string>
+    for (const code of VALIDATION_CODES) {
+      expect(messages[code], `${code} has no ${locale} message`).toBeTruthy()
+    }
   })
 })
