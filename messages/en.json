@@ -183,7 +183,8 @@
     "summaryEn": "Summary (English)",
     "descriptionZh": "Description (Chinese)",
     "descriptionEn": "Description (English)",
-    "confirmCity": "The location moved — check the county"
+    "confirmCity": "The location moved — check the county",
+    "durationWillBeLost": "This file carries no timestamps, so the recorded {min}–{max} min becomes “unknown”."
   },
   "review": {
     "title": "Awaiting review",

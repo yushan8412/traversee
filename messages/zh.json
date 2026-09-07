@@ -183,7 +183,8 @@
     "summaryEn": "簡介（英文）",
     "descriptionZh": "詳細描述（中文）",
     "descriptionEn": "詳細描述（英文）",
-    "confirmCity": "位置變了，請確認縣市"
+    "confirmCity": "位置變了，請確認縣市",
+    "durationWillBeLost": "這個檔案沒有時間紀錄，原本的 {min}–{max} 分鐘會變成「未知」。"
   },
   "review": {
     "title": "待審核",
