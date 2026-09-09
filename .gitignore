@@ -66,3 +66,4 @@ public/maplibre/
 # replacement. Video is served from Blob Storage instead; see
 # public/hero/PROVENANCE.md for what is expected here and where it comes from.
 public/hero/*.mp4
+public/hero/*.webm
