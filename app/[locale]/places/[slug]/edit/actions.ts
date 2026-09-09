@@ -8,6 +8,9 @@ import { applyEdit, canEdit, type GeometryReplacement } from '../../../../../lib
 import { parseGpx } from '../../../../../lib/gpx/parse'
 import { summariseTrack } from '../../../../../lib/places/route-submission'
 import { PENDING, PUBLIC, removeEverywhere, upload } from '../../../../../lib/storage/blob'
+import { checkUploads, MAX_PHOTOS } from '../../../../../lib/photos/limits'
+import { storePhotos } from '../../../../../lib/photos/store'
+import type { Photo } from '../../../../../lib/places/types'
 import { validateSubmission } from '../../../../../lib/places/validate'
 import { ACTIVITIES, CITIES } from '../../../../../lib/places/types'
 import type { Activity, City } from '../../../../../lib/places/types'
@@ -47,6 +50,9 @@ export async function editPlace(formData: FormData): Promise<EditResult> {
   const replacement = await readReplacement(formData, place.status === 'published')
   if ('error' in replacement) return { ok: false, errors: [replacement.error] }
 
+  const photos = await readPhotos(formData, place)
+  if ('error' in photos) return { ok: false, errors: [photos.error] }
+
   const edited = applyEdit(
     place,
     {
@@ -62,6 +68,7 @@ export async function editPlace(formData: FormData): Promise<EditResult> {
         .map(String)
         .filter((value): value is Activity => ACTIVITIES.includes(value as Activity)),
       ...(replacement.geometry ? { geometry: replacement.geometry } : {}),
+      ...(photos.photos ? { photos: photos.photos } : {}),
     },
     new Date().toISOString(),
   )
@@ -81,6 +88,10 @@ export async function editPlace(formData: FormData): Promise<EditResult> {
   if (replacement.geometry && place.route?.gpxPath) {
     await removeEverywhere(place.route.gpxPath)
   }
+
+  // Same order, same reason: the document no longer references these, so
+  // removing them now cannot leave an entry pointing at a file that is gone.
+  for (const path of photos.dropped ?? []) await removeEverywhere(path)
 
   revalidatePath(`/[locale]/places/${place.slug}`, 'page')
   revalidatePath('/[locale]/places', 'page')
@@ -137,4 +148,63 @@ async function readReplacement(
   await upload(published ? PUBLIC : PENDING, gpxPath, raw, 'application/gpx+xml')
 
   return { geometry: { kind: 'route', summary: summariseTrack(points), gpxPath } }
+}
+
+/**
+ * The photographs the entry keeps, plus any being added.
+ *
+ * The editor announces itself with `photoEditor`, because an absent
+ * `keepPhotos` is ambiguous on its own: it means both "this form had no photo
+ * editor" and "every photograph was removed", and reading it as the first would
+ * make deleting them all do nothing at all.
+ *
+ * **Every kept path is checked against the stored document.** They arrive from
+ * a form, and a path is the address of a file in blob storage — without this a
+ * crafted post could name somebody else's blob and have it kept, or name a real
+ * one and have it deleted. The document is the only authority on which files
+ * this entry owns.
+ */
+async function readPhotos(
+  formData: FormData,
+  place: { id: string; status: string; photos: Photo[] },
+): Promise<{ photos?: Photo[]; dropped?: string[] } | { error: string }> {
+  const added = formData
+    .getAll('photos')
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0)
+
+  if (!formData.has('photoEditor')) return {}
+
+  const asked = new Set(formData.getAll('keepPhotos').map(String))
+  const kept = place.photos.filter((photo) => asked.has(photo.path))
+
+  if (kept.length + added.length > MAX_PHOTOS) return { error: 'too-many-photos' }
+
+  const problem = checkUploads(added)
+  if (problem) return { error: problem }
+
+  let stored: Photo[] = []
+  if (added.length > 0) {
+    try {
+      stored = await storePhotos(place.id, added, {
+        // A published entry's files live in PUBLIC, or they would be invisible
+        // to readers and promoted a second time by the next approval.
+        container: place.status === 'published' ? PUBLIC : PENDING,
+        // A fresh name per photograph rather than its position. Reusing the
+        // index of a deleted photograph hands the new file a path a cache may
+        // still be holding.
+        key: () => randomUUID(),
+      })
+    } catch {
+      // processPhoto throws for anything it cannot decode, whatever the browser
+      // declared the type to be.
+      return { error: 'photo-not-an-image' }
+    }
+  }
+
+  const dropped = place.photos
+    .filter((photo) => !asked.has(photo.path))
+    .flatMap((photo) => [photo.path, photo.thumbPath])
+    .filter((path): path is string => Boolean(path))
+
+  return { photos: [...kept, ...stored], dropped }
 }

@@ -315,7 +315,7 @@
   },
   "edit": {
     "editTitle": "編輯地點",
-    "editNote": "名稱、描述、縣市、活動類型和位置都可以修改。表單只顯示目前的語言——要改英文版，切換到 English 再進來編輯。照片目前還不能改。",
+    "editNote": "名稱、描述、縣市、活動類型、位置和照片都可以修改。表單只顯示目前的語言——要改英文版，切換到 English 再進來編輯。",
     "save": "儲存",
     "saving": "儲存中…",
     "saved": "已儲存。",
@@ -329,6 +329,10 @@
     "replaceLocation": "更換位置",
     "replaceTrack": "更換路線",
     "replaceNote": "更換會丟掉現在的位置資料，不是修改它。也可以在這裡把地標換成路線、或把路線換成地標。",
-    "cancelReplace": "保留現在的位置"
+    "cancelReplace": "保留現在的位置",
+    "sectionPhotos": "照片",
+    "removePhoto": "移除這張照片",
+    "keepPhoto": "還原這張照片",
+    "photosFull": "已經有 {max} 張了，要新增請先移除一張。"
   }
 }

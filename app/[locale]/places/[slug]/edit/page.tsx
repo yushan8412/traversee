@@ -6,6 +6,7 @@ import { canEdit } from '../../../../../lib/places/editing'
 import { resolveText } from '../../../../../lib/places/text'
 import type { Locale } from '../../../../../i18n/routing'
 import { resolveTileSource } from '../../../../../lib/maps/tile-source'
+import { publicPhotoUrl } from '../../../../../lib/photos/public-url'
 import { EditForm } from './edit-form'
 
 export const dynamic = 'force-dynamic'
@@ -73,6 +74,10 @@ export default async function EditPlacePage({
                 }
               : null,
           }}
+          stored={place.photos.map((photo) => ({
+            path: photo.path,
+            src: publicPhotoUrl(photo.thumbPath ?? photo.path),
+          }))}
           place={{
             id: place.id,
             city: place.city,

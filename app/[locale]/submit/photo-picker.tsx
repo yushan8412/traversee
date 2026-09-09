@@ -18,9 +18,14 @@ import { BUTTON_QUIET, HINT, OPTIONAL, SECTION_NOTE, SECTION_TITLE } from './fie
 export function PhotoPicker({
   photos,
   onChange,
+  max = MAX_PHOTOS,
+  heading = true,
 }: {
   photos: File[]
   onChange: (photos: File[]) => void
+  /** How many more may be added. The edit page counts what is already stored. */
+  max?: number
+  heading?: boolean
 }) {
   const t = useTranslations('submit')
   const [previews, setPreviews] = useState<string[]>([])
@@ -33,14 +38,18 @@ export function PhotoPicker({
     return () => urls.forEach(URL.revokeObjectURL)
   }, [photos])
 
-  const full = photos.length >= MAX_PHOTOS
+  const full = photos.length >= max
 
   return (
     <div>
-      <h2 className={SECTION_TITLE}>
-        {t('photos')} <span className={OPTIONAL}>({t('optional')})</span>
-      </h2>
-      <p className={SECTION_NOTE}>{t('photosHint', LIMIT_MESSAGE_VALUES)}</p>
+      {heading && (
+        <>
+          <h2 className={SECTION_TITLE}>
+            {t('photos')} <span className={OPTIONAL}>({t('optional')})</span>
+          </h2>
+          <p className={SECTION_NOTE}>{t('photosHint', LIMIT_MESSAGE_VALUES)}</p>
+        </>
+      )}
 
       {photos.length > 0 && (
         <ul className="mb-4 mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -79,7 +88,7 @@ export function PhotoPicker({
         className="peer sr-only"
         onChange={(event) => {
           const picked = Array.from(event.target.files ?? [])
-          onChange(acceptPhotos(photos, picked, MAX_PHOTOS))
+          onChange(acceptPhotos(photos, picked, max))
           // The picker always opens empty, so without this the same photo
           // cannot be chosen again after it has been removed.
           event.target.value = ''
@@ -103,7 +112,7 @@ export function PhotoPicker({
 
       {photos.length > 0 && (
         <p className={`${HINT} tabular-nums`}>
-          {photos.length} / {MAX_PHOTOS}
+          {photos.length} / {max}
         </p>
       )}
     </div>

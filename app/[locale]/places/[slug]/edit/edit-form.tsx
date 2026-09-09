@@ -18,6 +18,9 @@ import {
 } from '../../../submit/field-styles'
 import type { TileSource } from '../../../../../lib/maps/tile-source'
 import { GeometrySection, type CurrentGeometry } from './geometry-section'
+import { PhotoEditor, type StoredPhoto } from './photo-editor'
+import { shrinkPhotos } from '../../../../../lib/photos/downscale'
+import { attachPhotos } from '../../../../../lib/photos/selection'
 import { editPlace, type EditResult } from './actions'
 
 export interface EditablePlace {
@@ -48,10 +51,12 @@ export interface EditablePlace {
 export function EditForm({
   place,
   current,
+  stored,
   tileSource,
 }: {
   place: EditablePlace
   current: CurrentGeometry
+  stored: StoredPhoto[]
   tileSource: TileSource
 }) {
   const t = useTranslations('edit')
@@ -67,10 +72,16 @@ export function EditForm({
   // A replacement that has been started but has nothing in it yet. Saving would
   // otherwise discard what the user just asked for, silently.
   const [awaitingReplacement, setAwaitingReplacement] = useState(false)
+  // Photographs being added. Held here rather than in the file input, which
+  // cannot be pre-filled and whose list cannot be edited.
+  const [added, setAdded] = useState<File[]>([])
 
   async function onSubmit(formData: FormData) {
     try {
-      setResult(await editPlace(formData))
+      // Shrunk in the browser first, exactly as the submission form does: the
+      // server publishes at a 1600px long edge, so sending a 34 MB original is
+      // almost entirely waste on a phone connection.
+      setResult(await editPlace(await shrinkPhotos(attachPhotos(formData, added, 'photos'))))
     } catch {
       setResult({ ok: false, errors: ['unknown'] })
     }
@@ -142,6 +153,13 @@ export function EditForm({
             }}
             onMove={() => setCityConfirmed(false)}
             onBlockingChange={setAwaitingReplacement}
+          />
+
+          <PhotoEditor
+            stored={stored}
+            added={added}
+            onKeptChange={() => undefined}
+            onAddedChange={setAdded}
           />
 
           <div>
