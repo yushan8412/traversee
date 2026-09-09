@@ -84,7 +84,16 @@
     "map": {
       "overview": "Overview map",
       "unavailable": "The map could not be loaded."
-    }
+    },
+    "noDescription": "Nobody has written about this place yet.",
+    "whereItIs": "Where it is",
+    "aboutThisPlace": "About this place",
+    "openPhoto": "Open this photograph",
+    "closePhoto": "Close",
+    "previousPhoto": "Previous",
+    "nextPhoto": "Next",
+    "photographs": "Photographs",
+    "photoCount": "{count, plural, one {# photograph} other {# photographs}}"
   },
   "explore": {
     "title": "Explore the map",
@@ -306,7 +315,7 @@
   },
   "edit": {
     "editTitle": "Edit place",
-    "editNote": "Name, description, county, activities and location can all be changed. The form is in the language of the page — switch to 中文 to edit the Chinese. Photos cannot be changed yet.",
+    "editNote": "Name, description, county, activities, location and photographs can all be changed. The form is in the language of the page — switch to 中文 to edit the Chinese.",
     "save": "Save",
     "saving": "Saving…",
     "saved": "Saved.",
@@ -320,6 +329,10 @@
     "replaceLocation": "Replace location",
     "replaceTrack": "Replace track",
     "replaceNote": "Replacing discards the current location rather than adjusting it. A spot can be replaced by a track here, and a route by a point.",
-    "cancelReplace": "Keep what is there"
+    "cancelReplace": "Keep what is there",
+    "sectionPhotos": "Photographs",
+    "removePhoto": "Remove this photograph",
+    "keepPhoto": "Put this photograph back",
+    "photosFull": "This entry already has {max}. Remove one to add another."
   }
 }

@@ -1,3 +1,4 @@
+
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { auth } from '../../../../auth'
 import { notFound } from 'next/navigation'
@@ -5,15 +6,92 @@ import { Link } from '../../../../i18n/navigation'
 import type { Locale } from '../../../../i18n/routing'
 import { getPublishedPlaceBySlug } from '../../../../lib/places/repository'
 import { resolveText } from '../../../../lib/places/text'
-import type { RouteMetrics } from '../../../../lib/places/types'
+import type { Activity, RouteMetrics } from '../../../../lib/places/types'
 import { PlaceMap } from '../place-map'
 import { resolveTileSource } from '../../../../lib/maps/tile-source'
 import { PlacePhoto } from '../photo'
 import { standInPhotos } from '../../../../lib/places/stand-in-photos'
 import { TranslatedText } from '../translated-text'
 import { canEdit } from '../../../../lib/places/editing'
+import { DifficultyDots } from '../../place-card'
+import { ActivityIcon } from '../../activity-icon'
+import { PlaceGallery, PhotoStrip, ZoomTrigger, type GalleryShot } from '../photo-gallery'
+import { publicPhotoUrl } from '../../../../lib/photos/public-url'
 
 export const dynamic = 'force-dynamic'
+
+/** The reading measure. The photograph is not bound by it. */
+const COLUMN = 'mx-auto w-full max-w-3xl px-5 sm:px-6'
+
+/**
+ * Wider than the text, narrower than the window. The map wants room — it is
+ * the answer to "where is this" — but running it edge to edge made it read as
+ * a band the page had been cut in half by rather than as part of the page.
+ */
+const WIDE = 'mx-auto w-full max-w-6xl px-5 sm:px-6'
+
+/**
+ * A section's name, in both languages, in the pattern the home page set.
+ *
+ * A small tracked kicker in the UI face, then a display line at 2–2.75rem: the
+ * page's own language in ink, the other riding beside it in the brand green.
+ * The site's positioning is one bilingual document rather than two translated
+ * ones, so the pairing is the heading rather than an ornament on it.
+ *
+ * **The emphasis follows the script, not the role.** English is set italic and
+ * Chinese is letter-spaced wherever each one lands — the home page's `emphasis`
+ * rule applied to the writing system rather than to which half happens to be
+ * first. Keying it to the role instead left English upright on the English site
+ * and italic on the Chinese one, and upright Palatino at 2.75rem is the version
+ * that reads as a default. Latin and Chinese simply want different treatment at
+ * this size, and which language the reader chose does not change that.
+ */
+function SectionHeading({
+  kicker,
+  zh,
+  en,
+  locale,
+}: {
+  kicker?: string
+  zh: string
+  en: string
+  locale: string
+}) {
+  const chinese = (lead: boolean) => (
+    <span
+      key="zh"
+      lang="zh-Hant"
+      className={lead ? 'tracking-[-0.01em]' : 'tracking-[0.14em] text-brand'}
+    >
+      {zh}
+    </span>
+  )
+
+  const english = (lead: boolean) => (
+    <span key="en" lang="en" className={`italic ${lead ? '' : 'text-brand'}`}>
+      {en}
+    </span>
+  )
+
+  const leadsInChinese = locale === 'zh'
+
+  return (
+    <header className="mb-6 sm:mb-8">
+      {kicker && (
+        <span className="block text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
+          {kicker}
+        </span>
+      )}
+      <h2
+        className="mt-3 font-[family-name:var(--font-display)] text-[2rem] font-normal
+          leading-[1.15] tracking-[-0.01em] sm:text-[2.75rem]"
+      >
+        {leadsInChinese ? chinese(true) : english(true)}{' '}
+        {leadsInChinese ? english(false) : chinese(false)}
+      </h2>
+    </header>
+  )
+}
 
 export default async function PlacePage({
   params,
@@ -27,6 +105,11 @@ export default async function PlacePage({
   if (!place) notFound()
 
   const t = await getTranslations('places')
+  // Both languages by name. A heading carries the pair, and neither half is
+  // invented here — they are the same catalogue entries the rest of the site
+  // reads from.
+  const tzh = await getTranslations({ locale: 'zh', namespace: 'places' })
+  const ten = await getTranslations({ locale: 'en', namespace: 'places' })
   const te = await getTranslations('edit')
   const session = await auth()
   const mayEdit = canEdit(
@@ -36,158 +119,366 @@ export default async function PlacePage({
   const name = resolveText(place.name, locale as Locale)
   const summary = resolveText(place.summary, locale as Locale)
   const description = resolveText(place.description, locale as Locale)
+  const title = name?.value ?? place.slug
 
-  const metrics = (m: RouteMetrics) => (
-    <dl className="grid grid-cols-[9rem_1fr] gap-y-1 text-sm">
-      <dt className="text-dim">{t('metrics.distance')}</dt>
-      <dd>{t('metrics.kilometres', { value: m.distanceKm })}</dd>
-      <dt className="text-dim">{t('metrics.elevationGain')}</dt>
-      <dd>{t('metrics.metres', { value: m.elevationGainM })}</dd>
-      <dt className="text-dim">{t('metrics.duration')}</dt>
-      <dd>
-        {t('metrics.minutes', {
-          min: m.duration.minMinutes,
-          max: m.duration.maxMinutes,
-        })}
-        <span className="ml-2 text-xs text-dim">{t(`basis.${m.duration.basis}` as never)}</span>
-      </dd>
-    </dl>
-  )
+  const activities = place.activities.map((activity) => ({
+    key: activity,
+    label: t(`activity.${activity}` as never) as string,
+  }))
+
+  // Borrowed photography only where the entry has none of its own, never mixed
+  // with the author's, and always credited because the licences require it.
+  const own = place.photos
+  const standIns = own.length === 0 ? (standInPhotos[place.slug] ?? []) : []
+  const cover = own[0]
+
+  // One list for every picture on the page, in the order they appear, so the
+  // gallery's indices and what the reader sees cannot drift apart. The cover is
+  // index 0 and is reachable from the hero as well as from the strip.
+  const shots: GalleryShot[] = [
+    ...own.map((photo) => ({
+      src: publicPhotoUrl(photo.path),
+      width: photo.width,
+      height: photo.height,
+      credit: null,
+    })),
+    ...standIns.map((photo) => ({
+      src: photo.path,
+      width: 1600,
+      height: 1200,
+      credit: photo.credit,
+    })),
+  ]
+
+  // The highest-graded activity, so the hero carries one grade rather than a
+  // list. Camping, surfing, diving and waterfalls have no scale defined at all
+  // — deliberately — so most places carry none.
+  const [lng, lat] = place.startPoint.coordinates
+  const coordinates = `${lat.toFixed(4)} · ${lng.toFixed(4)}`
+
+  const graded = Object.entries(place.difficulty) as [Activity, number][]
+  const topGrade = graded.sort((a, b) => b[1] - a[1])[0]
 
   return (
-    <main className="mx-auto max-w-3xl px-6 pb-20 pt-10">
-      <Link href="/places" className="text-sm text-accent hover:underline">
-        ← {t('backToList')}
-      </Link>
-
-      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {name ? <TranslatedText text={name} as="span" /> : place.slug}
-        </h1>
-        {/* Only for whoever may actually save the change; an edit link that
-            leads to a refusal is worse than no link. */}
-        {mayEdit && (
-          <Link
-            href={`/places/${place.slug}/edit`}
-            className="text-[13px] text-dim no-underline hover:text-ink"
+    <PlaceGallery shots={shots} alt={title}>
+      <main className="pb-24">
+      {/* ── The photograph, and the name on it ───────────────────────────────
+          The index leads with the picture and so does this, because the card
+          that brought the reader here was a photograph and landing on a page of
+          grey text reads as arriving somewhere else. */}
+      <header className="relative isolate overflow-hidden bg-panel">
+        {shots[0] && (
+          <ZoomTrigger
+            index={0}
+            label={t('openPhoto')}
+            className="absolute inset-0 h-full w-full cursor-zoom-in"
           >
-            {te('edit')}
-          </Link>
+            {cover ? (
+              <PlacePhoto
+                photo={cover}
+                alt={title}
+                priority
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- already WebP at a bounded size
+              <img
+                src={shots[0].src}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+          </ZoomTrigger>
         )}
+
+        {/* The scrim is what makes white type legible over an unknown
+            photograph. Without a picture there is nothing to darken, so the
+            name is set in ink on the panel instead. */}
+        {(cover || standIns[0]) && (
+          <>
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/25 to-ink/5"
+            />
+            {/* A second, shorter scrim at the top. The first one fades to 5%
+                there, which left the back and edit links sitting on whatever
+                the photograph happened to be — bright rock, in the first one
+                tested — well under the 4.5:1 they need. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-ink/55 to-transparent"
+            />
+          </>
+        )}
+
+        <div
+          className={`${COLUMN} relative flex min-h-[19rem] flex-col justify-end pb-7 pt-24
+            sm:min-h-[24rem] sm:pb-9`}
+        >
+          <div className="absolute inset-x-5 top-4 flex items-center justify-between sm:inset-x-6">
+            <Link
+              href="/places"
+              className={`inline-flex min-h-11 items-center text-[13px] no-underline ${
+                cover || standIns[0] ? 'text-white/85 hover:text-white' : 'text-dim hover:text-ink'
+              }`}
+            >
+              ← {t('backToList')}
+            </Link>
+            {/* Only for whoever may actually save the change; an edit link that
+                leads to a refusal is worse than no link. */}
+            {mayEdit && (
+              <Link
+                href={`/places/${place.slug}/edit`}
+                className={`inline-flex min-h-11 items-center text-[13px] no-underline ${
+                  cover || standIns[0] ? 'text-white/85 hover:text-white' : 'text-dim hover:text-ink'
+                }`}
+              >
+                {te('edit')}
+              </Link>
+            )}
+          </div>
+
+          <h1
+            className={`font-[family-name:var(--font-display)] text-[30px] leading-tight
+              tracking-tight sm:text-[44px] ${
+                cover || standIns[0] ? 'text-white' : 'text-ink'
+              }`}
+          >
+            {name ? <TranslatedText text={name} as="span" /> : place.slug}
+          </h1>
+
+          <p
+            className={`mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] ${
+              cover || standIns[0] ? 'text-white/80' : 'text-dim'
+            }`}
+          >
+            <span>{t(`city.${place.city}`)}</span>
+            {activities.map((activity) => (
+              <span key={activity.key} className="flex items-center gap-1.5">
+                <span aria-hidden="true" className="opacity-50">
+                  ·
+                </span>
+                <ActivityIcon activity={activity.key} size={15} />
+                {activity.label}
+              </span>
+            ))}
+          </p>
+
+          {/* Borrowed photography carries its credit on the picture, because the
+              licence requires it and because nobody should mistake a stand-in
+              for the catalogue's own work. Its own backing, since a credit that
+              lands on bright sky is not a credit. */}
+          {standIns[0]?.credit && (
+            <span
+              className="absolute bottom-2 right-5 rounded bg-ink/55 px-1.5 py-0.5 text-[10px]
+                text-white/90 sm:right-6"
+            >
+              {standIns[0].credit}
+            </span>
+          )}
+        </div>
+
+      </header>
+
+      {/* ── What a reader deciding at 6am wants first ────────────────────────
+          These three numbers used to sit in a grey box at the foot of the page,
+          the least designed element carrying the most-wanted facts. A spot with
+          nothing to measure gets no bar at all rather than an empty one. */}
+      {place.route && <DecisionBar metrics={place.route} label={t} />}
+
+      <div className={`${COLUMN} mt-8 sm:mt-10`}>
+        {/* No row rather than an empty one — the same rule the index card
+            follows, because most places carry no grade at all. */}
+        {topGrade && (
+          <div className="border-b border-line pb-4">
+            <DifficultyDots
+              difficulty={{
+                label: `${t(`activity.${topGrade[0]}` as never)} · ${t('metrics.difficultyValue', { value: topGrade[1] })}`,
+                value: topGrade[1],
+              }}
+            />
+          </div>
+        )}
+
+        {/* ── The prose, and saying so when there is none ─────────────────── */}
+        <div className="mt-7">
+          {summary && (
+            <TranslatedText
+              text={summary}
+              className="text-[19px] leading-relaxed text-ink sm:text-[21px]"
+            />
+          )}
+
+          {description ? (
+            <div className={summary ? 'mt-5' : ''}>
+              {!description.translated && (
+                <p className="mb-2 text-xs text-dim">{t('notTranslatedHint')}</p>
+              )}
+              <TranslatedText
+                text={description}
+                className="whitespace-pre-line leading-relaxed text-ink/90"
+                showMarker={false}
+              />
+            </div>
+          ) : (
+            // Absence is displayed, not hidden — a page that simply omits the
+            // description makes the catalogue look fuller than it is.
+            !summary && <p className="text-[15px] text-dim">{t('noDescription')}</p>
+          )}
+        </div>
       </div>
 
-      <p className="mt-1 flex flex-wrap gap-x-3 text-xs text-dim">
-        <span>{t(`city.${place.city}`)}</span>
-        <span>{t(`kind.${place.kind}`)}</span>
-        {place.activities.map((activity) => (
-          <span key={activity}>{t(`activity.${activity}`)}</span>
-        ))}
-      </p>
-
-      {summary && <TranslatedText text={summary} className="mt-4 text-lg" />}
-
-      {place.photos.length > 0 ? (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {place.photos.map((photo) => (
-            <PlacePhoto
-              key={photo.path}
-              photo={photo}
-              alt={name?.value ?? place.slug}
-              className="h-40 w-full rounded border border-line object-cover"
-            />
-          ))}
-        </div>
-      ) : (
-        // Stand-ins, on the same terms as everywhere else: only where the entry
-        // has none of its own, each credited because the licences require it,
-        // and never mixed with the author's. Without this, a card on the
-        // explore map shows a photograph and the page it links to shows none.
-        (standInPhotos[place.slug] ?? []).length > 0 && (
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {standInPhotos[place.slug]!.map((photo) => (
-              <figure key={photo.path} className="relative overflow-hidden rounded border border-line">
-                {/* eslint-disable-next-line @next/next/no-img-element -- already WebP at a bounded size */}
-                <img src={photo.path} alt="" className="h-40 w-full object-cover" />
-                <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent px-2 pb-1 pt-4 text-[10px] leading-tight text-white/85">
-                  {photo.credit}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        )
-      )}
-
-      {/* The detail query returns the whole document, so the simplified track is
-          already in hand and drawing it costs nothing extra. */}
-      <PlaceMap
-        tileSource={resolveTileSource()}
-        markers={[{ slug: place.slug, name: name?.value ?? place.slug, point: place.startPoint }]}
-        geometry={place.geometry}
-        className="mt-6 h-96 w-full"
-      />
-
-      {Object.keys(place.difficulty).length > 0 && (
-        <section className="mt-6">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-widest text-dim">
-            {t('metrics.difficulty')}
-          </h2>
-          <ul className="text-sm">
-            {Object.entries(place.difficulty).map(([activity, level]) => (
-              <li key={activity}>
-                {t(`activity.${activity}` as never)} — {t('metrics.difficultyValue', { value: level })}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {place.route && (
-        <section className="mt-6 rounded border border-line bg-panel p-5">
-          {metrics(place.route)}
-        </section>
-      )}
-
-      {place.approach && (
-        <section className="mt-6 rounded border border-line bg-panel p-5">
-          <h2 className="mb-1 text-xs font-semibold uppercase tracking-widest text-dim">
-            {t('approach.title')}
-          </h2>
-          <p className="mb-3 text-sm text-dim">{t('approach.note')}</p>
-          {metrics(place.approach)}
-        </section>
-      )}
-
-      {description && (
-        <section className="mt-8">
-          {!description.translated && (
-            <p className="mb-2 text-xs text-dim">{t('notTranslatedHint')}</p>
-          )}
-          <TranslatedText
-            text={description}
-            className="whitespace-pre-line"
-            showMarker={false}
+      {/* ── Where it is ──────────────────────────────────────────────────────
+          Wider and taller than the old h-96 inside a 768px column. The detail
+          query returns the whole document, so the simplified track is already
+          in hand and drawing it costs nothing extra. */}
+      <section className={`${WIDE} mt-10 sm:mt-12`}>
+        <SectionHeading
+          kicker={coordinates}
+          zh={tzh('whereItIs')}
+          en={ten('whereItIs')}
+          locale={locale}
+        />
+        {/* Framed like everything else the site puts a picture in, rather than
+            bleeding to both edges. */}
+        <div className="overflow-hidden rounded-2xl border border-line">
+          <PlaceMap
+            tileSource={resolveTileSource()}
+            markers={[{ slug: place.slug, name: title, point: place.startPoint }]}
+            geometry={place.geometry}
+            className="h-[22rem] w-full sm:h-[30rem]"
           />
+        </div>
+      </section>
+
+      {/* ── The photographs ─────────────────────────────────────────────────
+          A strip you scroll rather than a grid you scan, with the middle one
+          enlarged. Every picture opens full-screen, where it is shown
+          uncropped — the strip has to crop to a common shape, and the reason to
+          open a photograph is to see what the crop took away. */}
+      {shots.length > 1 && (
+        <section className={`${WIDE} mt-10 sm:mt-12`}>
+          <SectionHeading
+            kicker={t('photoCount', { count: shots.length })}
+            zh={tzh('photographs')}
+            en={ten('photographs')}
+            locale={locale}
+          />
+          <PhotoStrip shots={shots} alt={title} />
         </section>
       )}
 
-      {Object.keys(place.attributes).length > 0 && (
-        <section className="mt-8">
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-widest text-dim">
-            {t('attributes.title')}
-          </h2>
-          {Object.entries(place.attributes).map(([activity, values]) => (
-            <div key={activity} className="mb-4">
-              <h3 className="text-sm font-medium">{t(`activity.${activity}` as never)}</h3>
-              <dl className="grid grid-cols-[9rem_1fr] gap-y-1 text-sm">
-                {Object.entries(values ?? {}).map(([key, value]) => (
-                  <ReadOnlyAttribute key={key} name={key} value={value} />
-                ))}
-              </dl>
+      {/* ── Supporting detail ───────────────────────────────────────────────── */}
+      {(place.approach || Object.keys(place.attributes).length > 0) && (
+        <section className={`${WIDE} mt-10 sm:mt-12`}>
+          <SectionHeading
+            zh={tzh('aboutThisPlace')}
+            en={ten('aboutThisPlace')}
+            locale={locale}
+          />
+          <div className="space-y-4">
+
+          {place.approach && (
+            <div className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
+              <h3 className="text-[15px] font-medium text-ink">{t('approach.title')}</h3>
+              <p className="mt-1 text-[13px] text-dim">{t('approach.note')}</p>
+              <div className="mt-4">
+                <Figures metrics={place.approach} label={t} compact />
+              </div>
             </div>
-          ))}
+          )}
+
+          {Object.keys(place.attributes).length > 0 && (
+            <div className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
+              {Object.entries(place.attributes).map(([activity, values]) => (
+                <div key={activity} className="mb-4 last:mb-0">
+                  <h3 className="text-[15px] font-medium text-ink">
+                    {t(`activity.${activity}` as never)}
+                  </h3>
+                  <dl className="mt-2 grid grid-cols-[9rem_1fr] gap-y-1 text-sm">
+                    {Object.entries(values ?? {}).map(([key, value]) => (
+                      <ReadOnlyAttribute key={key} name={key} value={value} />
+                    ))}
+                  </dl>
+                </div>
+              ))}
+            </div>
+          )}
+          </div>
         </section>
       )}
-    </main>
+      </main>
+    </PlaceGallery>
+  )
+}
+
+type Label = Awaited<ReturnType<typeof getTranslations<'places'>>>
+
+/**
+ * Distance, ascent and time, at the size their importance deserves.
+ *
+ * Full-width on its own ground rather than a card, so it reads as part of the
+ * page's spine instead of an aside. `tabular-nums` because three figures side
+ * by side that shift as digits change look like they are still loading.
+ */
+function DecisionBar({ metrics, label }: { metrics: RouteMetrics; label: Label }) {
+  return (
+    <div className="mt-0 border-b border-line bg-paper">
+      <div className={`${COLUMN} py-6 sm:py-7`}>
+        <Figures metrics={metrics} label={label} />
+      </div>
+    </div>
+  )
+}
+
+function Figures({
+  metrics,
+  label,
+  compact = false,
+}: {
+  metrics: RouteMetrics
+  label: Label
+  compact?: boolean
+}) {
+  const size = compact ? 'text-[17px]' : 'text-[22px] sm:text-[26px]'
+
+  return (
+    <dl className="flex flex-wrap gap-x-10 gap-y-5 sm:gap-x-14">
+      <div>
+        <dt className="text-[12px] uppercase tracking-wider text-dim">
+          {label('metrics.distance')}
+        </dt>
+        <dd className={`mt-1 font-[family-name:var(--font-display)] tabular-nums ${size}`}>
+          {label('metrics.kilometres', { value: metrics.distanceKm })}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-[12px] uppercase tracking-wider text-dim">
+          {label('metrics.elevationGain')}
+        </dt>
+        <dd className={`mt-1 font-[family-name:var(--font-display)] tabular-nums ${size}`}>
+          {label('metrics.metres', { value: metrics.elevationGainM })}
+        </dd>
+      </div>
+
+      <div>
+        <dt className="text-[12px] uppercase tracking-wider text-dim">
+          {label('metrics.duration')}
+        </dt>
+        <dd className={`mt-1 font-[family-name:var(--font-display)] tabular-nums ${size}`}>
+          {label('metrics.minutes', {
+            min: metrics.duration.minMinutes,
+            max: metrics.duration.maxMinutes,
+          })}
+        </dd>
+        {/* Whether this was measured or guessed, next to the number it
+            qualifies rather than in a legend somewhere else. */}
+        <dd className="mt-0.5 text-[12px] text-dim">
+          {label(`basis.${metrics.duration.basis}` as never)}
+        </dd>
+      </div>
+    </dl>
   )
 }
 

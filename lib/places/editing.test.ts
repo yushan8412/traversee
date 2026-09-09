@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { canEdit, applyEdit, type PlaceEdit } from './editing'
 import type { TrackSummary } from './route-submission'
+import type { Photo } from './types'
 import type { Place } from './types'
 
 const place = {
@@ -239,5 +240,75 @@ describe('applyEdit with a geometry replacement', () => {
     expect(after.status).toBe(before.status)
     expect(after.submittedBy).toBe(before.submittedBy)
     expect(after.photos).toEqual(before.photos)
+  })
+})
+
+describe('applyEdit with photographs', () => {
+  const shot = (name: string): Photo => ({
+    path: `photos/p1/${name}.webp`,
+    thumbPath: `photos/p1/${name}-thumb.webp`,
+    width: 1600,
+    height: 1200,
+  })
+
+  const withPhotos = (photos: Photo[], coverPhotoIndex: number) =>
+    ({ ...spotPlace(), photos, coverPhotoIndex }) as unknown as Place
+
+  it('leaves the photographs alone when none are given', () => {
+    const before = withPhotos([shot('a'), shot('b')], 1)
+    const after = applyEdit(before, edit, NOW)
+    expect(after.photos).toEqual(before.photos)
+    expect(after.coverPhotoIndex).toBe(1)
+  })
+
+  it('removes the ones that were dropped', () => {
+    const after = applyEdit(
+      withPhotos([shot('a'), shot('b'), shot('c')], 0),
+      { ...edit, photos: [shot('a'), shot('c')] },
+      NOW,
+    )
+    expect(after.photos.map((p) => p.path)).toEqual(['photos/p1/a.webp', 'photos/p1/c.webp'])
+  })
+
+  it('keeps the cover on the same photograph when something before it goes', () => {
+    // Stored as a position, so dropping the first would otherwise hand the
+    // cover to a different picture without anybody asking for that.
+    const after = applyEdit(
+      withPhotos([shot('a'), shot('b'), shot('c')], 2),
+      { ...edit, photos: [shot('b'), shot('c')] },
+      NOW,
+    )
+    expect(after.coverPhotoIndex).toBe(1)
+    expect(after.photos[after.coverPhotoIndex]!.path).toBe('photos/p1/c.webp')
+  })
+
+  it('falls back to the first when the cover itself is removed', () => {
+    const after = applyEdit(
+      withPhotos([shot('a'), shot('b')], 1),
+      { ...edit, photos: [shot('a')] },
+      NOW,
+    )
+    expect(after.coverPhotoIndex).toBe(0)
+  })
+
+  it('never leaves the cover pointing past the end of the list', () => {
+    // A card whose cover index is out of range shows no picture at all.
+    const after = applyEdit(
+      withPhotos([shot('a'), shot('b'), shot('c')], 2),
+      { ...edit, photos: [] },
+      NOW,
+    )
+    expect(after.photos).toEqual([])
+    expect(after.coverPhotoIndex).toBe(0)
+  })
+
+  it('adds new photographs after the ones that were kept', () => {
+    const after = applyEdit(
+      withPhotos([shot('a')], 0),
+      { ...edit, photos: [shot('a'), shot('new')] },
+      NOW,
+    )
+    expect(after.photos.map((p) => p.path)).toEqual(['photos/p1/a.webp', 'photos/p1/new.webp'])
+    expect(after.coverPhotoIndex).toBe(0)
   })
 })

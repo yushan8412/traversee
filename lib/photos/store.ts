@@ -2,7 +2,7 @@ import { processPhoto } from './process'
 import { needsHeicDecoding } from './heic'
 import { heicToJpeg } from './decode-heic'
 import { photoPaths } from './paths'
-import { uploadToPending } from '../storage/blob'
+import { PENDING, upload } from '../storage/blob'
 import type { Photo } from '../places/types'
 
 /**
@@ -13,11 +13,18 @@ import type { Photo } from '../places/types'
  * the file, and publishing those beside a submitter's name discloses where a
  * person was.
  *
- * Everything lands in `pending` regardless of who submitted it. Approval is what
- * makes a file publicly readable, so an image is never reachable before somebody
- * has looked at it.
+ * A submission's photographs land in `pending` regardless of who sent them:
+ * approval is what makes a file publicly readable, so an image is never
+ * reachable before somebody has looked at it. A photograph added to an entry
+ * that is *already published* goes straight to `public`, because `filesOf` and
+ * the promote/demote pair assume a file sits in the container its entry's
+ * status implies.
  */
-export async function storePhotos(placeId: string, files: File[]): Promise<Photo[]> {
+export async function storePhotos(
+  placeId: string,
+  files: File[],
+  { container = PENDING, key }: { container?: string; key?: (index: number) => string } = {},
+): Promise<Photo[]> {
   const stored: Photo[] = []
 
   for (const [index, file] of files.entries()) {
@@ -32,10 +39,10 @@ export async function storePhotos(placeId: string, files: File[]): Promise<Photo
     // Throws for anything that is not a decodable image, which rejects the
     // submission rather than storing a file nothing can render.
     const { full, thumb, width, height } = await processPhoto(decodable)
-    const { path, thumbPath } = photoPaths(placeId, index)
+    const { path, thumbPath } = photoPaths(placeId, key ? key(index) : index)
 
-    await uploadToPending(path, full, 'image/webp')
-    await uploadToPending(thumbPath, thumb, 'image/webp')
+    await upload(container, path, full, 'image/webp')
+    await upload(container, thumbPath, thumb, 'image/webp')
 
     stored.push({ path, thumbPath, width, height })
   }

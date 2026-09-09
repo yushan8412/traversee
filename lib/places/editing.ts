@@ -1,4 +1,4 @@
-import type { Activity, City, Place, Point } from './types'
+import type { Activity, City, Photo, Place, Point } from './types'
 import type { TrackSummary } from './route-submission'
 
 /**
@@ -37,6 +37,11 @@ export interface PlaceEdit {
   city: City
   activities: Activity[]
   geometry?: GeometryReplacement
+  /**
+   * The entry's photographs after the edit — those kept, then those added.
+   * Absent leaves them alone, which is every edit that only touches words.
+   */
+  photos?: Photo[]
 }
 
 export interface Editor {
@@ -72,8 +77,7 @@ const orNull = (value: string) => {
  * touch are the dangerous ones. `status` belongs to the reviewer — an edit that
  * changed it would make correcting a typo a way to publish past review, or to
  * quietly take a place off the site. `slug` stays because it is already a URL
- * somebody may have shared. `submittedBy`, `photos` and the geometry are not
- * on this form at all.
+ * somebody may have shared. `submittedBy` is not on this form at all.
  */
 export function applyEdit(place: Place, edit: PlaceEdit, now: string): Place {
   const edited: Place = {
@@ -86,7 +90,29 @@ export function applyEdit(place: Place, edit: PlaceEdit, now: string): Place {
     updatedAt: now,
   }
 
-  return edit.geometry ? replaceGeometry(edited, edit.geometry) : edited
+  const withPhotos = edit.photos ? replacePhotos(edited, edit.photos) : edited
+
+  return edit.geometry ? replaceGeometry(withPhotos, edit.geometry) : withPhotos
+}
+
+/**
+ * The photographs an entry keeps, and which of them is its cover.
+ *
+ * The cover is stored as a position, so removing a photograph before it would
+ * silently re-point the cover at a different picture — or past the end of the
+ * list, which is how a card ends up with no image at all. Following the cover
+ * by its path keeps it on the same photograph, and only falls back to the first
+ * when the cover itself is the one being removed.
+ */
+function replacePhotos(place: Place, photos: Photo[]): Place {
+  const coverPath = place.photos[place.coverPhotoIndex]?.path
+  const stillThere = photos.findIndex((photo) => photo.path === coverPath)
+
+  return {
+    ...place,
+    photos,
+    coverPhotoIndex: stillThere >= 0 ? stillThere : 0,
+  }
 }
 
 /**
