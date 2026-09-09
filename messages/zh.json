@@ -87,7 +87,12 @@
     },
     "noDescription": "這個地點還沒有文字介紹。",
     "whereItIs": "位置",
-    "aboutThisPlace": "關於這個地點"
+    "aboutThisPlace": "關於這個地點",
+    "openPhoto": "放大這張照片",
+    "closePhoto": "關閉",
+    "previousPhoto": "上一張",
+    "nextPhoto": "下一張",
+    "photographs": "照片"
   },
   "explore": {
     "title": "探索地圖",

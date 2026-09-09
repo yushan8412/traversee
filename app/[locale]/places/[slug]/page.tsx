@@ -5,7 +5,7 @@ import { Link } from '../../../../i18n/navigation'
 import type { Locale } from '../../../../i18n/routing'
 import { getPublishedPlaceBySlug } from '../../../../lib/places/repository'
 import { resolveText } from '../../../../lib/places/text'
-import type { Activity, Photo, RouteMetrics } from '../../../../lib/places/types'
+import type { Activity, RouteMetrics } from '../../../../lib/places/types'
 import { PlaceMap } from '../place-map'
 import { resolveTileSource } from '../../../../lib/maps/tile-source'
 import { PlacePhoto } from '../photo'
@@ -14,6 +14,8 @@ import { TranslatedText } from '../translated-text'
 import { canEdit } from '../../../../lib/places/editing'
 import { DifficultyDots } from '../../place-card'
 import { ActivityIcon } from '../../activity-icon'
+import { PlaceGallery, PhotoStrip, ZoomTrigger, type GalleryShot } from '../photo-gallery'
+import { publicPhotoUrl } from '../../../../lib/photos/public-url'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +55,24 @@ export default async function PlacePage({
   const own = place.photos
   const standIns = own.length === 0 ? (standInPhotos[place.slug] ?? []) : []
   const cover = own[0]
-  const rest = own.slice(1)
+
+  // One list for every picture on the page, in the order they appear, so the
+  // gallery's indices and what the reader sees cannot drift apart. The cover is
+  // index 0 and is reachable from the hero as well as from the strip.
+  const shots: GalleryShot[] = [
+    ...own.map((photo) => ({
+      src: publicPhotoUrl(photo.path),
+      width: photo.width,
+      height: photo.height,
+      credit: null,
+    })),
+    ...standIns.map((photo) => ({
+      src: photo.path,
+      width: 1600,
+      height: 1200,
+      credit: photo.credit,
+    })),
+  ]
 
   // The highest-graded activity, so the hero carries one grade rather than a
   // list. Camping, surfing, diving and waterfalls have no scale defined at all
@@ -62,27 +81,36 @@ export default async function PlacePage({
   const topGrade = graded.sort((a, b) => b[1] - a[1])[0]
 
   return (
-    <main className="pb-24">
+    <PlaceGallery shots={shots} alt={title}>
+      <main className="pb-24">
       {/* ── The photograph, and the name on it ───────────────────────────────
           The index leads with the picture and so does this, because the card
           that brought the reader here was a photograph and landing on a page of
           grey text reads as arriving somewhere else. */}
       <header className="relative isolate overflow-hidden bg-panel">
-        {cover ? (
-          <PlacePhoto
-            photo={cover}
-            alt={title}
-            priority
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : standIns[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element -- already WebP at a bounded size
-          <img
-            src={standIns[0].path}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        ) : null}
+        {shots[0] && (
+          <ZoomTrigger
+            index={0}
+            label={t('openPhoto')}
+            className="absolute inset-0 h-full w-full cursor-zoom-in"
+          >
+            {cover ? (
+              <PlacePhoto
+                photo={cover}
+                alt={title}
+                priority
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- already WebP at a bounded size
+              <img
+                src={shots[0].src}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
+          </ZoomTrigger>
+        )}
 
         {/* The scrim is what makes white type legible over an unknown
             photograph. Without a picture there is nothing to darken, so the
@@ -235,37 +263,15 @@ export default async function PlacePage({
         />
       </section>
 
-      {/* ── The rest of the photographs ─────────────────────────────────────
-          A ratio on every frame so the browser holds the space before the file
-          arrives, and so a portrait from a phone and a landscape from a camera
-          make the same shape. */}
-      {(rest.length > 0 || standIns.length > 1) && (
-        <section className={`${COLUMN} mt-10 sm:mt-12`}>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {rest.map((photo: Photo) => (
-              <PlacePhoto
-                key={photo.path}
-                photo={photo}
-                alt={title}
-                className="aspect-[4/3] w-full rounded-xl border border-line object-cover"
-              />
-            ))}
-            {standIns.slice(1).map((photo) => (
-              <figure
-                key={photo.path}
-                className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element -- already WebP at a bounded size */}
-                <img src={photo.path} alt="" className="h-full w-full object-cover" />
-                <figcaption
-                  className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60
-                    to-transparent px-2 pb-1 pt-4 text-[10px] leading-tight text-white/85"
-                >
-                  {photo.credit}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
+      {/* ── The photographs ─────────────────────────────────────────────────
+          A strip you scroll rather than a grid you scan, with the middle one
+          enlarged. Every picture opens full-screen, where it is shown
+          uncropped — the strip has to crop to a common shape, and the reason to
+          open a photograph is to see what the crop took away. */}
+      {shots.length > 1 && (
+        <section className="mt-10 sm:mt-12">
+          <h2 className={`${COLUMN} text-[13px] font-medium text-dim`}>{t('photographs')}</h2>
+          <PhotoStrip shots={shots} alt={title} />
         </section>
       )}
 
@@ -302,7 +308,8 @@ export default async function PlacePage({
           )}
         </section>
       )}
-    </main>
+      </main>
+    </PlaceGallery>
   )
 }
 

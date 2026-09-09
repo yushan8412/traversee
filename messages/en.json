@@ -87,7 +87,12 @@
     },
     "noDescription": "Nobody has written about this place yet.",
     "whereItIs": "Where it is",
-    "aboutThisPlace": "About this place"
+    "aboutThisPlace": "About this place",
+    "openPhoto": "Open this photograph",
+    "closePhoto": "Close",
+    "previousPhoto": "Previous",
+    "nextPhoto": "Next",
+    "photographs": "Photographs"
   },
   "explore": {
     "title": "Explore the map",

@@ -519,3 +519,50 @@ select {
     }
   }
 }
+
+/*
+ * The photograph in the middle of the strip is the big one.
+ *
+ * Same mechanism as `tv-drift` above and for the same reason: the browser runs
+ * a scroll-driven animation off the main thread, so a strip that scales its
+ * centre item cannot stutter behind React, and there is no scroll listener to
+ * throttle. The axis is `inline` because this scroller runs sideways.
+ *
+ * The rule sits on the list item, never on the frame. `view()` resolves against
+ * the nearest scroll container, and the frame around each photograph is
+ * `overflow: hidden` — which makes it one, and the timeline would then measure
+ * the image inside its own clip, where it never moves. The index page shipped
+ * that bug once; the note above `tv-drift` records how long it took to find.
+ *
+ * Without support this degrades to an ordinary snapping strip, which is still a
+ * perfectly good way to look through six pictures.
+ */
+@keyframes tv-shot-focus {
+  0% {
+    scale: 0.84;
+    opacity: 0.5;
+  }
+  50% {
+    scale: 1;
+    opacity: 1;
+  }
+  100% {
+    scale: 0.84;
+    opacity: 0.5;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tv-strip-shot {
+      animation-name: tv-shot-focus;
+      /* `auto`, not the `animation` shorthand, which resets duration to 0s and
+         freezes the whole thing at its midpoint. */
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view(inline);
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
