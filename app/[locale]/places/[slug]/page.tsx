@@ -1,3 +1,4 @@
+
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { auth } from '../../../../auth'
 import { notFound } from 'next/navigation'
@@ -19,8 +20,78 @@ import { publicPhotoUrl } from '../../../../lib/photos/public-url'
 
 export const dynamic = 'force-dynamic'
 
-/** The reading measure. The photograph and the map are not bound by it. */
+/** The reading measure. The photograph is not bound by it. */
 const COLUMN = 'mx-auto w-full max-w-3xl px-5 sm:px-6'
+
+/**
+ * Wider than the text, narrower than the window. The map wants room — it is
+ * the answer to "where is this" — but running it edge to edge made it read as
+ * a band the page had been cut in half by rather than as part of the page.
+ */
+const WIDE = 'mx-auto w-full max-w-6xl px-5 sm:px-6'
+
+/**
+ * A section's name, in both languages, in the pattern the home page set.
+ *
+ * A small tracked kicker in the UI face, then a display line at 2–2.75rem: the
+ * page's own language in ink, the other riding beside it in the brand green.
+ * The site's positioning is one bilingual document rather than two translated
+ * ones, so the pairing is the heading rather than an ornament on it.
+ *
+ * **The emphasis follows the script, not the role.** English is set italic and
+ * Chinese is letter-spaced wherever each one lands — the home page's `emphasis`
+ * rule applied to the writing system rather than to which half happens to be
+ * first. Keying it to the role instead left English upright on the English site
+ * and italic on the Chinese one, and upright Palatino at 2.75rem is the version
+ * that reads as a default. Latin and Chinese simply want different treatment at
+ * this size, and which language the reader chose does not change that.
+ */
+function SectionHeading({
+  kicker,
+  zh,
+  en,
+  locale,
+}: {
+  kicker?: string
+  zh: string
+  en: string
+  locale: string
+}) {
+  const chinese = (lead: boolean) => (
+    <span
+      key="zh"
+      lang="zh-Hant"
+      className={lead ? 'tracking-[-0.01em]' : 'tracking-[0.14em] text-brand'}
+    >
+      {zh}
+    </span>
+  )
+
+  const english = (lead: boolean) => (
+    <span key="en" lang="en" className={`italic ${lead ? '' : 'text-brand'}`}>
+      {en}
+    </span>
+  )
+
+  const leadsInChinese = locale === 'zh'
+
+  return (
+    <header className="mb-6 sm:mb-8">
+      {kicker && (
+        <span className="block text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
+          {kicker}
+        </span>
+      )}
+      <h2
+        className="mt-3 font-[family-name:var(--font-display)] text-[2rem] font-normal
+          leading-[1.15] tracking-[-0.01em] sm:text-[2.75rem]"
+      >
+        {leadsInChinese ? chinese(true) : english(true)}{' '}
+        {leadsInChinese ? english(false) : chinese(false)}
+      </h2>
+    </header>
+  )
+}
 
 export default async function PlacePage({
   params,
@@ -34,6 +105,11 @@ export default async function PlacePage({
   if (!place) notFound()
 
   const t = await getTranslations('places')
+  // Both languages by name. A heading carries the pair, and neither half is
+  // invented here — they are the same catalogue entries the rest of the site
+  // reads from.
+  const tzh = await getTranslations({ locale: 'zh', namespace: 'places' })
+  const ten = await getTranslations({ locale: 'en', namespace: 'places' })
   const te = await getTranslations('edit')
   const session = await auth()
   const mayEdit = canEdit(
@@ -77,6 +153,9 @@ export default async function PlacePage({
   // The highest-graded activity, so the hero carries one grade rather than a
   // list. Camping, surfing, diving and waterfalls have no scale defined at all
   // — deliberately — so most places carry none.
+  const [lng, lat] = place.startPoint.coordinates
+  const coordinates = `${lat.toFixed(4)} · ${lng.toFixed(4)}`
+
   const graded = Object.entries(place.difficulty) as [Activity, number][]
   const topGrade = graded.sort((a, b) => b[1] - a[1])[0]
 
@@ -253,14 +332,23 @@ export default async function PlacePage({
           Wider and taller than the old h-96 inside a 768px column. The detail
           query returns the whole document, so the simplified track is already
           in hand and drawing it costs nothing extra. */}
-      <section className="mt-10 sm:mt-12">
-        <h2 className={`${COLUMN} mb-3 text-[13px] font-medium text-dim`}>{t('whereItIs')}</h2>
-        <PlaceMap
-          tileSource={resolveTileSource()}
-          markers={[{ slug: place.slug, name: title, point: place.startPoint }]}
-          geometry={place.geometry}
-          className="h-[22rem] w-full sm:h-[30rem]"
+      <section className={`${WIDE} mt-10 sm:mt-12`}>
+        <SectionHeading
+          kicker={coordinates}
+          zh={tzh('whereItIs')}
+          en={ten('whereItIs')}
+          locale={locale}
         />
+        {/* Framed like everything else the site puts a picture in, rather than
+            bleeding to both edges. */}
+        <div className="overflow-hidden rounded-2xl border border-line">
+          <PlaceMap
+            tileSource={resolveTileSource()}
+            markers={[{ slug: place.slug, name: title, point: place.startPoint }]}
+            geometry={place.geometry}
+            className="h-[22rem] w-full sm:h-[30rem]"
+          />
+        </div>
       </section>
 
       {/* ── The photographs ─────────────────────────────────────────────────
@@ -269,16 +357,26 @@ export default async function PlacePage({
           uncropped — the strip has to crop to a common shape, and the reason to
           open a photograph is to see what the crop took away. */}
       {shots.length > 1 && (
-        <section className="mt-10 sm:mt-12">
-          <h2 className={`${COLUMN} text-[13px] font-medium text-dim`}>{t('photographs')}</h2>
+        <section className={`${WIDE} mt-10 sm:mt-12`}>
+          <SectionHeading
+            kicker={t('photoCount', { count: shots.length })}
+            zh={tzh('photographs')}
+            en={ten('photographs')}
+            locale={locale}
+          />
           <PhotoStrip shots={shots} alt={title} />
         </section>
       )}
 
       {/* ── Supporting detail ───────────────────────────────────────────────── */}
       {(place.approach || Object.keys(place.attributes).length > 0) && (
-        <section className={`${COLUMN} mt-10 space-y-6 sm:mt-12`}>
-          <h2 className="text-[13px] font-medium text-dim">{t('aboutThisPlace')}</h2>
+        <section className={`${WIDE} mt-10 sm:mt-12`}>
+          <SectionHeading
+            zh={tzh('aboutThisPlace')}
+            en={ten('aboutThisPlace')}
+            locale={locale}
+          />
+          <div className="space-y-4">
 
           {place.approach && (
             <div className="rounded-2xl border border-line bg-paper p-5 sm:p-6">
@@ -306,6 +404,7 @@ export default async function PlacePage({
               ))}
             </div>
           )}
+          </div>
         </section>
       )}
       </main>

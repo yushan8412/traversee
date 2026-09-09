@@ -92,7 +92,8 @@
     "closePhoto": "關閉",
     "previousPhoto": "上一張",
     "nextPhoto": "下一張",
-    "photographs": "照片"
+    "photographs": "照片",
+    "photoCount": "{count} 張"
   },
   "explore": {
     "title": "探索地圖",

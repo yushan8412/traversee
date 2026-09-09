@@ -209,21 +209,171 @@ export function ZoomTrigger({
  */
 export function PhotoStrip({ shots, alt }: { shots: GalleryShot[]; alt: string }) {
   const t = useTranslations('places')
+  const strip = useRef<HTMLUListElement>(null)
+  const [at, setAt] = useState({ start: true, end: false })
+
+  const measure = useCallback(() => {
+    const el = strip.current
+    if (!el) return
+    setAt({
+      start: el.scrollLeft < 8,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 8,
+    })
+  }, [])
+
+  /**
+   * One photograph along, by bringing that photograph to the middle.
+   *
+   * Not `scrollBy` with a card's width: the row snaps mandatorily, and a
+   * smooth scroll of a fixed distance gets recaptured by the snap and pulled
+   * back where it started — measured at nine pixels of travel instead of a
+   * whole card. Asking the browser to centre a specific element is a request
+   * the snap agrees with rather than fights.
+   */
+  // Where the row is heading, which is not where it currently is. Holding the
+  // destination separately is what makes a second wheel notch add to the first
+  // instead of restarting it — the difference between momentum and a series of
+  // jumps.
+  const target = useRef<number | null>(null)
+  const frame = useRef<number | null>(null)
+
+  /**
+   * Eases the row toward `target`, a fraction of the remaining distance each
+   * frame.
+   *
+   * Assigning `scrollLeft` straight from the wheel moves the row the full delta
+   * at once — about a hundred pixels per notch, arriving instantly. It works,
+   * and it feels like nothing at all. Covering a share of what is left each
+   * frame starts fast and settles slowly, which is the part that reads as
+   * smooth.
+   */
+  const glide = useCallback(() => {
+    const el = strip.current
+    if (!el || target.current === null) {
+      frame.current = null
+      return
+    }
+
+    const remaining = target.current - el.scrollLeft
+    if (Math.abs(remaining) < 0.5) {
+      el.scrollLeft = target.current
+      target.current = null
+      frame.current = null
+      // Snapping comes back only once the row is at rest, so it settles onto a
+      // photograph instead of tugging at every frame of the journey.
+      el.style.scrollSnapType = ''
+      return
+    }
+
+    el.scrollLeft += remaining * 0.16
+    frame.current = requestAnimationFrame(glide)
+  }, [])
+
+  const glideTo = useCallback(
+    (to: number) => {
+      const el = strip.current
+      if (!el) return
+      const furthest = el.scrollWidth - el.clientWidth
+      const destination = Math.max(0, Math.min(furthest, to))
+
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        el.scrollLeft = destination
+        return
+      }
+
+      target.current = destination
+      el.style.scrollSnapType = 'none'
+      if (frame.current === null) frame.current = requestAnimationFrame(glide)
+    },
+    [glide],
+  )
+
+  useEffect(
+    () => () => {
+      if (frame.current !== null) cancelAnimationFrame(frame.current)
+    },
+    [],
+  )
+
+  const step = useCallback(
+    (direction: 1 | -1) => {
+      const el = strip.current
+      if (!el) return
+      const card = el.querySelector('li')
+      const width = card ? card.clientWidth + 16 : 256
+      // From where the row is heading, so a second click while it is still
+      // moving goes one further rather than restarting the same trip.
+      glideTo((target.current ?? el.scrollLeft) + direction * width)
+    },
+    [glideTo],
+  )
+
+  /**
+   * A mouse wheel only ever scrolls down, so a sideways strip was unreachable
+   * with one — reported from the desktop site, where the row would not move.
+   *
+   * The wheel goes back to the page at either end, so the strip is never a
+   * place the page gets stuck. That is the trap the home page's rail comment
+   * warns about: taking someone's scroll away and not giving it back.
+   */
+  useEffect(() => {
+    const el = strip.current
+    if (!el) return
+
+    function onWheel(event: WheelEvent) {
+      if (!el) return
+      // A trackpad's own sideways gesture already scrolls this correctly, and a
+      // finger on a phone produces no wheel event at all — so this only ever
+      // takes over a vertical wheel, the one that cannot reach a sideways row.
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return
+
+      const forward = event.deltaY > 0
+      const heading = target.current ?? el.scrollLeft
+      const atStart = heading < 2
+      const atEnd = heading >= el.scrollWidth - el.clientWidth - 2
+      if ((forward && atEnd) || (!forward && atStart)) return
+
+      event.preventDefault()
+      glideTo(heading + event.deltaY)
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [glideTo])
+
   if (shots.length === 0) return null
 
   return (
+    <div className="relative">
+      {/* Visible controls as well, because a wheel that behaves differently
+          over one strip is not something anybody can see. Hidden where there is
+          no pointer to hover them with. */}
+      <StripArrow side="left" label={t('previousPhoto')} disabled={at.start} onClick={() => step(-1)} />
+      <StripArrow side="right" label={t('nextPhoto')} disabled={at.end} onClick={() => step(1)} />
+
     <ul
-      className="tv-strip flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth
-        px-[calc(50%-7.5rem)] py-6 [scrollbar-width:none] sm:px-[calc(50%-11rem)]
-        [&::-webkit-scrollbar]:hidden"
+      ref={strip}
+      onScroll={measure}
+      // `overflow-x-auto` clips on both axes, so a photograph that grows on
+      // hover loses its edges to the scroller. The padding is the room it grows
+      // into, and the matching negative margin puts the row's left edge back
+      // under the heading — otherwise the padding would push it out of line.
+      className="tv-strip -mx-5 flex snap-x snap-proximity gap-4 overflow-x-auto px-5 py-7
+        [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {shots.map((shot, at) => (
-        <li key={shot.src} className="tv-strip-shot w-60 shrink-0 snap-center sm:w-88">
+        <li key={shot.src} className="w-56 shrink-0 snap-start sm:w-72">
           <ZoomTrigger
             index={at}
             label={t('openPhoto')}
+            // `scale`, not `transform`: Tailwind 4's scale utilities set the
+            // standalone property, so a transition naming `transform` leaves the
+            // growth snapping instantly. Same lesson as the index card's press.
             className="relative block w-full overflow-hidden rounded-2xl border border-line
-              bg-panel transition-shadow hover:shadow-[0_18px_40px_-24px_rgb(31_42_36/0.55)]"
+              bg-panel transition-[scale,box-shadow] duration-300
+              ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:z-10 hover:scale-[1.11]
+              hover:shadow-[0_26px_56px_-22px_rgb(31_42_36/0.6)]
+              motion-reduce:hover:scale-100"
           >
             {/* A ratio so the browser holds the space before the file arrives
                 and a portrait and a landscape make the same shape in the row. */}
@@ -245,5 +395,35 @@ export function PhotoStrip({ shots, alt }: { shots: GalleryShot[]; alt: string }
         </li>
       ))}
     </ul>
+    </div>
+  )
+}
+
+function StripArrow({
+  side,
+  label,
+  disabled,
+  onClick,
+}: {
+  side: 'left' | 'right'
+  label: string
+  disabled: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      className={`absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center
+        rounded-full border border-line bg-paper/90 text-ink shadow-[0_10px_24px_-18px_rgb(31_42_36/0.6)]
+        transition-opacity hover:bg-paper disabled:pointer-events-none disabled:opacity-0
+        [@media(hover:hover)]:grid ${side === 'left' ? 'left-4' : 'right-4'}`}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d={side === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
+      </svg>
+    </button>
   )
 }

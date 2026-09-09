@@ -92,7 +92,8 @@
     "closePhoto": "Close",
     "previousPhoto": "Previous",
     "nextPhoto": "Next",
-    "photographs": "Photographs"
+    "photographs": "Photographs",
+    "photoCount": "{count, plural, one {# photograph} other {# photographs}}"
   },
   "explore": {
     "title": "Explore the map",
