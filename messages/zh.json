@@ -84,7 +84,10 @@
     "map": {
       "overview": "地圖總覽",
       "unavailable": "地圖無法載入。"
-    }
+    },
+    "noDescription": "這個地點還沒有文字介紹。",
+    "whereItIs": "位置",
+    "aboutThisPlace": "關於這個地點"
   },
   "explore": {
     "title": "探索地圖",

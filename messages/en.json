@@ -84,7 +84,10 @@
     "map": {
       "overview": "Overview map",
       "unavailable": "The map could not be loaded."
-    }
+    },
+    "noDescription": "Nobody has written about this place yet.",
+    "whereItIs": "Where it is",
+    "aboutThisPlace": "About this place"
   },
   "explore": {
     "title": "Explore the map",

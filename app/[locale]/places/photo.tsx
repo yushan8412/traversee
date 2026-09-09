@@ -15,11 +15,20 @@ export function PlacePhoto({
   photo,
   alt,
   thumb = false,
+  priority = false,
   className,
 }: {
   photo: Photo
   alt: string
   thumb?: boolean
+  /**
+   * For the one photograph that is the largest thing in the first viewport.
+   * Lazy-loading that image delays the very paint the reader is waiting for —
+   * measured on the detail page, where a lazy hero left the page showing its
+   * scrim over an empty panel for seconds. Never set on more than one image
+   * per page; lazy is right for every other.
+   */
+  priority?: boolean
   className?: string
 }) {
   const path = thumb ? (photo.thumbPath ?? photo.path) : photo.path
@@ -31,7 +40,8 @@ export function PlacePhoto({
       alt={alt}
       width={photo.width}
       height={photo.height}
-      loading="lazy"
+      loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
       className={className}
     />
   )
