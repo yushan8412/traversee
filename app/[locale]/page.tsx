@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 import { Link } from '../../i18n/navigation'
 import type { Locale } from '../../i18n/routing'
@@ -18,10 +20,20 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const tp = await getTranslations('places')
   const places = await listPublishedPlacesOrNone()
 
-  // The footage is not in the repository — see .gitignore. Point this at Blob
-  // Storage in production; the local path is the convenience for development,
-  // and its absence costs a poster rather than a broken hero.
+  // The footage is not in the repository — see .gitignore. Point these at Blob
+  // Storage in production; the local paths are the convenience for development,
+  // and their absence costs a poster rather than a broken hero.
+  //
+  // A WebM is offered only when one actually exists, because whether VP9 beats
+  // H.264 depends on the footage: it was a third smaller on a cut of slow aerial
+  // shots and a third *larger* once the cut included white water and a tracking
+  // shot. Serving a source that 404s to gain nothing is worse than one file, so
+  // the file's presence — not a hardcoded path — decides. Drop a hero.webm in
+  // and it is used; leave it out and only the MP4 is offered.
   const heroVideo = process.env.HERO_VIDEO_URL ?? '/hero/hero.mp4'
+  const heroVideoWebm =
+    process.env.HERO_VIDEO_WEBM_URL ??
+    (existsSync(join(process.cwd(), 'public', 'hero', 'hero.webm')) ? '/hero/hero.webm' : null)
 
   // Latin italics are a designed second face; a browser asked to italicise
   // Chinese just slants the upright one, which is a counterfeit, not a style.
@@ -63,14 +75,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             video arrives. */}
         <video
           className="absolute inset-0 h-full w-full object-cover"
-          src={heroVideo}
           poster="/hero/hero-poster.jpg"
           autoPlay
           muted
           loop
           playsInline
           aria-hidden="true"
-        />
+        >
+          {heroVideoWebm && <source src={heroVideoWebm} type="video/webm" />}
+          <source src={heroVideo} type="video/mp4" />
+        </video>
         {/* Three scrims doing different jobs: a flat wash that puts a floor
             under the brightest frames, a soft pool behind the copy so the
             subhead survives white water, and a vertical gradient that seats the
