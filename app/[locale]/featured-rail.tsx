@@ -243,6 +243,8 @@ export function FeaturedRail({ items, emphasis }: { items: RailItem[]; emphasis:
                       <img
                         src={item.photos[0].src}
                         alt=""
+                        loading="lazy"
+                        decoding="async"
                         className={`h-full w-full object-cover transition-all duration-700 ease-out ${
                           item.photos[1] ? 'group-hover:opacity-0' : 'group-hover:scale-[1.05]'
                         }`}
@@ -255,6 +257,8 @@ export function FeaturedRail({ items, emphasis }: { items: RailItem[]; emphasis:
                         <img
                           src={item.photos[1].src}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="absolute inset-0 h-full w-full scale-[1.04] object-cover opacity-0 transition-all duration-700 ease-out group-hover:scale-100 group-hover:opacity-100"
                         />
                       )}

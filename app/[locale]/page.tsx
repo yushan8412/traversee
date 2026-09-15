@@ -8,6 +8,7 @@ import { ActivityCarousel } from './activity-carousel'
 import { ClosingBand } from './closing-band'
 import { DoodleField, type DoodleMark } from './doodle'
 import { FeaturedRail, type RailItem } from './featured-rail'
+import { HeroVideo } from './hero-video'
 import { toCardData } from './place-card-data'
 
 export const dynamic = 'force-dynamic'
@@ -72,19 +73,9 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <section className="relative flex min-h-[38rem] items-center justify-center overflow-hidden sm:min-h-[86vh]">
         {/* Muted and inline so iOS plays it without a tap; the poster carries
             the first paint so the hero is never an empty rectangle while the
-            video arrives. */}
-        <video
-          className="absolute inset-0 h-full w-full object-cover"
-          poster="/hero/hero-poster.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-          aria-hidden="true"
-        >
-          {heroVideoWebm && <source src={heroVideoWebm} type="video/webm" />}
-          <source src={heroVideo} type="video/mp4" />
-        </video>
+            video arrives. It stops for reduced motion and while it is scrolled
+            past — see hero-video.tsx. */}
+        <HeroVideo mp4={heroVideo} webm={heroVideoWebm} poster="/hero/hero-poster.jpg" />
         {/* Three scrims doing different jobs: a flat wash that puts a floor
             under the brightest frames, a soft pool behind the copy so the
             subhead survives white water, and a vertical gradient that seats the
@@ -161,12 +152,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <img
               src="/activities/hiking.jpg"
               alt=""
+              loading="lazy"
+              decoding="async"
               className="aspect-[4/5] w-full rounded-[1.75rem] object-cover"
             />
             {/* eslint-disable-next-line @next/next/no-img-element -- fixed art direction */}
             <img
               src="/activities/waterfall.jpg"
               alt=""
+              loading="lazy"
+              decoding="async"
               className="absolute -bottom-12 -left-8 hidden aspect-square w-56 rounded-[1.25rem] border-[6px] border-brandInk object-cover sm:block lg:-left-16 lg:w-[22rem]"
             />
           </div>
