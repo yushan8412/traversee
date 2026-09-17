@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server'
 import { Link } from '../../i18n/navigation'
 import { LanguageSwitcher } from './language-switcher'
 import { Mountain } from './mountain'
+import { Wordmark } from './wordmark'
 import type { Locale } from '../../i18n/routing'
 
 const REPOSITORY = 'https://github.com/yushan8412/traversee'
@@ -23,11 +24,9 @@ export async function SiteFooter({ locale }: { locale: Locale }) {
     <footer className="border-t border-line bg-panel">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-[1.4fr_1fr_1fr] sm:gap-12">
         <div>
-          <span className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand">
-              <Mountain stroke="#fff" />
-            </span>
-            {site('name')}
+          <span className="flex items-center gap-2.5">
+            <Mountain size={68} />
+            <Wordmark title={site('name')} className="h-[15px] w-auto text-brandInk" />
           </span>
           <p className="mt-4 max-w-[38ch] text-[13px] leading-relaxed text-dim">{t('blurb')}</p>
         </div>

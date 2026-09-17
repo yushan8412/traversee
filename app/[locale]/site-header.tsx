@@ -7,6 +7,7 @@ import { LanguageSwitcher } from './language-switcher'
 import { MainTabs, type Tab } from './main-tabs'
 import { MenuDrawer } from './menu-drawer'
 import { Mountain } from './mountain'
+import { Wordmark } from './wordmark'
 
 /**
  * Logo left, the three pages centred, everything else behind the menu.
@@ -32,14 +33,13 @@ export async function SiteHeader({ locale }: { locale: Locale }) {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/85 backdrop-blur">
       <div className="mx-auto grid h-16 max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:px-6">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-2.5 whitespace-nowrap text-lg font-semibold tracking-tight no-underline"
-        >
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand">
-            <Mountain stroke="#fff" />
-          </span>
-          {site('name')}
+        {/* The mark carries its own colour now, so it no longer sits in a green
+            tile, and the name is drawn rather than set — see wordmark.tsx. The
+            accessible name lives on the wordmark; the mark beside it is
+            decorative and would otherwise announce the site twice. */}
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 no-underline">
+          <Mountain size={68} />
+          <Wordmark title={site('name')} className="h-[15px] w-auto text-brandInk" />
         </Link>
 
         <MainTabs tabs={tabs} />

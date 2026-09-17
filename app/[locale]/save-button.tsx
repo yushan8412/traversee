@@ -34,7 +34,7 @@ export function SaveButton({
 
   return (
     <button type="submit" disabled={pending || disabled} className={className}>
-      {pending && <Mountain size={17} strokeWidth={2} tracing className="mr-2" />}
+      {pending && <Mountain size={17} pulsing className="mr-2" />}
       {pending ? busyLabel : label}
     </button>
   )
