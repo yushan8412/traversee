@@ -211,8 +211,18 @@ export function ActivityCarousel({
             className={`order-2 max-w-[20ch] lg:order-1 lg:ml-auto lg:text-right ${enters}`}
             style={motion ? { animationDelay: '180ms' } : undefined}
           >
+            {/* `break-keep` is what stops the Chinese from breaking mid-phrase.
+                Chinese has no spaces, so a browser will wrap between any two
+                characters — 「火升起來，山就 / 安靜了。」 splits a phrase in half
+                for no reason but the column width. keep-all suppresses those
+                arbitrary opportunities while leaving the one after a comma, and
+                every quote here is two clauses joined by exactly one comma, so
+                the line now breaks where the sentence already pauses.
+
+                English needs none of this and is unaffected: its spaces are
+                already break opportunities, which keep-all does not touch. */}
             <blockquote
-              className={`font-[family-name:var(--font-display)] text-xl leading-[1.6] text-brandInk sm:text-2xl ${emphasis}`}
+              className={`font-[family-name:var(--font-display)] text-xl leading-[1.6] text-brandInk break-keep sm:text-2xl ${emphasis}`}
             >
               {t(`lead.${current}`)}
             </blockquote>
