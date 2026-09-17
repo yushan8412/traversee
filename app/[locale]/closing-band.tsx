@@ -18,6 +18,8 @@ export async function ClosingBand({ count, emphasis }: { count: number; emphasis
       <img
         src="/closing/nanya.webp"
         alt=""
+        loading="lazy"
+        decoding="async"
         className="absolute inset-0 -z-10 h-full w-full object-cover"
       />
       {/* Blue, not green. The featured band immediately above is a green field,
